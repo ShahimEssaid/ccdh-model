@@ -1,0 +1,13 @@
+dist: bionic
+language: ruby
+sudo: required
+
+before_install:
+    - echo ============= before intall =================
+
+script:
+    - echo ================= script ===================
+
+branches:
+    only:
+        - master

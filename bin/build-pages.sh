@@ -35,6 +35,6 @@ git push -f --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" gh-pages || 
 
 cd ${GIT_ROOT}/jekyll
 bundle install
-bundle exec jekyll b --baseurl "https://ShahimEssaid.github.io/ccdh-model/${GIT_BRANCH}"
+bundle exec jekyll b --baseurl "ccdh-model/${GIT_BRANCH}"
 
 echo ================= FINISHED BUILDING =========================

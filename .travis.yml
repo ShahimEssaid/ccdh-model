@@ -6,7 +6,8 @@ before_install:
     - echo ============= before intall =================
 
 script:
-    - echo ================= script ===================
+    - bin/build-pages.sh
+    - bin/publish-pages.sh
 
 branches:
     only:

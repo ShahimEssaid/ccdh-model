@@ -16,10 +16,10 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 GIT_ROOT="$(dirname "$DIR")"
 GIT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-${TRAVIS_BRANCH}}
-
+GIT_REPO="/ShahimEssaid/ccdh-model.git"
 # reset origin to default to work around Travis'
 git remote remove origin
-git remote add origin https://github.com/ShahimEssaid/ccdh-model.git
+git remote add origin https://github.com/${GIT_REPO}
 git fetch --all --tags
 
 
@@ -31,12 +31,10 @@ cd ${GIT_ROOT}/../stage-gh-pages
 git reset gh-pages-start
 git add -A &> /dev/null
 git commit -m "Preparing build of $GIT_BRANCH"
-git push -f --set-upstream "https://${COREIGTOKEN}@github.com/phenopackets/core-ig.git" gh-pages
+git push -f --set-upstream "https://${TOKEN}@github.com/${GIT_REPO}" gh-pages
 
-if [[ ! -f $GIT_ROOT/ig-root/input-cache/publisher.jar ]]; then
-    ${GIT_ROOT}/bin/get-publisher.sh
-fi
-
-java -jar ${GIT_ROOT}/ig-root/input-cache/publisher.jar  -ig ${GIT_ROOT}/ig-root/ig.ini
+cd ${GIT_ROOT}/jekyll
+bundle install
+bundle exec jekyll b
 
 echo ================= FINISHED BUILDING =========================

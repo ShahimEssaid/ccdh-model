@@ -30,8 +30,8 @@ rm -rf "${GIT_ROOT}/../stage-gh-pages/$GIT_BRANCH" || true
 cd ${GIT_ROOT}/../stage-gh-pages
 git reset gh-pages-start
 git add -A &> /dev/null
-git commit -m "Preparing build of $GIT_BRANCH"
-git push -f --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" gh-pages
+git commit -m "Preparing build of $GIT_BRANCH" || true
+git push -f --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" gh-pages || true
 
 cd ${GIT_ROOT}/jekyll
 bundle install

@@ -19,7 +19,7 @@ GIT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-${TRAVIS_BRANCH}}
 GIT_REPO="/ShahimEssaid/ccdh-model.git"
 # reset origin to default to work around Travis'
 git remote remove origin
-git remote add origin https://github.com/${GIT_REPO}
+git remote add origin https://github.com${GIT_REPO}
 git fetch --all --tags
 
 
@@ -31,7 +31,7 @@ cd ${GIT_ROOT}/../stage-gh-pages
 git reset gh-pages-start
 git add -A &> /dev/null
 git commit -m "Preparing build of $GIT_BRANCH"
-git push -f --set-upstream "https://${TOKEN}@github.com/${GIT_REPO}" gh-pages
+git push -f --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" gh-pages
 
 cd ${GIT_ROOT}/jekyll
 bundle install

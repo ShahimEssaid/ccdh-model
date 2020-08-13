@@ -1,0 +1,10 @@
+/_site
+/gems
+.vscode/
+_site
+.sass-cache
+.jekyll-cache
+.jekyll-metadata
+vendor
+/jekyll/model
+TAGS

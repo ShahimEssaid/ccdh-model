@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../../../../../.rbenv/versions/2.6.4/lib/ruby/gems"
+		}
+	],
+	"settings": {
+		"ruby.codeCompletion": "rcodetools",
+		"ruby.intellisense": "rubyLocate"
+	}
+}

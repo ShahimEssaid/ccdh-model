@@ -35,11 +35,18 @@ module ReadCsvModel
     end
 
     def readCsv
-      elements_csv = CSV.parse(File.read(File.join(@repodir, "model/data-elements.csv")), headers: true)
-      elements_csv.each { |row|
+      @elements_csv = CSV.parse(File.read(File.join(@repodir, "model/data-elements.csv")), headers: true)
+      @elements_csv.each { |row|
         element = {}
         element["description"] = row["description"]
+        element["examples"] = row["examples"]
+        element["representations"] = row["examples"].split(",").collect(&:strip)
+        element["values"] = row["values"].split(",").collect(&:strip)
+        element["deprecated"] = row["deprecated"]
+        element["replaced-by"] = row["replaced-by"]
+        element["notes"] = row["notes"]
         element["github_issue"] = row["github-issue"]
+        element["mappings"] = row["mappings"].split(",").collect(&:strip)
 
         File.open(File.join(@datadir, "model/de", row["name"] + ".json"), "w") { |f|
           f.write(JSON.pretty_generate(element))
@@ -47,8 +54,8 @@ module ReadCsvModel
         @model_data["model"]["de"][row["name"]] = element
       }
 
-      groups_csv = CSV.parse(File.read(File.join(@repodir, "model/data-groups.csv")), headers: true)
-      groups_csv.each { |row|
+      @groups_csv = CSV.parse(File.read(File.join(@repodir, "model/data-groups.csv")), headers: true)
+      @groups_csv.each { |row|
         element = {}
         element["description"] = row["description"]
         element["github_issue"] = row["github-issue"]
@@ -59,8 +66,10 @@ module ReadCsvModel
         @model_data["model"]["dg"][row["name"]] = element
       }
 
-      structures_csv = CSV.parse(File.read(File.join(@repodir, "model/data-structures.csv")), headers: true)
+      @structures_csv = CSV.parse(File.read(File.join(@repodir, "model/data-representations.csv")), headers: true)
       structures_csv.each { |row|
+        name = row["name"]
+        attribute = row["attribute"]
         element = {}
         element["description"] = row["description"]
         element["github_issue"] = row["github-issue"]
@@ -68,7 +77,7 @@ module ReadCsvModel
         File.open(File.join(@datadir, "model/ds", row["name"] + ".json"), "w") { |f|
           f.write(JSON.pretty_generate(element))
         }
-        @model_data["model"]["ds"][row["name"]] = element
+        @model_data["model"]["ds"][name] = {element}
       }
 
       @site.data["model"] = @model_data

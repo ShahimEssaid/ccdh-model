@@ -1,5 +1,1 @@
-name,description,github-issue
-age1,The age of a person,something
-age2,The age of a person,something
-age3,The age of a person,something
-age4,The age of a person,something
+"name","attribute","description","element","representation","min","max","github-issue","notes"

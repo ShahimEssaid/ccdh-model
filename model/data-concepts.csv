@@ -1,0 +1,4 @@
+"name","description","examples","representations","values","deprecated","replaced-by","notes","github-issue","mappings"
+"string","A string value","“liver”",,,,,,,
+"number","An integer or floating number",9.9,,,,,,,
+"boolean","A boolean value","yes, no, true, false, 1, 0","de.string","TRUE, FALSE",,,,,

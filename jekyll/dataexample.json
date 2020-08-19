@@ -1,0 +1,22 @@
+{
+    "model": {
+        "build": {
+            "concepts": {
+                "concept-name": {
+                    "data": "value",
+                    "vals": {}
+                }
+            },
+            "structures": {
+                "structure-name": {
+                    "structure-name": "value",
+                    "attributes": {
+                        "attribute-name": {},
+                        "vals": {}
+                    },
+                    "vals": {}
+                }
+            }
+        }
+    }
+}

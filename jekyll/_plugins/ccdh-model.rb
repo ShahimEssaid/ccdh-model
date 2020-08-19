@@ -3,6 +3,12 @@ require "yaml"
 require "pathname"
 require "fileutils"
 
+module Jekyll
+  class Page
+    attr_accessor :base, :relative_path, :path
+  end
+end
+
 module CCDHModel
   @@generator
   @@models = {}
@@ -49,7 +55,9 @@ module CCDHModel
       #puts model.asHash.to_yaml
 
       publisher = ModelPublisher.new(model, site, "_template", "model")
+
       publisher.publishModel
+      puts "hello"
     end
   end
 
@@ -111,7 +119,7 @@ module CCDHModel
   end
 
   class MConcept
-    attr_accessor :vals, :name, :description
+    attr_accessor :vals
     #:examples,
     #:structures_array, :values, :deprecated, :replaced_by_array,
     #:notes, :github_issue, :mappings
@@ -121,12 +129,26 @@ module CCDHModel
       @vals = vals
     end
 
+    def name
+      @vals["name"]
+    end
+
+    def description
+      @vals["description"]
+    end
+
     def asHash
-      { "name" => @name, "description" => @description }
+      { "name" => self.name, "description" => self.description }
     end
 
     def valsClone
       @vals.clone
+    end
+
+    def data
+      { "name" => self.name,
+        "description" => self.description,
+        "vals" => self.valsClone }
     end
   end
 
@@ -223,12 +245,29 @@ module CCDHModel
 
     def publishModel
       @model.concepts.each do |name, concept|
-        path = File.join(@site.source, @page_dir + "/concept", name + ".html")
-        unless File.exist? (path)
+        relativeDir = @page_dir + "/concept"
+
+        path = File.join(@site.source, relativeDir, name + ".html")
+        if File.exist? (path)
+          page = getPage(@site.source, relativeDir, name)
+        else
           page = JekyllPage.new(@site, @page_dir + "/concept", name + ".html", concept.asHash)
           @site.pages << page
         end
+        page.data["mc"] = concept.data
       end
+    end
+
+    def getPage(base, dir, basename)
+      page = nil
+      path = File.join(base, dir, basename + ".html")
+      @site.pages.each do |p|
+        if p.path == path
+          page = p
+          break
+        end
+      end
+      page
     end
   end
 

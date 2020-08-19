@@ -15,14 +15,11 @@ module CCDHModel
       source = config["source"]
       path = nil
       if Pathname.new(source).absolute?
-        puts "ABSOLUTE"
         #FileUtils.rm_rf(File.join(source, "model"))
         path = File.join(source, "model")
       else
-        puts "RELATIVE"
         path = File.expand_path(File.join(Dir.pwd, source, "model"))
       end
-
       Dir.glob("**/*", base: path).each { |f|
         file = File.join(path, f)
         next if File.directory?(file)
@@ -39,21 +36,13 @@ module CCDHModel
       #CCDHModel.generator = self
       @site = site
       model = CCDHModel.readModelFromCsv(File.expand_path(File.join(site.source, "../model")), "build")
-
       CCDHModel.resolveAndValidate(model)
-
       data = model.data
-
-      PP.pp(model.data, $>, 220)
-      #puts model.asHash.to_yaml
-
       publisher = ModelPublisher.new(model, site, "_template", "model")
-
       publisher.publishModel
-      puts "hello"
-      CCDHModel.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))
-      puts "hello"
-      pp model.data
+      CCDHModel.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model")))
+
+      puts model.data.to_json
     end
   end
 
@@ -61,7 +50,7 @@ module CCDHModel
     attr_accessor :name, :concepts, :groups, :structures, :warnings, :errors,
       :concepts_csv, :concepts_headers,
       :groups_csv, :groups_headers,
-      :structures_csv, :structures_headers
+      :structures_csv, :structures_headers, :meta_vals
 
     def initialize(name)
       @name = name
@@ -73,9 +62,10 @@ module CCDHModel
       @concepts_headers = []
       @groups_headers = []
       @structures_headers = []
+      @meta_vals = []
     end
 
-    def getConcept(name, create)
+    def getConcept(name, create = false)
       if @concepts[name].nil? && create
         @concepts[name] = MConcept.new
       end
@@ -103,7 +93,6 @@ module CCDHModel
       @concepts.each do |name, concept|
         data["concepts"][name] = concept.data
       end
-
       @structures.each do |name, structure|
         data["structures"][name] = structure.data
       end
@@ -127,7 +116,7 @@ module CCDHModel
     end
 
     def data
-      cleanVals = self.vals.to_hash.clone
+      cleanVals = self.vals.clone
       cleanVals.delete(nil)
       { "name" => self.name,
         "description" => self.description,
@@ -147,7 +136,7 @@ module CCDHModel
     end
 
     def data
-      cleanVals = self.vals.to_hash.clone
+      cleanVals = self.vals.clone
       cleanVals.delete(nil)
       {
         "name" => self.name,
@@ -180,7 +169,7 @@ module CCDHModel
     end
 
     def data
-      cleanVals = self.vals.to_hash.clone
+      cleanVals = self.vals.clone
       cleanVals.delete(nil)
       data = { "name" => self.name,
                "description" => self.description,
@@ -209,7 +198,7 @@ module CCDHModel
     end
 
     def data
-      cleanVals = self.vals.to_hash.clone
+      cleanVals = self.vals.clone
       cleanVals.delete(nil)
       data = {
         "name" => self.name,
@@ -325,7 +314,15 @@ module CCDHModel
       end
     end
     model.concepts_csv.each { |row|
-      model.getConcept(row["name"], true).vals = row
+      hash = { nil => [] }
+      row.each do |k, v|
+        if k
+          hash[k] = v
+        else
+          hash[k] << v
+        end
+      end
+      model.getConcept(hash["name"], true).vals = hash
     }
 
     model.groups_csv = CSV.read(File.join(model_dir, "data-groups.csv"), headers: true)
@@ -335,7 +332,15 @@ module CCDHModel
       end
     end
     model.groups_csv.each { |row|
-      model.getGroup(row["name"], true).vals = row
+      hash = { nil => [] }
+      row.each do |k, v|
+        if k
+          hash[k] = v
+        else
+          hash[k] << v
+        end
+      end
+      model.getGroup(hash["name"], true).vals = hash
     }
 
     model.structures_csv = CSV.read(File.join(model_dir, "data-structures.csv"), headers: true)
@@ -345,11 +350,19 @@ module CCDHModel
       end
     end
     model.structures_csv.each { |row|
-      structure = model.getStructure(row["name"], true)
-      if row["attribute"] == "self"
-        structure.vals = row
+      hash = { nil => [] }
+      row.each do |k, v|
+        if k
+          hash[k] = v
+        else
+          hash[k] << v
+        end
+      end
+      structure = model.getStructure(hash["name"], true)
+      if hash["attribute"] == "self"
+        structure.vals = hash
       else
-        structure.getAttribute(row["attribute"], true).vals = row
+        structure.getAttribute(hash["attribute"], true).vals = hash
       end
     }
     model
@@ -361,24 +374,56 @@ module CCDHModel
     CSV.open(File.join(dir, "concepts.csv"), mode = "wb", { force_quotes: true }) do |csv|
       csv << model.concepts_headers
       model.concepts.keys.sort.each do |k|
-        csv << model.concepts[k].vals
+        row = []
+        concept = model.concepts[k]
+        model.concepts_headers.each do |h|
+          row << concept.vals[h]
+        end
+        concept.vals[nil].each do |v|
+          row << v
+        end
+        csv << row
       end
     end
 
     CSV.open(File.join(dir, "groups.csv"), mode = "wb", { force_quotes: true }) do |csv|
       csv << model.groups_headers
       model.groups.keys.sort.each do |k|
-        csv << model.groups[k].vals
+        row = []
+        group = model.groups[k]
+        model.groups_headers.each do |h|
+          row << group.vals[h]
+        end
+        group.vals[nil].each do |v|
+          row << v
+        end
+        csv << row
       end
     end
 
     CSV.open(File.join(dir, "structures.csv"), mode = "wb", { force_quotes: true }) do |csv|
       csv << model.structures_headers
       model.structures.keys.sort.each do |sk|
-        s = model.structures[sk]
-        csv << s.vals
-        s.attributes.keys.sort.each do |ak|
-          csv << s.attributes[ak].vals
+        row = []
+        structure = model.structures[sk]
+        model.structures_headers.each do |h|
+          row << structure.vals[h]
+        end
+        structure.vals[nil].each do |v|
+          row << v
+        end
+        csv << row
+
+        structure.attributes.keys.sort.each do |ak|
+          row = []
+          attribute = structure.attributes[ak]
+          model.structures_headers.each do |h|
+            row << attribute.vals[h]
+          end
+          attribute.vals[nil].each do |v|
+            row << v
+          end
+          csv << row
         end
       end
     end

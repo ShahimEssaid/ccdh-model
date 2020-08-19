@@ -1,0 +1,94 @@
+{
+    "name": "build",
+    "concepts": {
+        "string": {
+            "name": "string",
+            "description": "A string value",
+            "vals": {
+                "name": "string",
+                "description": "A string value",
+                "examples": "liver",
+                "structures": null,
+                "values": null,
+                "deprecated": null,
+                "replaced-by": null,
+                "notes": null,
+                "github-issue": null,
+                "mappings": null,
+                "some-field": "ONE"
+            }
+        },
+        "number": {
+            "name": "number",
+            "description": "An integer or floating number",
+            "vals": {
+                "name": "number",
+                "description": "An integer or floating number",
+                "examples": "9.9",
+                "structures": null,
+                "values": null,
+                "deprecated": null,
+                "replaced-by": null,
+                "notes": null,
+                "github-issue": null,
+                "mappings": null,
+                "some-field": null
+            }
+        },
+        "boolean": {
+            "name": "boolean",
+            "description": "A boolean value",
+            "vals": {
+                "name": "boolean",
+                "description": "A boolean value",
+                "examples": "yes, no, true, false, 1, 0",
+                "structures": "de.string",
+                "values": "TRUE, FALSE",
+                "deprecated": null,
+                "replaced-by": null,
+                "notes": null,
+                "github-issue": "http://www.google.com",
+                "mappings": null,
+                "some-field": null
+            }
+        }
+    },
+    "structures": {
+        "name_1": {
+            "name": "name_1",
+            "description": "description_self",
+            "vals": {
+                "name": "name_1",
+                "attribute": "self",
+                "description": "description_self",
+                "concepts": "concepts_self",
+                "structures": "structures_self",
+                "min": "min_self",
+                "max": "max_self",
+                "deprecated": "deprecated_self",
+                "replaced-by": " replaced-by_self",
+                "github-issue": "github-issue_self",
+                "notes": "notes_self"
+            },
+            "attributes": {
+                "attribute_1": {
+                    "name": "attribute_1",
+                    "description": "description_1",
+                    "vals": {
+                        "name": "name_1",
+                        "attribute": "attribute_1",
+                        "description": "description_1",
+                        "concepts": "concepts_1",
+                        "structures": "structures_1",
+                        "min": "min_1",
+                        "max": "max_1",
+                        "deprecated": "deprecated_1",
+                        "replaced-by": " replaced-by_1",
+                        "github-issue": "github-issue",
+                        "notes": "notes"
+                    }
+                }
+            }
+        }
+    }
+}

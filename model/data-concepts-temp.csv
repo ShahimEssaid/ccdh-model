@@ -1,4 +1,0 @@
-name,description,examples,structures,values,deprecated,replaced-by,notes,github-issue,mappings,some-field,,,
-string,A string value,liver,,,,,,,,ONE,TWO,THREE,FOUR
-number,An integer or floating number,9.9,,,,,,,,,,,
-boolean,A boolean value,"yes, no, true, false, 1, 0",de.string,"TRUE, FALSE",,,,http://www.google.com/pages,,,,,

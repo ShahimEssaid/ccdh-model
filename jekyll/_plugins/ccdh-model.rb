@@ -307,7 +307,7 @@ module CCDHModel
   def self.readModelFromCsv(model_dir, name)
     model = Model.new(name)
 
-    model.concepts_csv = CSV.read(File.join(model_dir, "data-concepts.csv"), headers: true)
+    model.concepts_csv = CSV.read(File.join(model_dir, "concepts.csv"), headers: true)
     model.concepts_csv.headers.each do |h|
       unless h.nil?
         model.concepts_headers << h
@@ -325,7 +325,7 @@ module CCDHModel
       model.getConcept(hash["name"], true).vals = hash
     }
 
-    model.groups_csv = CSV.read(File.join(model_dir, "data-groups.csv"), headers: true)
+    model.groups_csv = CSV.read(File.join(model_dir, "groups.csv"), headers: true)
     model.groups_csv.headers.each do |h|
       unless h.nil?
         model.groups_headers << h
@@ -343,7 +343,7 @@ module CCDHModel
       model.getGroup(hash["name"], true).vals = hash
     }
 
-    model.structures_csv = CSV.read(File.join(model_dir, "data-structures.csv"), headers: true)
+    model.structures_csv = CSV.read(File.join(model_dir, "structures.csv"), headers: true)
     model.structures_csv.headers.each do |h|
       unless h.nil?
         model.structures_headers << h

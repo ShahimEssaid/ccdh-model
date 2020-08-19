@@ -58,7 +58,7 @@ module CCDHModel
   end
 
   class Model
-    attr_accessor :name, :concepts, :structures, :warnings, :errors,
+    attr_accessor :name, :concepts, :groups, :structures, :warnings, :errors,
       :concepts_csv, :concepts_headers,
       :groups_csv, :groups_headers,
       :structures_csv, :structures_headers
@@ -66,6 +66,7 @@ module CCDHModel
     def initialize(name)
       @name = name
       @concepts = {}
+      @groups = {}
       @structures = {}
       @warnings = []
       @errors = []
@@ -74,12 +75,18 @@ module CCDHModel
       @structures_headers = []
     end
 
-    def getConcept(vals, create)
-      name = vals["name"]
+    def getConcept(name, create)
       if @concepts[name].nil? && create
-        @concepts[name] = MConcept.new(vals)
+        @concepts[name] = MConcept.new
       end
       @concepts[name]
+    end
+
+    def getGroup(name, create)
+      if @groups[name].nil? && create
+        @groups[name] = MGroup.new
+      end
+      @groups[name]
     end
 
     def getStructure(name, create)
@@ -109,9 +116,7 @@ module CCDHModel
   end
 
   class MConcept
-    def initialize(vals)
-      @vals = vals
-    end
+    attr_accessor :vals
 
     def name
       @vals["name"]
@@ -119,10 +124,6 @@ module CCDHModel
 
     def description
       @vals["description"]
-    end
-
-    def vals
-      @vals
     end
 
     def data
@@ -135,20 +136,14 @@ module CCDHModel
   end
 
   class MGroup
-    def initialize(vals)
-      @vals = valse
-    end
+    attr_accessor :vals
 
     def name
-      @name
+      @vals["name"]
     end
 
     def description
-      @self["description"]
-    end
-
-    def vals
-      @vals
+      @vals["description"]
     end
 
     def data
@@ -164,6 +159,7 @@ module CCDHModel
 
   class MStructure
     attr_accessor :attributes, :vals
+
     def initialize
       @attributes = {}
     end
@@ -176,16 +172,11 @@ module CCDHModel
       @vals["description"]
     end
 
-    def getAttribute(vals, create)
-      name = vals["name"]
+    def getAttribute(name, create)
       if @attributes[name].nil? && create
-        @attributes[name] = MSAttribute.new(vals, self)
+        @attributes[name] = MSAttribute.new(self)
       end
       @attributes[name]
-    end
-
-    def vals
-      @vals
     end
 
     def data
@@ -203,8 +194,9 @@ module CCDHModel
   end
 
   class MSAttribute
-    def initialize(vals, structure)
-      @vals = vals
+    attr_accessor :vals
+
+    def initialize(structure)
       @structure = structure
     end
 
@@ -214,10 +206,6 @@ module CCDHModel
 
     def description
       @vals["description"]
-    end
-
-    def vals
-      @vals
     end
 
     def data
@@ -314,7 +302,17 @@ module CCDHModel
       end
     end
     model.concepts_csv.each { |row|
-      model.getConcept(row, true)
+      model.getConcept(row["name"], true).vals = row
+    }
+
+    model.groups_csv = CSV.read(File.join(model_dir, "data-groups.csv"), headers: true)
+    model.groups_csv.headers.each do |h|
+      unless h.nil?
+        model.groups_headers << h
+      end
+    end
+    model.groups_csv.each { |row|
+      model.getGroup(row["name"], true).vals = row
     }
 
     model.structures_csv = CSV.read(File.join(model_dir, "data-structures.csv"), headers: true)
@@ -326,9 +324,9 @@ module CCDHModel
     model.structures_csv.each { |row|
       structure = model.getStructure(row["name"], true)
       if row["attribute"] == "self"
-       structure.vals = row
+        structure.vals = row
       else
-        structure.getAttribute(row, true)
+        structure.getAttribute(row["attribute"], true).vals = row
       end
     }
     model
@@ -336,11 +334,19 @@ module CCDHModel
 
   def self.writeModelToCSV(model, dir)
     FileUtils.mkdir_p(dir)
-    
+
     CSV.open(File.join(dir, "concepts.csv"), mode = "wb", { force_quotes: true }) do |csv|
       csv << model.concepts_headers
       model.concepts.keys.sort.each do |k|
         csv << model.concepts[k].vals
+      end
+    end
+
+
+    CSV.open(File.join(dir, "groups.csv"), mode = "wb", { force_quotes: true }) do |csv|
+      csv << model.groups_headers
+      model.groups.keys.sort.each do |k|
+        csv << model.groups[k].vals
       end
     end
 
@@ -353,12 +359,6 @@ module CCDHModel
           csv << s.attributes[ak].vals
         end
       end
-      # model.structures.each do |name, s|
-      #   csv << s.vals
-      #   s.attributes.each do |name, a|
-      #     csv << a.vals
-      #   end
-      # end
     end
   end
 

@@ -10,13 +10,6 @@ module Jekyll
 end
 
 module CCDHModel
-  @@generator
-  @@models = {}
-
-  def models
-    @@models
-  end
-
   class JGenerator < Jekyll::Generator
     def initialize(config)
       source = config["source"]
@@ -45,13 +38,13 @@ module CCDHModel
     def generate(site)
       #CCDHModel.generator = self
       @site = site
-      model = CCDHModel.readModelFromCsv(File.expand_path(File.join(site.source, "../model")))
+      model = CCDHModel.readModelFromCsv(File.expand_path(File.join(site.source, "../model")), "build")
 
       CCDHModel.resolveAndValidate(model)
 
-      vals = model.valsClone
+      data = model.data
 
-      PP.pp(model.valsClone, $>, 220)
+      PP.pp(model.data, $>, 220)
       #puts model.asHash.to_yaml
 
       publisher = ModelPublisher.new(model, site, "_template", "model")
@@ -62,55 +55,45 @@ module CCDHModel
   end
 
   class Model
-    attr_accessor :concepts, :structures,
+    attr_accessor :name, :concepts, :structures, :warnings, :errors,
       :csv_concepts, :csv_groups, :csv_structures
 
-    def initialize
+    def initialize(name)
+      @name = name
       @concepts = {}
       @structures = {}
       @warnings = []
       @errors = []
     end
 
-    def getConcept(name, vals, create)
+    def getConcept(vals, create)
+      name = vals["name"]
       if @concepts[name].nil? && create
-        @concepts[name] = MConcept.new(name, vals)
+        @concepts[name] = MConcept.new(vals)
       end
       @concepts[name]
     end
 
-    def getStructure(name, vals, create)
+    def getStructure(vals, create)
+      name = vals["name"]
       if @structures[name].nil? && create
-        @structures[name] = MStructure.new(name, vals)
+        @structures[name] = MStructure.new(vals)
       end
       @structures[name]
     end
 
-    def asHash
-      hash = { "concepts" => {}, "structures" => {} }
-
+    def data
+      data = { "name" => self.name,
+               "concepts" => {},
+               "structures" => {} }
       @concepts.each do |name, concept|
-        hash["concepts"][name] = concept.asHash
+        data["concepts"][name] = concept.data
       end
 
       @structures.each do |name, structure|
-        hash["structures"][name] = structure.asHash
+        data["structures"][name] = structure.data
       end
-      hash
-    end
-
-    def valsClone
-      hash = {}
-      hash["concepts"] = {}
-      @concepts.each do |name, concept|
-        hash["concepts"][name] = concept.valsClone
-      end
-
-      hash["structures"] = {}
-      @structures.each do |name, structure|
-        hash["structures"][name] = structure.valsClone
-      end
-      hash
+      data
     end
 
     def warn(message, object)
@@ -119,13 +102,7 @@ module CCDHModel
   end
 
   class MConcept
-    attr_accessor :vals
-    #:examples,
-    #:structures_array, :values, :deprecated, :replaced_by_array,
-    #:notes, :github_issue, :mappings
-
-    def initialize(name, vals)
-      @name = name
+    def initialize(vals)
       @vals = vals
     end
 
@@ -137,87 +114,106 @@ module CCDHModel
       @vals["description"]
     end
 
-    def asHash
-      { "name" => self.name, "description" => self.description }
-    end
-
-    def valsClone
-      @vals.clone
+    def vals
+      @vals
     end
 
     def data
       { "name" => self.name,
         "description" => self.description,
-        "vals" => self.valsClone }
+        "vals" => self.vals.clone }
     end
   end
 
   class MGroup
-    def initialize(name, vals)
-      @name = name
+    def initialize(vals)
       @vals = valse
+    end
+
+    def name
+      @name
+    end
+
+    def description
+      @self["description"]
+    end
+
+    def vals
+      @vals
+    end
+
+    def data
+      {
+        "name" => self.name,
+        "description" => self.description,
+        "vals" => self.vals.clone,
+      }
     end
   end
 
   class MStructure
-    attr_accessor :vals, :name,
-                  #:description,
-                  #:examples,
-                  #:deprecated, :replaced_by_array, :github_issue, :mappings,
-                  :attributes
-
-    def initialize(name, vals)
-      @name = name
-      @attributes = {}
+    def initialize(vals)
       @vals = vals
+      @attributes = {}
     end
 
-    def getAttribute(name, vals, create)
+    def name
+      @vals["name"]
+    end
+
+    def description
+      @vals["description"]
+    end
+
+    def getAttribute(vals, create)
+      name = vals["name"]
       if @attributes[name].nil? && create
-        @attributes[name] = MSAttribute.new(name, vals, self)
+        @attributes[name] = MSAttribute.new(vals, self)
       end
       @attributes[name]
     end
 
-    def asHash
-      hash = { "name" => @name,
-               "description" => @description,
-               "attributes" => {} }
-
-      @attributes.each do |name, attribute|
-        hash["attributes"][name] = attribute.asHash
-      end
-      hash
+    def vals
+      @vals
     end
 
-    def valsClone
-      hash = @vals.clone
-      hash["attributes"] = {}
+    def data
+      data = { "name" => self.name,
+               "description" => self.description,
+               "vals" => self.vals.clone,
+               "attributes" => {} }
       @attributes.each do |name, attribute|
-        hash["attributes"][name] = attribute.valsClone
+        data["attributes"][name] = attribute.data
       end
-      hash
+      data
     end
   end
 
   class MSAttribute
-    attr_accessor :vals, :name, :description
-    #:concepts, :structures, :examples,
-    #:deprecated, :replaced_by_array, :github_issue, :mappings,
-    #:structure
-
-    def initialize(name, vals, structure)
-      @name = name
-      @structure = structure
+    def initialize(vals, structure)
       @vals = vals
+      @structure = structure
     end
 
-    def asHash
-      { "name" => @name, "description" => @description }
+    def name
+      @vals["attribute"]
     end
 
-    def valsClone
-      @vals.clone
+    def description
+      @vals["description"]
+    end
+
+    def vals
+      @vals
+    end
+
+    def data
+      data = {
+        "name" => self.name,
+        "description" => self.description,
+        "vals" => self.vals.clone,
+      }
+      data
     end
   end
 
@@ -251,7 +247,7 @@ module CCDHModel
         if File.exist? (path)
           page = getPage(@site.source, relativeDir, name)
         else
-          page = JekyllPage.new(@site, @page_dir + "/concept", name + ".html", concept.asHash)
+          page = JekyllPage.new(@site, @page_dir + "/concept", name + ".html", concept.data)
           @site.pages << page
         end
         page.data["mc"] = concept.data
@@ -293,23 +289,23 @@ module CCDHModel
   # ==============================================
   # ==============================================
 
-  def self.readModelFromCsv(model_dir)
-    model = Model.new
+  def self.readModelFromCsv(model_dir, name)
+    model = Model.new(name)
 
     model.csv_concepts = CSV.read(File.join(model_dir, "data-concepts.csv"), headers: true)
 
     model.csv_concepts.each { |row|
-      concept = model.getConcept(row["name"], row.to_hash, true)
+      concept = model.getConcept(row.to_hash, true)
     }
 
     model.csv_structures = CSV.read(File.join(model_dir, "data-structures.csv"), headers: true)
     model.csv_structures.each { |row|
-      structure = model.getStructure(row["name"], row.to_hash, true)
+      structure = model.getStructure(row.to_hash, true)
 
       if row["attribute"] == "self"
         next
       else
-        attribute = structure.getAttribute(row["attribute"], row.to_hash, true)
+        structure.getAttribute(row.to_hash, true)
       end
     }
     model
@@ -320,9 +316,5 @@ module CCDHModel
 
   def self.readRow(row, name, default = "")
     value = row[name] || default
-  end
-
-  def self.models
-    @@models
   end
 end

@@ -427,6 +427,7 @@ module CCDHModel
               # generated, warning
               enum.vals["name"] = s
               enum.vals["summary"] = "TODO:generated"
+              enum.vals["generated"] = "Y"
               concept.representation[enum.name] = enum
               concept.warn("Enum #{s} was generated", "TODO")
             else
@@ -452,6 +453,7 @@ module CCDHModel
 
               structure.vals["name"] = parts[0]
               structure.vals["summary"] = "TODO:generated"
+              structure.vals["generated"] = "Y"
               structure.vals["attribute"] = "self"
 
               concept.warn("Structure #{s} was generated", concept.vals)
@@ -477,6 +479,8 @@ module CCDHModel
                   # generated
                   attribute.vals["name"] = parts[1]
                   attribute.vals["summary"] = "TODO:generated"
+                  attribute.vals["generated"] = "Y"
+
                   concept.representation[attribute.fqn] = attribute
                   concept.warn("Attribute #{s} was generated", "TODO")
                 else

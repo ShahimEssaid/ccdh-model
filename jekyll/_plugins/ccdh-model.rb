@@ -68,21 +68,21 @@ module CCDHModel
 
     def getConcept(name, create = false)
       if @concepts[name].nil? && create
-        @concepts[name] = MConcept.new(name)
+        @concepts[name] = MConcept.new(name, self)
       end
       @concepts[name]
     end
 
     def getGroup(name, create = false)
       if @groups[name].nil? && create
-        @groups[name] = MGroup.new(name)
+        @groups[name] = MGroup.new(name, self)
       end
       @groups[name]
     end
 
     def getStructure(name, create = false)
       if @structures[name].nil? && create
-        @structures[name] = MStructure.new(name)
+        @structures[name] = MStructure.new(name, self)
       end
       @structures[name]
     end
@@ -110,6 +110,7 @@ module CCDHModel
       @representations = {}
       @warnings = []
       @errors = []
+      @vals = { nil => {} }
     end
 
     def name
@@ -163,10 +164,12 @@ module CCDHModel
   class MGroup
     attr_accessor :vals, :warnings, :errors
 
-    def initialize(name)
+    def initialize(name, model)
+      @model = model
       @name = name
       @warnings = []
       @errors = []
+      @vals = { nil => {} }
     end
 
     def name
@@ -199,12 +202,14 @@ module CCDHModel
   class MStructure
     attr_accessor :attributes, :vals, :concepts, :warnings, :errors
 
-    def initialize(name)
+    def initialize(name, model)
+      @model = model
       @name = name
       @attributes = {}
       @concepts = {}
       @warnings = []
       @errors = []
+      @vals = { nil => {} }
     end
 
     def name
@@ -217,7 +222,7 @@ module CCDHModel
 
     def getAttribute(name, create)
       if @attributes[name].nil? && create
-        @attributes[name] = MSAttribute.new(name, self)
+        @attributes[name] = MSAttribute.new(name, self, @model)
       end
       @attributes[name]
     end
@@ -247,16 +252,22 @@ module CCDHModel
   class MSAttribute
     attr_accessor :vals, :concepts, :warnings, :errors
 
-    def initialize(name, structure)
+    def initialize(name, structure, model)
+      @model = model
       @name = name
       @structure = structure
       @concepts = {}
       @warnings = []
       @errors = []
+      @vals = { nil => {} }
     end
 
     def name
       @name
+    end
+
+    def fqn
+      @structure.name + "." + @name
     end
 
     def description
@@ -414,42 +425,66 @@ module CCDHModel
             enum = model.getConcept(s, (not model.resolve_strict))
             if enum
               # generated, warning
+              enum.vals["name"] = s
               enum.vals["description"] = "TODO:generated"
               concept.representations[enum.name] = enum
               concept.warn("Enum #{s} was generated", "TODO")
             else
               # not generated, error
-              concept.error("Enum #{s} referenced but not found", "TODO")
+              concept.error("Enum #{s} referenced but NOT generated", "TODO")
             end
           end
         else
+          # now we need a structure anyway
           # try to split on "."
           parts = s.split(".").collect(&:strip)
           if (parts.length < 1) || (parts.length > 2)
             raise "Error parsing concept representations for concept #{name} and representation #{s}"
           end
-          # now we need a structure anyway
-
-            # this is a structure
-            structure = model.getStructure(s)
+          structure = model.getStructure(parts[0])
+          if structure
+            #wait until we figure out if it's a structure or attribute reference
+          else
+            # not defined yet
+            structure = model.getStructure(parts[0], (not model.resolve_strict))
             if structure
-              # already defined, just link
+              # generated, warning
+
+              structure.vals["name"] = parts[0]
+              structure.vals["description"] = "TODO:generated"
+              structure.vals["attribute"] = "self"
+
+              concept.warn("Structure #{s} was generated", concept.vals)
+            else
+              # not generated, error
+              concept.error("Structure #{s} referenced but NOT generate", "TODO")
+            end
+          end
+
+          if structure
+            if parts.length == 1
+              # it's a structure reference and we can link it
               concept.representations[structure.name] = structure
             else
-              # not defined yet
-              structure = model.getStructure(s, (not model.resolve_strict))
-              if structure
-                # generated, warning
-                structure.vals["description"] = "TODO:generated"
-                structure.vals["attribute"] = "self"
-                concept.representations[structure.name] = structure
-                concept.warn("Structure #{s} was generated", concept.vals)
+              # we have an attribute here and we need to find or generate it
+              attribute = structure.getAttribute(parts[1])
+              if attribute
+                concept.representations[attribute.name] = attribute
               else
-                # not generated, error
-                concept.error("Structure #{s} referenced but not found", "TODO")
+                # see if we can generate it
+                attribute = structure.getAttribute(parts[1], (not model.resolve_strict))
+                if attribute
+                  # generated
+                  attribute.vals["name"] = parts[1]
+                  attribute.vals["description"] = "TODO:generated"
+                  concept.representations[attribute.fqn] = attribute
+                  concept.warn("Attribute #{s} was generated", "TODO")
+                else
+                  # not generated, error
+                  concept.error("Attribute #{s} referenced but NOT generate", "TODO")
+                end
               end
             end
-
           end
         end
       end

@@ -1,4 +1,4 @@
-"name","description","structures"
+"name","description","representations"
 "Specimen","A specimen","SpecimenFull"
 "boolean","A boolean value",""
 "number","An integer or floating number",""

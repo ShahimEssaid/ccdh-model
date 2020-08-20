@@ -1,3 +1,4 @@
-"name","attribute","description"
-"name_1","self","description_self"
-"name_1","attribute_1","description_1"
+"name","attribute","summary","description"
+"SpecimenFull","self","summary text","TODO:generated"
+"name_1","self","summary text","description_self"
+"name_1","attribute_1","summary text","description_1"

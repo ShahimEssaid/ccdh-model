@@ -412,7 +412,7 @@ module CCDHModel
 
   def self.resolveAndValidate(model)
 
-    # link concept's structures
+    # link concept
     model.concepts.each do |name, concept|
       concept.val_representations.each do |s|
         if /[[:lower:]]/.match(s[0])
@@ -426,7 +426,7 @@ module CCDHModel
             if enum
               # generated, warning
               enum.vals["name"] = s
-              enum.vals["description"] = "TODO:generated"
+              enum.vals["summary"] = "TODO:generated"
               concept.representations[enum.name] = enum
               concept.warn("Enum #{s} was generated", "TODO")
             else
@@ -451,7 +451,7 @@ module CCDHModel
               # generated, warning
 
               structure.vals["name"] = parts[0]
-              structure.vals["description"] = "TODO:generated"
+              structure.vals["summary"] = "TODO:generated"
               structure.vals["attribute"] = "self"
 
               concept.warn("Structure #{s} was generated", concept.vals)
@@ -476,7 +476,7 @@ module CCDHModel
                 if attribute
                   # generated
                   attribute.vals["name"] = parts[1]
-                  attribute.vals["description"] = "TODO:generated"
+                  attribute.vals["summary"] = "TODO:generated"
                   concept.representations[attribute.fqn] = attribute
                   concept.warn("Attribute #{s} was generated", "TODO")
                 else
@@ -489,6 +489,9 @@ module CCDHModel
         end
       end
     end
+
+    # link structures
+
   end
 
   def self.readModelFromCsv(model_dir, name)

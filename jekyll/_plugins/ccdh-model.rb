@@ -102,12 +102,12 @@ module CCDHModel
   end
 
   class MConcept
-    attr_accessor :vals, :representations, :warnings, :errors
+    attr_accessor :vals, :representation, :warnings, :errors
 
     def initialize(name, model)
       @model = model
       @name = name
-      @representations = {}
+      @representation = {}
       @warnings = []
       @errors = []
       @vals = { nil => {} }
@@ -121,14 +121,14 @@ module CCDHModel
       @vals["description"]
     end
 
-    def val_representations
-      @vals["representations"].split(",").collect(&:strip)
+    def val_representation
+      @vals["representation"].split(",").collect(&:strip)
     end
 
     def representation_of
       of = []
       @model.concepts.each do |c|
-        c.representations.values.each do |r|
+        c.representation.values.each do |r|
           if r.equals? self
             of << r
           end
@@ -414,12 +414,12 @@ module CCDHModel
 
     # link concept
     model.concepts.each do |name, concept|
-      concept.val_representations.each do |s|
+      concept.val_representation.each do |s|
         if /[[:lower:]]/.match(s[0])
           # it's an enum/valueset
           enum = model.getConcept(s)
           if enum
-            concept.representations[enum.name] = enum
+            concept.representation[enum.name] = enum
           else
             # not defined yet
             enum = model.getConcept(s, (not model.resolve_strict))
@@ -427,7 +427,7 @@ module CCDHModel
               # generated, warning
               enum.vals["name"] = s
               enum.vals["summary"] = "TODO:generated"
-              concept.representations[enum.name] = enum
+              concept.representation[enum.name] = enum
               concept.warn("Enum #{s} was generated", "TODO")
             else
               # not generated, error
@@ -464,12 +464,12 @@ module CCDHModel
           if structure
             if parts.length == 1
               # it's a structure reference and we can link it
-              concept.representations[structure.name] = structure
+              concept.representation[structure.name] = structure
             else
               # we have an attribute here and we need to find or generate it
               attribute = structure.getAttribute(parts[1])
               if attribute
-                concept.representations[attribute.name] = attribute
+                concept.representation[attribute.name] = attribute
               else
                 # see if we can generate it
                 attribute = structure.getAttribute(parts[1], (not model.resolve_strict))
@@ -477,7 +477,7 @@ module CCDHModel
                   # generated
                   attribute.vals["name"] = parts[1]
                   attribute.vals["summary"] = "TODO:generated"
-                  concept.representations[attribute.fqn] = attribute
+                  concept.representation[attribute.fqn] = attribute
                   concept.warn("Attribute #{s} was generated", "TODO")
                 else
                   # not generated, error

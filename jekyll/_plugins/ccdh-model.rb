@@ -36,6 +36,7 @@ module CCDHModel
       #CCDHModel.generator = self
       @site = site
       model = CCDHModel.readModelFromCsv(File.expand_path(File.join(site.source, "../model")), "build")
+      model.resolve_strict = site.config["ccdh"]["resolve"]["strict"]
       CCDHModel.resolveAndValidate(model)
       data = model.data
       publisher = ModelPublisher.new(model, site, "_template", "model")
@@ -47,18 +48,18 @@ module CCDHModel
   end
 
   class Model
-    attr_accessor :name, :concepts, :groups, :structures, :warnings, :errors,
+    attr_accessor :name, :concepts, :groups, :structures,
       :concepts_csv, :concepts_headers,
       :groups_csv, :groups_headers,
-      :structures_csv, :structures_headers, :meta_vals
+      :structures_csv, :structures_headers, :meta_vals,
+      :resolve_strict, :validate_strict
 
     def initialize(name)
       @name = name
       @concepts = {}
       @groups = {}
       @structures = {}
-      @warnings = []
-      @errors = []
+
       @concepts_headers = []
       @groups_headers = []
       @structures_headers = []
@@ -67,21 +68,21 @@ module CCDHModel
 
     def getConcept(name, create = false)
       if @concepts[name].nil? && create
-        @concepts[name] = MConcept.new
+        @concepts[name] = MConcept.new(name)
       end
       @concepts[name]
     end
 
-    def getGroup(name, create)
+    def getGroup(name, create = false)
       if @groups[name].nil? && create
-        @groups[name] = MGroup.new
+        @groups[name] = MGroup.new(name)
       end
       @groups[name]
     end
 
-    def getStructure(name, create)
+    def getStructure(name, create = false)
       if @structures[name].nil? && create
-        @structures[name] = MStructure.new
+        @structures[name] = MStructure.new(name)
       end
       @structures[name]
     end
@@ -98,21 +99,48 @@ module CCDHModel
       end
       data
     end
-
-    def warn(message, object)
-      @warnings << { "message" => message, "object" => object }
-    end
   end
 
   class MConcept
-    attr_accessor :vals
+    attr_accessor :vals, :representations, :warnings, :errors
+
+    def initialize(name, model)
+      @model = model
+      @name = name
+      @representations = {}
+      @warnings = []
+      @errors = []
+    end
 
     def name
-      @vals["name"]
+      @name
     end
 
     def description
       @vals["description"]
+    end
+
+    def val_representations
+      @vals["representations"].split(",").collect(&:strip)
+    end
+
+    def representation_of
+      of = []
+      @model.concepts.each do |c|
+        c.representations.values.each do |r|
+          if r.equals? self
+            of << r
+          end
+        end
+      end
+    end
+
+    def isPrimitive
+      if /[[:upper:]]/.match(self.name[0])
+        puts true
+      else
+        puts false
+      end
     end
 
     def data
@@ -122,13 +150,27 @@ module CCDHModel
         "description" => self.description,
         "vals" => cleanVals }
     end
+
+    def warn(message, object)
+      @warnings << { "message" => message, "object" => object }
+    end
+
+    def error(message, object)
+      @errors << { "message" => message, "object" => object }
+    end
   end
 
   class MGroup
-    attr_accessor :vals
+    attr_accessor :vals, :warnings, :errors
+
+    def initialize(name)
+      @name = name
+      @warnings = []
+      @errors = []
+    end
 
     def name
-      @vals["name"]
+      @name
     end
 
     def description
@@ -144,17 +186,29 @@ module CCDHModel
         "vals" => cleanVals,
       }
     end
+
+    def warn(message, object)
+      @warnings << { "message" => message, "object" => object }
+    end
+
+    def error(message, object)
+      @errors << { "message" => message, "object" => object }
+    end
   end
 
   class MStructure
-    attr_accessor :attributes, :vals
+    attr_accessor :attributes, :vals, :concepts, :warnings, :errors
 
-    def initialize
+    def initialize(name)
+      @name = name
       @attributes = {}
+      @concepts = {}
+      @warnings = []
+      @errors = []
     end
 
     def name
-      @vals["name"]
+      @name
     end
 
     def description
@@ -163,7 +217,7 @@ module CCDHModel
 
     def getAttribute(name, create)
       if @attributes[name].nil? && create
-        @attributes[name] = MSAttribute.new(self)
+        @attributes[name] = MSAttribute.new(name, self)
       end
       @attributes[name]
     end
@@ -180,17 +234,29 @@ module CCDHModel
       end
       data
     end
+
+    def warn(message, object)
+      @warnings << { "message" => message, "object" => object }
+    end
+
+    def error(message, object)
+      @errors << { "message" => message, "object" => object }
+    end
   end
 
   class MSAttribute
-    attr_accessor :vals
+    attr_accessor :vals, :concepts, :warnings, :errors
 
-    def initialize(structure)
+    def initialize(name, structure)
+      @name = name
       @structure = structure
+      @concepts = {}
+      @warnings = []
+      @errors = []
     end
 
     def name
-      @vals["attribute"]
+      @name
     end
 
     def description
@@ -206,6 +272,35 @@ module CCDHModel
         "vals" => cleanVals,
       }
       data
+    end
+
+    def warn(message, object)
+      @warnings << { "message" => message, "object" => object }
+    end
+
+    def error(message, object)
+      @errors << { "message" => message, "object" => object }
+    end
+  end
+
+  class AttributeToConcept
+    attr_accessor :structures
+
+    def initialize(concept)
+      @concept = concept
+      @structures = {}
+    end
+
+    def concept
+      @concept
+    end
+
+    def addStructure(structure)
+      @structures[structure.name] = structure
+    end
+
+    def getStructure(name)
+      @structures[name]
     end
   end
 
@@ -303,6 +398,63 @@ module CCDHModel
   # ==============================================
   # ==============================================
   # ==============================================
+
+  def self.resolveAndValidate(model)
+
+    # link concept's structures
+    model.concepts.each do |name, concept|
+      concept.val_representations.each do |s|
+        if /[[:lower:]]/.match(s[0])
+          # it's an enum/valueset
+          enum = model.getConcept(s)
+          if enum
+            concept.representations[enum.name] = enum
+          else
+            # not defined yet
+            enum = model.getConcept(s, (not model.resolve_strict))
+            if enum
+              # generated, warning
+              enum.vals["description"] = "TODO:generated"
+              concept.representations[enum.name] = enum
+              concept.warn("Enum #{s} was generated", "TODO")
+            else
+              # not generated, error
+              concept.error("Enum #{s} referenced but not found", "TODO")
+            end
+          end
+        else
+          # try to split on "."
+          parts = s.split(".").collect(&:strip)
+          if (parts.length < 1) || (parts.length > 2)
+            raise "Error parsing concept representations for concept #{name} and representation #{s}"
+          end
+          # now we need a structure anyway
+
+            # this is a structure
+            structure = model.getStructure(s)
+            if structure
+              # already defined, just link
+              concept.representations[structure.name] = structure
+            else
+              # not defined yet
+              structure = model.getStructure(s, (not model.resolve_strict))
+              if structure
+                # generated, warning
+                structure.vals["description"] = "TODO:generated"
+                structure.vals["attribute"] = "self"
+                concept.representations[structure.name] = structure
+                concept.warn("Structure #{s} was generated", concept.vals)
+              else
+                # not generated, error
+                concept.error("Structure #{s} referenced but not found", "TODO")
+              end
+            end
+
+          end
+        end
+      end
+    end
+  end
 
   def self.readModelFromCsv(model_dir, name)
     model = Model.new(name)
@@ -427,9 +579,6 @@ module CCDHModel
         end
       end
     end
-  end
-
-  def self.resolveAndValidate(model)
   end
 
   def self.readRow(row, name, default = "")

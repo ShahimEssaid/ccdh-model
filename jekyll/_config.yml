@@ -64,3 +64,9 @@ collection:
 #   exclude:
 #     - '**/*.scss'
 #     - '**/*.js'
+
+ccdh:
+  resolve:
+    strict: false
+  validate:
+    strict: false

@@ -10,6 +10,14 @@ module Jekyll
 end
 
 module CCDHModel
+
+  H_NAME = "name"
+  H_DESC = "description"
+  H_MESG = "message"
+  H_WARNINGS = "warnings"
+  H_ERRORS = "errors"
+  H_OBJECT = "object"
+
   class JGenerator < Jekyll::Generator
     def initialize(config)
       source = config["source"]
@@ -47,18 +55,53 @@ module CCDHModel
     end
   end
 
-  class Model
+  class ModelElement
+    attr_accessor :model :vals
+    def initialize(model)
+      @model = mode
+      @vals = { nil => {}, H_WARNINGS => [], H_ERRORS =>[] }
+    end
+
+
+    def name
+      @vals(H_NAME)
+    end
+
+    def description
+      @vals[H_DESC]
+    end
+
+    def isPrimitive
+      if /[[:upper:]]/.match(self.name[0])
+        puts true
+      else
+        puts false
+      end
+    end
+
+
+    def warn(message, object)
+      @vals[H_WARNINGS]<< { H_MESG => message, H_OBJECT => object }
+    end
+
+    def error(message, object)
+      @vals[H_ERRORS] << { H_MESG => message, H_OBJECT => object }
+    end
+  end
+
+  class Model < ModelElement
     attr_accessor :name, :concepts, :groups, :structures,
       :concepts_csv, :concepts_headers,
       :groups_csv, :groups_headers,
       :structures_csv, :structures_headers, :meta_vals,
-      :resolve_strict, :validate_strict
+      :resolve_strict, :validate_strict, :packages
 
     def initialize(name)
       @name = name
       @concepts = {}
       @groups = {}
       @structures = {}
+      @packages
 
       @concepts_headers = []
       @groups_headers = []
@@ -78,6 +121,20 @@ module CCDHModel
         @groups[name] = MGroup.new(name, self)
       end
       @groups[name]
+    end
+
+    def getPackage(name, create = false)
+      return nil if (name.nil? || name.empty?)
+      package = @packages[name]
+      if package.nil? && create
+        parts = name.split(":").collect(&:strip)
+        pkgname = parts.pop
+        parent = getPackage(parts.join(":"), create)
+        package = MPkg.new(pkgname, parent, self)
+        @packages[name] = package
+        parent.children[pkgname] = package unless parent.nil?
+      end
+      package
     end
 
     def getStructure(name, create = false)
@@ -101,123 +158,82 @@ module CCDHModel
     end
   end
 
-  class MConcept
-    attr_accessor :vals, :representation, :warnings, :errors
+  class MPkg < ModelElement
+    attr_accessor :parent, :children, :entities
+    def initialize(name, parent, model)
+      super(mode)
 
-    def initialize(name, model)
-      @model = model
-      @name = name
-      @representation = {}
-      @warnings = []
-      @errors = []
-      @vals = { nil => {} }
-    end
+      @parent = parent
+      @children = {}
+      @entities = {}
 
-    def name
-      @name
-    end
-
-    def description
-      @vals["description"]
-    end
-
-    def val_representation
-      @vals["representation"].split(",").collect(&:strip)
-    end
-
-    def representation_of
-      of = []
-      @model.concepts.each do |c|
-        c.representation.values.each do |r|
-          if r.equals? self
-            of << r
-          end
-        end
-      end
-    end
-
-    def isPrimitive
-      if /[[:upper:]]/.match(self.name[0])
-        puts true
-      else
-        puts false
-      end
-    end
-
-    def data
-      cleanVals = self.vals.clone
-      cleanVals.delete(nil)
-      { "name" => self.name,
-        "description" => self.description,
-        "vals" => cleanVals }
-    end
-
-    def warn(message, object)
-      @warnings << { "message" => message, "object" => object }
-    end
-
-    def error(message, object)
-      @errors << { "message" => message, "object" => object }
     end
   end
 
-  class MGroup
-    attr_accessor :vals, :warnings, :errors
+  class MConcept < ModelElement
+    
 
-    def initialize(name, model)
-      @model = model
-      @name = name
-      @warnings = []
-      @errors = []
-      @vals = { nil => {} }
+    def initialize( model)
+      super(model)
+
+      
     end
 
-    def name
-      @name
-    end
 
-    def description
-      @vals["description"]
-    end
+    # def val_representation
+    #   @vals["representation"].split(",").collect(&:strip)
+    # end
 
-    def data
-      cleanVals = self.vals.clone
-      cleanVals.delete(nil)
-      {
-        "name" => self.name,
-        "description" => self.description,
-        "vals" => cleanVals,
-      }
-    end
+    # def representation_of
+    #   of = []
+    #   @model.concepts.each do |c|
+    #     c.representation.values.each do |r|
+    #       if r.equals? self
+    #         of << r
+    #       end
+    #     end
+    #   end
+    # end
 
-    def warn(message, object)
-      @warnings << { "message" => message, "object" => object }
-    end
 
-    def error(message, object)
-      @errors << { "message" => message, "object" => object }
-    end
+
+    # def data
+    #   cleanVals = self.vals.clone
+    #   cleanVals.delete(nil)
+    #   { "name" => self.name,
+    #     "description" => self.description,
+    #     "vals" => cleanVals }
+    # end
+
   end
 
-  class MStructure
-    attr_accessor :attributes, :vals, :concepts, :warnings, :errors
+  class MGroup < ModelElement
+    attr_accessor :vals
 
-    def initialize(name, model)
-      @model = model
-      @name = name
+    def initialize(model)
+      super(model)
+    end
+
+    # def data
+    #   cleanVals = self.vals.clone
+    #   cleanVals.delete(nil)
+    #   {
+    #     "name" => self.name,
+    #     "description" => self.description,
+    #     "vals" => cleanVals,
+    #   }
+    # end
+
+  end
+
+  class MStructure < ModelElement
+    attr_accessor :attributes, :concepts
+
+    def initialize( model)
+      super(model)
       @attributes = {}
       @concepts = {}
-      @warnings = []
-      @errors = []
-      @vals = { nil => {} }
-    end
 
-    def name
-      @name
-    end
-
-    def description
-      @vals["description"]
     end
 
     def getAttribute(name, create)
@@ -227,74 +243,46 @@ module CCDHModel
       @attributes[name]
     end
 
-    def data
-      cleanVals = self.vals.clone
-      cleanVals.delete(nil)
-      data = { "name" => self.name,
-               "description" => self.description,
-               "vals" => cleanVals,
-               "attributes" => {} }
-      @attributes.each do |name, attribute|
-        data["attributes"][name] = attribute.data
-      end
-      data
-    end
+    # def data
+    #   cleanVals = self.vals.clone
+    #   cleanVals.delete(nil)
+    #   data = { "name" => self.name,
+    #            "description" => self.description,
+    #            "vals" => cleanVals,
+    #            "attributes" => {} }
+    #   @attributes.each do |name, attribute|
+    #     data["attributes"][name] = attribute.data
+    #   end
+    #   data
+    # end
 
-    def warn(message, object)
-      @warnings << { "message" => message, "object" => object }
-    end
-
-    def error(message, object)
-      @errors << { "message" => message, "object" => object }
-    end
   end
 
-  class MSAttribute
-    attr_accessor :vals, :concepts, :warnings, :errors
+  class MSAttribute < ModelElement
+    attr_accessor :concepts
 
     def initialize(name, structure, model)
-      @model = model
-      @name = name
+      super(mode)
+
       @structure = structure
       @concepts = {}
-      @warnings = []
-      @errors = []
-      @vals = { nil => {} }
+
     end
 
-    def name
-      @name
-    end
+    # def data
+    #   cleanVals = self.vals.clone
+    #   cleanVals.delete(nil)
+    #   data = {
+    #     "name" => self.name,
+    #     "description" => self.description,
+    #     "vals" => cleanVals,
+    #   }
+    #   data
+    # end
 
-    def fqn
-      @structure.name + "." + @name
-    end
-
-    def description
-      @vals["description"]
-    end
-
-    def data
-      cleanVals = self.vals.clone
-      cleanVals.delete(nil)
-      data = {
-        "name" => self.name,
-        "description" => self.description,
-        "vals" => cleanVals,
-      }
-      data
-    end
-
-    def warn(message, object)
-      @warnings << { "message" => message, "object" => object }
-    end
-
-    def error(message, object)
-      @errors << { "message" => message, "object" => object }
-    end
   end
 
-  class AttributeToConcept
+  class AttributeToConcept 
     attr_accessor :structures
 
     def initialize(concept)

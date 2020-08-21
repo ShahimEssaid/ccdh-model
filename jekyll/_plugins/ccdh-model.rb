@@ -10,13 +10,24 @@ module Jekyll
 end
 
 module CCDHModel
-
+  H_PKG = "pkg"
   H_NAME = "name"
   H_DESC = "description"
   H_MESG = "message"
   H_WARNINGS = "warnings"
   H_ERRORS = "errors"
   H_OBJECT = "object"
+  H_ATTRIBUTE = "attribute"
+
+  F_CONCEPTS_CSV = "concepts.csv"
+  F_GROUPS_CSV = "groups.csv"
+  F_STRUCTURES_CSV = "structures.csv"
+
+  P_CONCEPTS = "c"
+  P_STRUCTURES = "s"
+  P_GROUPS = "g"
+
+  V_SELF = "self"
 
   class JGenerator < Jekyll::Generator
     def initialize(config)
@@ -44,27 +55,28 @@ module CCDHModel
       #CCDHModel.generator = self
       @site = site
       model = CCDHModel.readModelFromCsv(File.expand_path(File.join(site.source, "../model")), "build")
-      model.resolve_strict = site.config["ccdh"]["resolve"]["strict"]
-      CCDHModel.resolveAndValidate(model)
-      data = model.data
-      publisher = ModelPublisher.new(model, site, "_template", "model")
-      publisher.publishModel
-      CCDHModel.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model")))
+      #model.resolve_strict = site.config["ccdh"]["resolve"]["strict"]
+      #CCDHModel.resolveAndValidate(model)
+      #data = model.data
+      #publisher = ModelPublisher.new(model, site, "_template", "model")
+      #publisher.publishModel
+      #CCDHModel.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model")))
 
-      puts model.data.to_json
+      #puts model.data.to_json
     end
   end
 
   class ModelElement
-    attr_accessor :model :vals
-    def initialize(model)
-      @model = mode
-      @vals = { nil => {}, H_WARNINGS => [], H_ERRORS =>[] }
+    attr_accessor :model, :package, :vals
+
+    def initialize(package, model)
+      @model = model
+      @package = package
+      @vals = { nil => [], H_WARNINGS => [], H_ERRORS => [] }
     end
 
-
     def name
-      @vals(H_NAME)
+      @vals[H_NAME]
     end
 
     def description
@@ -79,9 +91,8 @@ module CCDHModel
       end
     end
 
-
     def warn(message, object)
-      @vals[H_WARNINGS]<< { H_MESG => message, H_OBJECT => object }
+      @vals[H_WARNINGS] << { H_MESG => message, H_OBJECT => object }
     end
 
     def error(message, object)
@@ -90,37 +101,58 @@ module CCDHModel
   end
 
   class Model < ModelElement
-    attr_accessor :name, :concepts, :groups, :structures,
+    attr_accessor :concepts, :groups, :structures,
       :concepts_csv, :concepts_headers,
       :groups_csv, :groups_headers,
-      :structures_csv, :structures_headers, :meta_vals,
+      :structures_csv, :structures_headers,
       :resolve_strict, :validate_strict, :packages
 
     def initialize(name)
-      @name = name
+      super(nil, self)
+      @vals[H_NAME] = name
       @concepts = {}
       @groups = {}
       @structures = {}
-      @packages
-
+      @packages = {}
       @concepts_headers = []
       @groups_headers = []
       @structures_headers = []
-      @meta_vals = []
     end
 
-    def getConcept(name, create = false)
-      if @concepts[name].nil? && create
-        @concepts[name] = MConcept.new(name, self)
+    def getConcept(name, package, must_create = nil)
+      if name.nil? || name.empty? || package.nil?
+        raise "Can't create concept: #{name} with package:#{package ||= "NIL"}"
       end
-      @concepts[name]
+      fqn = package.name + ":" + name
+      concept = @concepts[fqn]
+      if concept && must_create # must_create when true means "must create" new concept
+        raise "Asked to must create concept #{fqn} but it existed already. Duplicate name/row?"
+      end
+      if concept.nil? && (must_create.nil? || must_create) # nil means ok to create if needed
+        concept = MConcept.new(package, self)
+        package.entities[concept.name] = concept
+        @concepts[fqn] = concept
+        concept.vals[H_NAME] = name
+      end
+      concept
     end
 
-    def getGroup(name, create = false)
-      if @groups[name].nil? && create
-        @groups[name] = MGroup.new(name, self)
+    def getGroup(name, package, must_create = nil)
+      if name.nil? || name.empty? || package.nil?
+        raise "Can't create entity: #{name} with package:#{package ||= "NIL"}"
       end
-      @groups[name]
+      fqn = package.name + ":" + name
+      entity = @groups[fqn]
+      if entity && must_create # must_create when true means "must create" new entity
+        raise "Asked to must create entity #{fqn} but it existed already. Duplicate name/row?"
+      end
+      if entity.nil? && (must_create.nil? || must_create) # nil means ok to create if needed
+        entity = MGroup.new(package, self)
+        package.entities[entity.name] = entity
+        @groups[fqn] = entity
+        entity.vals[H_NAME] = name
+      end
+      entity
     end
 
     def getPackage(name, create = false)
@@ -128,57 +160,67 @@ module CCDHModel
       package = @packages[name]
       if package.nil? && create
         parts = name.split(":").collect(&:strip)
-        pkgname = parts.pop
+        parts.pop
         parent = getPackage(parts.join(":"), create)
-        package = MPkg.new(pkgname, parent, self)
+        package = MPkg.new(parent, self)
         @packages[name] = package
-        parent.children[pkgname] = package unless parent.nil?
+        parent.children[name] = package unless parent.nil?
+        package.vals[H_PKG] = name
       end
       package
     end
 
-    def getStructure(name, create = false)
-      if @structures[name].nil? && create
-        @structures[name] = MStructure.new(name, self)
+    def getStructure(name, package, must_create = nil)
+      if name.nil? || name.empty? || package.nil?
+        raise "Can't create entity: #{name} with package:#{package ||= "NIL"}"
       end
-      @structures[name]
+      fqn = package.name + ":" + name
+      entity = @structures[fqn]
+      if entity && must_create # must_create when true means "must create" new entity
+        raise "Asked to must create entity #{fqn} but it existed already. Duplicate name/row?"
+      end
+      if entity.nil? && (must_create.nil? || must_create) # nil means ok to create if needed
+        entity = MStructure.new(package, self)
+        package.entities[entity.name] = entity
+        @structures[fqn] = entity
+        entity.vals[H_NAME] = name
+      end
+      entity
     end
 
-    def data
-      data = { "name" => self.name,
-               "concepts" => {},
-               "structures" => {} }
-      @concepts.each do |name, concept|
-        data["concepts"][name] = concept.data
-      end
-      @structures.each do |name, structure|
-        data["structures"][name] = structure.data
-      end
-      data
-    end
+    # def data
+    #   data = { "name" => self.name,
+    #            "concepts" => {},
+    #            "structures" => {} }
+    #   @concepts.each do |name, concept|
+    #     data["concepts"][name] = concept.data
+    #   end
+    #   @structures.each do |name, structure|
+    #     data["structures"][name] = structure.data
+    #   end
+    #   data
+    # end
   end
 
   class MPkg < ModelElement
     attr_accessor :parent, :children, :entities
-    def initialize(name, parent, model)
-      super(mode)
 
+    def initialize(package, model)
+      super(package, model)
       @parent = parent
       @children = {}
       @entities = {}
+    end
 
+    def name
+      @vals[H_PKG]
     end
   end
 
   class MConcept < ModelElement
-    
-
-    def initialize( model)
-      super(model)
-
-      
+    def initialize(package, model)
+      super(package, model)
     end
-
 
     # def val_representation
     #   @vals["representation"].split(",").collect(&:strip)
@@ -195,8 +237,6 @@ module CCDHModel
     #   end
     # end
 
-
-
     # def data
     #   cleanVals = self.vals.clone
     #   cleanVals.delete(nil)
@@ -210,8 +250,8 @@ module CCDHModel
   class MGroup < ModelElement
     attr_accessor :vals
 
-    def initialize(model)
-      super(model)
+    def initialize(package, model)
+      super(package, model)
     end
 
     # def data
@@ -229,16 +269,17 @@ module CCDHModel
   class MStructure < ModelElement
     attr_accessor :attributes, :concepts
 
-    def initialize( model)
-      super(model)
+    def initialize(package, mode)
+      super(package, model)
       @attributes = {}
       @concepts = {}
-
     end
 
     def getAttribute(name, create)
       if @attributes[name].nil? && create
-        @attributes[name] = MSAttribute.new(name, self, @model)
+        attribute = MSAttribute.new(self, @model)
+        @attributes[name] = attribute
+        attribute.vals[H_ATTRIBUTE] = name
       end
       @attributes[name]
     end
@@ -261,12 +302,15 @@ module CCDHModel
   class MSAttribute < ModelElement
     attr_accessor :concepts
 
-    def initialize(name, structure, model)
-      super(mode)
+    def initialize(structure, model)
+      super(nil, model)
 
       @structure = structure
       @concepts = {}
+    end
 
+    def name
+      @vals[H_ATTRIBUTE]
     end
 
     # def data
@@ -282,7 +326,7 @@ module CCDHModel
 
   end
 
-  class AttributeToConcept 
+  class AttributeToConcept
     attr_accessor :structures
 
     def initialize(concept)
@@ -489,62 +533,103 @@ module CCDHModel
   def self.readModelFromCsv(model_dir, name)
     model = Model.new(name)
 
-    model.concepts_csv = CSV.read(File.join(model_dir, "concepts.csv"), headers: true)
+    model.concepts_csv = CSV.read(File.join(model_dir, F_CONCEPTS_CSV), headers: true)
     model.concepts_csv.headers.each do |h|
       unless h.nil?
         model.concepts_headers << h
       end
     end
     model.concepts_csv.each { |row|
-      hash = { nil => [] }
+      row[H_PKG] ||= P_CONCEPTS
+      row[H_PKG].empty? && row[H_PKG] = P_CONCEPTS
+      if not row[H_PKG].start_with?(P_CONCEPTS)
+        row[H_PKG] = "#{P_CONCEPTS}:#{row[H_PKG]}"
+      end
+      pkgname = row[H_PKG]
+      package = model.getPackage(pkgname, true)
+      entity = nil
+      if row[H_NAME] == V_SELF
+        # it's a package row
+        entity = package
+      else
+        #it's a concept row
+        entity = model.getConcept(row[H_NAME], package, true)
+      end
+      vals = entity.vals
       row.each do |k, v|
         if k
-          hash[k] = v
+          vals[k] = v
         else
-          hash[k] << v
+          vals[k] << v
         end
       end
-      model.getConcept(hash["name"], true).vals = hash
     }
 
-    model.groups_csv = CSV.read(File.join(model_dir, "groups.csv"), headers: true)
+    model.groups_csv = CSV.read(File.join(model_dir, F_GROUPS_CSV), headers: true)
     model.groups_csv.headers.each do |h|
       unless h.nil?
         model.groups_headers << h
       end
     end
     model.groups_csv.each { |row|
-      hash = { nil => [] }
+      row[H_PKG] ||= P_GROUPS
+      row[H_PKG].empty? && row[H_PKG] = P_GROUPS
+      if not row[H_PKG].start_with?(P_GROUPS)
+        row[H_PKG] = "#{P_GROUPS}:#{row[H_PKG]}"
+      end
+      pkgname = row[H_PKG]
+      package = model.getPackage(pkgname, true)
+      entity = nil
+      if row[H_NAME] == V_SELF
+        entity = package
+      else
+        #it's a group row
+        entity = model.getGroup(row[H_NAME], package, true)
+      end
+      vals = entity.vals
       row.each do |k, v|
         if k
-          hash[k] = v
+          vals[k] = v
         else
-          hash[k] << v
+          vals[k] << v
         end
       end
-      model.getGroup(hash["name"], true).vals = hash
     }
 
-    model.structures_csv = CSV.read(File.join(model_dir, "structures.csv"), headers: true)
+    model.structures_csv = CSV.read(File.join(model_dir, F_STRUCTURES_CSV), headers: true)
     model.structures_csv.headers.each do |h|
       unless h.nil?
         model.structures_headers << h
       end
     end
     model.structures_csv.each { |row|
-      hash = { nil => [] }
+      row[H_PKG] ||= P_STRUCTURES
+      row[H_PKG].empty? && row[H_PKG] = P_STRUCTURES
+      if not row[H_PKG].start_with?(P_STRUCTURES)
+        row[H_PKG] = "#{P_STRUCTURES}:#{row[H_PKG]}"
+      end
+      pkgname = row[H_PKG]
+      package = model.getPackage(pkgname, true)
+
+      entity = nil
+      # see if it's a package "self" row
+      if row[H_NAME] == V_SELF
+        entity = package
+      elsif row[H_ATTRIBUTE] == V_SELF
+        #it's a structure row
+        entity = model.getStructure(row[H_NAME], package)
+      else
+        #it's an attribute row
+        structure = model.getStructure(row[H_NAME], package)
+        entity = structure.getAttribute(row[H_ATTRIBUTE], true)
+      end
+      vals = entity.vals
       row.each do |k, v|
         if k
-          hash[k] = v
+          vals[k] = v
         else
-          hash[k] << v
+          vals[k] << v
         end
-      end
-      structure = model.getStructure(hash["name"], true)
-      if hash["attribute"] == "self"
-        structure.vals = hash
-      else
-        structure.getAttribute(hash["attribute"], true).vals = hash
       end
     }
     model

@@ -66,6 +66,8 @@ collection:
 #     - '**/*.js'
 
 ccdh:
+  parse:
+    strict: false
   resolve:
     strict: false
   validate:

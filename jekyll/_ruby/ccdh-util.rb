@@ -61,10 +61,12 @@ module CCDH
   def self.checkEntityName(name, defaultName)
     (name.nil? || name.empty?) && name = "defaultName#{rand(100000..999999)}"
     # check for old self
-    name.match?("self") && name = V_SELF
-
-    # remove all none alpha numeric
-    name = name.gsub(/[^a-zA-Z0-9]/, "")
+    if name.match?("self")
+      name = V_SELF
+    else
+      # remove all none alpha numeric
+      name = name.gsub(/[^a-zA-Z0-9]/, "")
+    end
     name
   end
 

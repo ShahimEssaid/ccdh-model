@@ -27,7 +27,7 @@ module CCDHModel
   P_STRUCTURES = "s"
   P_GROUPS = "g"
 
-  V_SELF = "self"
+  V_SELF = "_self_"
 
   class JGenerator < Jekyll::Generator
     def initialize(config)
@@ -55,8 +55,10 @@ module CCDHModel
       #CCDHModel.generator = self
       @site = site
       model = CCDHModel.readModelFromCsv(File.expand_path(File.join(site.source, "../model")), "build")
-      #model.resolve_strict = site.config["ccdh"]["resolve"]["strict"]
-      #CCDHModel.resolveAndValidate(model)
+      model.resolve_strict = site.config["ccdh"]["resolve"]["strict"]
+      CCDHModel.validate(model)
+      CCDHModel.resolve(model)
+      CCDHModel.resolveData(model)
       #data = model.data
       #publisher = ModelPublisher.new(model, site, "_template", "model")
       #publisher.publishModel
@@ -187,19 +189,6 @@ module CCDHModel
       end
       entity
     end
-
-    # def data
-    #   data = { "name" => self.name,
-    #            "concepts" => {},
-    #            "structures" => {} }
-    #   @concepts.each do |name, concept|
-    #     data["concepts"][name] = concept.data
-    #   end
-    #   @structures.each do |name, structure|
-    #     data["structures"][name] = structure.data
-    #   end
-    #   data
-    # end
   end
 
   class MPkg < ModelElement
@@ -226,25 +215,6 @@ module CCDHModel
     #   @vals["representation"].split(",").collect(&:strip)
     # end
 
-    # def representation_of
-    #   of = []
-    #   @model.concepts.each do |c|
-    #     c.representation.values.each do |r|
-    #       if r.equals? self
-    #         of << r
-    #       end
-    #     end
-    #   end
-    # end
-
-    # def data
-    #   cleanVals = self.vals.clone
-    #   cleanVals.delete(nil)
-    #   { "name" => self.name,
-    #     "description" => self.description,
-    #     "vals" => cleanVals }
-    # end
-
   end
 
   class MGroup < ModelElement
@@ -253,17 +223,6 @@ module CCDHModel
     def initialize(package, model)
       super(package, model)
     end
-
-    # def data
-    #   cleanVals = self.vals.clone
-    #   cleanVals.delete(nil)
-    #   {
-    #     "name" => self.name,
-    #     "description" => self.description,
-    #     "vals" => cleanVals,
-    #   }
-    # end
-
   end
 
   class MStructure < ModelElement
@@ -283,20 +242,6 @@ module CCDHModel
       end
       @attributes[name]
     end
-
-    # def data
-    #   cleanVals = self.vals.clone
-    #   cleanVals.delete(nil)
-    #   data = { "name" => self.name,
-    #            "description" => self.description,
-    #            "vals" => cleanVals,
-    #            "attributes" => {} }
-    #   @attributes.each do |name, attribute|
-    #     data["attributes"][name] = attribute.data
-    #   end
-    #   data
-    # end
-
   end
 
   class MSAttribute < ModelElement
@@ -312,18 +257,6 @@ module CCDHModel
     def name
       @vals[H_ATTRIBUTE]
     end
-
-    # def data
-    #   cleanVals = self.vals.clone
-    #   cleanVals.delete(nil)
-    #   data = {
-    #     "name" => self.name,
-    #     "description" => self.description,
-    #     "vals" => cleanVals,
-    #   }
-    #   data
-    # end
-
   end
 
   class AttributeToConcept
@@ -442,7 +375,15 @@ module CCDHModel
   # ==============================================
   # ==============================================
 
-  def self.resolveAndValidate(model)
+  def self.validate(model)
+
+  end
+
+  def self.resolveData(model)
+
+  end
+
+  def self.resolve(model)
 
     # link concept
     model.concepts.each do |name, concept|

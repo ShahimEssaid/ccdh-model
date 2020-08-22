@@ -1,0 +1,5 @@
+"pkg","name","summary","description","status","build"
+"c:","Specimen","summary text","A specimen","","pkg:  was updated to: c:"
+"c:","boolean","summary text","A boolean value","","pkg:  was updated to: c:"
+"c:","number","summary text","An integer or floating number","","pkg:  was updated to: c:"
+"c:","string","summary text","A string value","","pkg:  was updated to: c:"

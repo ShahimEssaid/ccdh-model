@@ -54,7 +54,7 @@ module CCDH
       #data = model.data
       #publisher = ModelPublisher.new(model, site, "_template", "model")
       #publisher.publishModelFile.
-      #CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model")))
+      CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))
 
       #puts model.data.to_json
     end

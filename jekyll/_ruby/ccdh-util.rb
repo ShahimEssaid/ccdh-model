@@ -9,6 +9,8 @@ module CCDH
   H_ATTRIBUTE = "attribute"
   H_STATUS = "status"
   H_BUILD = "build"
+  H_CONCEPT = "concept"
+  H_VAL_CONCEPT = "val_concept"
 
   F_CONCEPTS_CSV = "concepts.csv"
   F_GROUPS_CSV = "groups.csv"
@@ -26,6 +28,7 @@ module CCDH
   SEP_COMMA = ","
   SEP_COLON = ":"
   SEP_AT = "@"
+  SEP_BAR = "|"
 
   ##
   # Takes a fqn package refernce and checks it, checks it agains the prefix, and fixes if indicated
@@ -35,7 +38,7 @@ module CCDH
   # returns nil if fails all checks and not requesting fixing.
 
   def self.checkPackageReference(ref, prefix)
-    !prefix.end_with?(":") && prefix += ":"
+    !prefix.end_with?(SEP_COLON) && prefix += SEP_COLON
 
     # nil or empty?
     (ref.nil? || ref.empty?) && ref = prefix
@@ -44,30 +47,134 @@ module CCDH
     !ref.start_with?(prefix) && ref = prefix + ref
 
     # replace any odd characters
-    ref = ref.gsub(/[^a-zA-Z:]/, ":")
+    ref = ref.gsub(/[^a-zA-Z:]/, SEP_COLON)
 
     # replace multiple : in a row
-    ref = ref.gsub(/[:]+/, ":")
+    ref = ref.gsub(/[:]+/, SEP_COLON)
 
     # all donw case
     ref = ref.downcase
 
     # ends with :?
-    !ref.end_with?(":") && ref += ":"
+    !ref.end_with?(SEP_COLON) && ref += SEP_COLON
 
     ref
   end
 
   def self.checkEntityName(name, defaultName)
-    (name.nil? || name.empty?) && name = "defaultName#{rand(100000..999999)}"
+    (name.nil? || name.empty?) && name = defaultName + "#{rand(100000..999999)}"
     # check for old self
     if name.match?("self")
       name = V_SELF
     else
       # remove all none alpha numeric
       name = name.gsub(/[^a-zA-Z0-9]/, "")
+      # in case name had some characters but empty now. create new name
+      name.empty? && name = defaultName + "#{rand(100000..999999)}"
     end
     name
+  end
+
+  def self.checkFqnEntityName(name, defaultName, packagePrefix)
+    (name.nil? || name.empty?) && name = defaultName + "#{rand(100000..999999)}"
+    fqnParts = name.split(SEP_COLON).collect(&:strip).reject(&:empty?)
+    conceptName = checkEntityName(fqnParts.pop, defaultName)
+    packageName = checkPackageReference(fqnParts.join(SEP_COLON), packagePrefix)
+    packageName + conceptName
+  end
+
+  def self.checkStructureConceptRef(reference)
+    if (reference.nil? || reference.empty?)
+      return reference
+    end
+    newRef = ""
+    reference.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |group|
+      # a possible concept group
+      newGroup = ""
+      group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
+        # we shoul have a fqn concept now
+        # split fqn and try to find the last part as entity name
+        name = checkFqnEntityName(c, "Concept", P_CONCEPTS)
+        newGroup.empty? || newGroup += SEP_COMMA + " "
+        newGroup += name
+      end
+      if !newGroup.empty?
+        newRef.empty? || newRef += " " + SEP_BAR + " "
+        newRef += newGroup
+      end
+    end
+    newRef
+  end
+
+  def self.checkStructureValRef(reference)
+    if (reference.nil? || reference.empty?)
+      return reference
+    end
+    newRef = ""
+    reference.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |group|
+      # a possible concept/val group. split on @
+      atGroup = group.split(SEP_AT).collect(&:strip).reject(&:empty?)
+      # if there was an @, we should have two parts. Otherwise we'll assume a one part is just a concpet
+      # if the concept part is empty we'll just give up on the @ group
+
+      if (atGroup.length == 0 || atGroup.length > 2)
+        next
+      else
+        # should only be a single concpet
+        # should be one concept and 0 or more structures
+        concept = atGroup[0]
+        concept.nil? && next
+        concept.empty? && next
+
+        # should only be one fqn concept with no commas.
+        # skip if any instead of trying to be smart about it
+        concept.match?(SEP_COMMA) && next
+        # fqnParts = concept.split(SEP_COLON).collect(&:strip).reject(&:empty?)
+        # conceptName = checkEntityName(fqnParts.pop, "Concept")
+        # packageName = checkPackageReference(fqnParts.join(SEP_COLON), P_CONCEPTS)
+        # conceptName = packageName + conceptName
+        newRef.empty? || (newRef += " " + SEP_BAR + " ")
+        newRef += checkFqnEntityName(concept, "Concept", P_CONCEPTS)
+
+        # now any structure info
+        structures = atGroup[1]
+        structures.nil? && next
+        strctgroup = ""
+        structures.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |s|
+          strctgroup.empty? || strctgroup += SEP_COMMA + " "
+          strctgroup += checkFqnEntityName(s, "Structure", P_STRUCTURES)
+        end
+        strctgroup.empty? || (newRef += " " + SEP_AT + " ")
+        newRef += strctgroup
+      end
+
+      #   newGroup = ""
+      #   group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
+      #     # we shoul have a fqn concept now
+      #     # split fqn and try to find the last part as entity name
+      #     parts = c.split(SEP_COLON).collect(&:strip).reject(&:empty?)
+      #     if parts.length == 0
+      #       #nothing, skip
+      #       next
+      #     elsif parts.length == 1
+      #       # one part, assume concept name under c:
+      #       name = P_CONCEPTS + checkEntityName(parts[0], "Concept")
+      #       newGroup.empty? || newGroup += SEP_COMMA + " "
+      #       newGroup += name
+      #     else
+      #       name = checkEntityName(parts.pop, "Concept")
+      #       package = parts.join(SEP_COLON)
+      #       package = checkPackageReference(package, P_CONCEPTS)
+      #       newGroup.empty? || newGroup += SEP_COMMA + " "
+      #       newGroup += package + name
+      #     end
+      #   end
+      #   if !newGroup.empty?
+      #     newRef.empty? || newRef += " " + SEP_BAR + " "
+      #     newRef += newGroup
+      #   end
+    end
+    newRef
   end
 
   def self.parseConceptReference(reference, containingEntity)
@@ -82,6 +189,12 @@ module CCDH
       end
       #TODO:
     end
+  end
+
+  def self.buildEntry(entry, row)
+    (entry.nil? || entry.empty?) && return
+    row[H_BUILD].empty? || (row[H_BUILD] += "\n")
+    row[H_BUILD] += entry
   end
 
   def self.readModelFromCsv(model_dir, model)
@@ -99,12 +212,12 @@ module CCDH
       #check package name
       pkg_ref = row[H_PKG]
       row[H_PKG] = checkPackageReference(pkg_ref, P_CONCEPTS)
-      row[H_PKG] == pkg_ref || row[H_BUILD] += "Package ref: |#{pkg_ref}| was updated to: |#{row[H_PKG]}|\n"
+      row[H_PKG] == pkg_ref || buildEntry("#{H_PKG}: #{pkg_ref} was updated to: #{row[H_PKG]}", row)
 
       #check name
       name = row[H_NAME]
       row[H_NAME] = checkEntityName(name, "Concept")
-      row[H_NAME] == name || row[H_BUILD] += "Concept name: |#{name}| was updated to: |#{row[H_NAME]}|\n"
+      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
       # we need a pakcage for creating the concept
       package = model.getPackage(row[H_PKG], true)
@@ -141,12 +254,12 @@ module CCDH
       #check package name
       pkg_ref = row[H_PKG]
       row[H_PKG] = checkPackageReference(pkg_ref, P_GROUPS)
-      row[H_PKG] == pkg_ref || row[H_BUILD] += "Package ref: |#{pkg_ref}| was updated to: |#{row[H_PKG]}|\n"
+      row[H_PKG] == pkg_ref || buildEntry("#{H_PKG}: #{pkg_ref} was updated to: #{row[H_PKG]}", row)
 
       #check name
       name = row[H_NAME]
       row[H_NAME] = checkEntityName(name, "Group")
-      row[H_NAME] == name || row[H_BUILD] += "Group name: |#{name}| was updated to: |#{row[H_NAME]}|\n"
+      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
       # we need a pakcage for creating the entity
       package = model.getPackage(row[H_PKG], true)
@@ -177,23 +290,36 @@ module CCDH
     end
     model.structures_csv.each { |row|
       # clean up the row before using it
+
       # make sure "build" isn't nil
       row[H_BUILD].nil? && row[H_BUILD] = ""
 
       #check package name
       pkg_ref = row[H_PKG]
       row[H_PKG] = checkPackageReference(pkg_ref, P_STRUCTURES)
-      row[H_PKG] == pkg_ref || row[H_BUILD] += "Package ref: |#{pkg_ref}| was updated to: |#{row[H_PKG]}|\n"
+      row[H_PKG] == pkg_ref || buildEntry("#{H_PKG}: #{pkg_ref} was updated to: #{row[H_PKG]}", row)
 
       #check name for structure
       name = row[H_NAME]
       row[H_NAME] = checkEntityName(name, "Structure")
-      row[H_NAME] == name || row[H_BUILD] += "Structure name: |#{name}| was updated to: |#{row[H_NAME]}|\n"
+      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
       #check name for attribute
       name = row[H_ATTRIBUTE]
       row[H_ATTRIBUTE] = checkEntityName(name, "attribute")
-      row[H_ATTRIBUTE] == name || row[H_BUILD] += "Attribute name: |#{name}| was updated to: |#{row[H_ATTRIBUTE]}|\n"
+      row[H_ATTRIBUTE] == name || buildEntry("#{H_ATTRIBUTE}: #{name} was updated to: #{row[H_ATTRIBUTE]}", row)
+
+      # check concept refs
+      cref = row[H_CONCEPT]
+      row[H_CONCEPT] = checkStructureConceptRef(row[H_CONCEPT])
+      row[H_CONCEPT] == cref || buildEntry("#{H_CONCEPT}: #{cref} was updated to #{row[H_CONCEPT]}", row)
+
+      # check val refs
+      vref = row[H_VAL_CONCEPT]
+      row[H_VAL_CONCEPT] = checkStructureValRef(row[H_VAL_CONCEPT])
+      row[H_VAL_CONCEPT] == cref || buildEntry("#{H_VAL_CONCEPT}: #{vref} was updated to #{row[H_VAL_CONCEPT]}", row)
+
+      # build the model
 
       # we need a pakcage for creating the concept
       package = model.getPackage(row[H_PKG], true)
@@ -227,11 +353,12 @@ module CCDH
   def self.writeModelToCSV(model, dir)
     FileUtils.mkdir_p(dir)
 
-    CSV.open(File.join(dir, "concepts.csv"), mode = "wb", { force_quotes: true }) do |csv|
+    CSV.open(File.join(dir, F_CONCEPTS_CSV), mode = "wb", { force_quotes: true }) do |csv|
       csv << model.concepts_headers
       model.concepts.keys.sort.each do |k|
         row = []
         concept = model.concepts[k]
+        concept.generated_now && concept.vals[H_STATUS] = V_GENERATED
         model.concepts_headers.each do |h|
           row << concept.vals[h]
         end
@@ -242,7 +369,7 @@ module CCDH
       end
     end
 
-    CSV.open(File.join(dir, "groups.csv"), mode = "wb", { force_quotes: true }) do |csv|
+    CSV.open(File.join(dir, F_GROUPS_CSV), mode = "wb", { force_quotes: true }) do |csv|
       csv << model.groups_headers
       model.groups.keys.sort.each do |k|
         row = []
@@ -257,11 +384,12 @@ module CCDH
       end
     end
 
-    CSV.open(File.join(dir, "structures.csv"), mode = "wb", { force_quotes: true }) do |csv|
+    CSV.open(File.join(dir, F_STRUCTURES_CSV), mode = "wb", { force_quotes: true }) do |csv|
       csv << model.structures_headers
       model.structures.keys.sort.each do |sk|
         row = []
         structure = model.structures[sk]
+        structure.generated_now && structure.vals[H_STATUS] = V_GENERATED
         model.structures_headers.each do |h|
           row << structure.vals[h]
         end
@@ -273,6 +401,7 @@ module CCDH
         structure.attributes.keys.sort.each do |ak|
           row = []
           attribute = structure.attributes[ak]
+          attribute.generated_now && attribute.vals[H_STATUS] = V_GENERATED
           model.structures_headers.each do |h|
             row << attribute.vals[h]
           end
@@ -296,91 +425,6 @@ module CCDH
   end
 
   def self.resolve(model)
-
-    # link concept
-    # model.concepts.each do |name, concept|
-    #   concept.val_representation.each do |s|
-    #     if /[[:lower:]]/.match(s[0])
-    #       # it's an enum/valueset
-    #       enum = model.getConcept(s)
-    #       if enum
-    #         concept.representation[enum.name] = enum
-    #       else
-    #         # not defined yet
-    #         enum = model.getConcept(s, (not model.resolve_strict))
-    #         if enum
-    #           # generated, warning
-    #           enum.vals["name"] = s
-    #           enum.vals["summary"] = "TODO:generated"
-    #           enum.vals["generated"] = "Y"
-    #           concept.representation[enum.name] = enum
-    #           concept.warn("Enum #{s} was generated", "TODO")
-    #         else
-    #           # not generated, error
-    #           concept.error("Enum #{s} referenced but NOT generated", "TODO")
-    #         end
-    #       end
-    #     else
-    #       # now we need a structure anyway
-    #       # try to split on "."
-    #       parts = s.split(".").collect(&:strip)
-    #       if (parts.length < 1) || (parts.length > 2)
-    #         raise "Error parsing concept representations for concept #{name} and representation #{s}"
-    #       end
-    #       structure = model.getStructure(parts[0])
-    #       if structure
-    #         #wait until we figure out if it's a structure or attribute reference
-    #       else
-    #         # not defined yet
-    #         structure = model.getStructure(parts[0], (not model.resolve_strict))
-    #         if structure
-    #           # generated, warning
-
-    #           structure.vals["name"] = parts[0]
-    #           structure.vals["summary"] = "TODO:generated"
-    #           structure.vals["generated"] = "Y"
-    #           structure.vals["attribute"] = "self"
-
-    #           concept.warn("Structure #{s} was generated", concept.vals)
-    #         else
-    #           # not generated, error
-    #           concept.error("Structure #{s} referenced but NOT generate", "TODO")
-    #         end
-    #       end
-
-    #       if structure
-    #         if parts.length == 1
-    #           # it's a structure reference and we can link it
-    #           concept.representation[structure.name] = structure
-    #         else
-    #           # we have an attribute here and we need to find or generate it
-    #           attribute = structure.getAttribute(parts[1])
-    #           if attribute
-    #             concept.representation[attribute.name] = attribute
-    #           else
-    #             # see if we can generate it
-    #             attribute = structure.getAttribute(parts[1], (not model.resolve_strict))
-    #             if attribute
-    #               # generated
-    #               attribute.vals["name"] = parts[1]
-    #               attribute.vals["summary"] = "TODO:generated"
-    #               attribute.vals["generated"] = "Y"
-
-    #               concept.representation[attribute.fqn] = attribute
-    #               concept.warn("Attribute #{s} was generated", "TODO")
-    #             else
-    #               # not generated, error
-    #               concept.error("Attribute #{s} referenced but NOT generate", "TODO")
-    #             end
-    #           end
-    #         end
-    #       end
-    #     end
-    #   end
-    # end
-
-    # link structures
-
     model.structures.each do |k, s|
     end
   end

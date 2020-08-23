@@ -56,59 +56,58 @@ module CCDH
     ##
     # get package from a fqn package name
     # the name is assumed to be clean
-
-    def getPackage(fqn, create = false)
+    # entities are tracked in thier parent package
+    def getPackage(fqn, create)
       package = @packages[fqn]
       if package.nil? && create
-        parts = fqn.split(SEP_COLON).collect(&:strip)
-        parts.pop
+        name = CCDH.getEntityNameFromFqn(fqn)
+        parentname = CCDH.getPkgNameFromFqn(fqn)
         parent = nil
-        if parts.length > 0
-          #there is a parent part
-          parent = getPackage(parts.join(SEP_COLON) + SEP_COLON, create)
+        if parentname
+          parent = getPackage(parentname, create)
         end
         package = MPkg.new(parent, self)
         @packages[fqn] = package
-        parent.nil? || parent.children[fqn] = package
+        parent.nil? || parent.children[name] = package
         package.vals[H_PKG] = fqn
       end
       package
     end
 
-    def getConcept(name, package, create)
-      fqn = package.name + name
+    ##
+    # name is fully qualified
+    #
+    def getConcept(fqn, package, create)
+      package.nil? && raise("Null package when creating concept #{fqn}")
       concept = @concepts[fqn]
       if concept.nil? && create
         concept = MConcept.new(package, self)
-        concept.vals[H_NAME] = name
-        package.entities[name] = concept
         @concepts[fqn] = concept
+        concept.vals[H_NAME] = CCDH.getEntityNameFromFqn(fqn)
+        package.entities[concept.vals[H_NAME]] = concept
       end
       concept
     end
 
-    def getGroup(name, package, create)
-      fqn = package.name + name
+    def getGroup(fqn, package, create)
+      package.nil? && raise("Null package when creating group #{fqn}")
       entity = @groups[fqn]
-
       if entity.nil? && create
         entity = MGroup.new(package, self)
-        entity.vals[H_NAME] = name
-        package.entities[name] = entity
         @groups[fqn] = entity
+        entity.vals[H_NAME] = CCDH.getEntityNameFromFqn(fqn)
+        package.entities[entity.vals[H_NAME]] = entity
       end
       entity
     end
 
-    def getStructure(name, package, create)
-      fqn = package.name + name
+    def getStructure(fqn, package, create)
       entity = @structures[fqn]
-
       if entity.nil? && create
         entity = MStructure.new(package, self)
-        entity.vals[H_NAME] = name
-        package.entities[name] = entity
         @structures[fqn] = entity
+        entity.vals[H_NAME] = CCDH.getEntityNameFromFqn(fqn)
+        package.entities[entity.vals[H_NAME]] = entity
       end
       entity
     end
@@ -187,7 +186,7 @@ module CCDH
 
   class MStructure < ModelElement
     attr_accessor :attributes,
-                  :concepts, :val_concepts
+                  :concept_refs, :val_concept_refs
 
     def initialize(package, mode)
       super(package, model)
@@ -211,12 +210,13 @@ module CCDH
   end
 
   class MSAttribute < ModelElement
-    attr_accessor :concepts
+    attr_accessor :concept_refs, :val_concept_refs
 
     def initialize(structure, model)
       super(nil, model)
       @structure = structure
-      @concepts = {}
+      @concept_refs = []
+      @val_concept_refs = []
     end
 
     def name

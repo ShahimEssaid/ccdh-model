@@ -115,25 +115,19 @@ module CCDH
       # a possible concept/val group. split on @
       atGroup = group.split(SEP_AT).collect(&:strip).reject(&:empty?)
       # if there was an @, we should have two parts. Otherwise we'll assume a one part is just a concpet
-      # if the concept part is empty we'll just give up on the @ group
 
       if (atGroup.length == 0 || atGroup.length > 2)
         next
       else
+        newRef.empty? || (newRef += " " + SEP_BAR + " ")
         # should only be a single concpet
         # should be one concept and 0 or more structures
         concept = atGroup[0]
-        concept.nil? && next
-        concept.empty? && next
+        # if the concept part is empty we'll just give up on the @ group
+        (concept.nil? || concept.empty?) && next
 
         # should only be one fqn concept with no commas.
-        # skip if any instead of trying to be smart about it
-        concept.match?(SEP_COMMA) && next
-        # fqnParts = concept.split(SEP_COLON).collect(&:strip).reject(&:empty?)
-        # conceptName = checkEntityName(fqnParts.pop, "Concept")
-        # packageName = checkPackageReference(fqnParts.join(SEP_COLON), P_CONCEPTS)
-        # conceptName = packageName + conceptName
-        newRef.empty? || (newRef += " " + SEP_BAR + " ")
+        # this one will implicitly check/make/force it to a single concept reference
         newRef += checkFqnEntityName(concept, "Concept", P_CONCEPTS)
 
         # now any structure info
@@ -147,32 +141,6 @@ module CCDH
         strctgroup.empty? || (newRef += " " + SEP_AT + " ")
         newRef += strctgroup
       end
-
-      #   newGroup = ""
-      #   group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-      #     # we shoul have a fqn concept now
-      #     # split fqn and try to find the last part as entity name
-      #     parts = c.split(SEP_COLON).collect(&:strip).reject(&:empty?)
-      #     if parts.length == 0
-      #       #nothing, skip
-      #       next
-      #     elsif parts.length == 1
-      #       # one part, assume concept name under c:
-      #       name = P_CONCEPTS + checkEntityName(parts[0], "Concept")
-      #       newGroup.empty? || newGroup += SEP_COMMA + " "
-      #       newGroup += name
-      #     else
-      #       name = checkEntityName(parts.pop, "Concept")
-      #       package = parts.join(SEP_COLON)
-      #       package = checkPackageReference(package, P_CONCEPTS)
-      #       newGroup.empty? || newGroup += SEP_COMMA + " "
-      #       newGroup += package + name
-      #     end
-      #   end
-      #   if !newGroup.empty?
-      #     newRef.empty? || newRef += " " + SEP_BAR + " "
-      #     newRef += newGroup
-      #   end
     end
     newRef
   end
@@ -195,6 +163,27 @@ module CCDH
     (entry.nil? || entry.empty?) && return
     row[H_BUILD].empty? || (row[H_BUILD] += "\n")
     row[H_BUILD] += entry
+  end
+
+  def self.getPkgNameFromFqn(fqn)
+    (fqn.nil? || fqn.empty?) && (return nil)
+    # strip last : in case it's a package name
+    (fqn[-1] == SEP_COLON) && (fqn = fqn[0...-1])
+    # check if we don't have any package name, which could happen for the root packages
+    #this must be the root package, which doesn't have a parent package name
+    i = fqn.rindex(SEP_COLON)
+    i.nil? && (return nil)
+    fqn[0..i]
+  end
+
+  def self.getEntityNameFromFqn(fqn)
+    (fqn.nil? || fqn.empty?) && (return nil)
+    # strip last : in case it's a package namepd
+    (fqn[-1] == SEP_COLON) && (fqn = fqn[0...-1])
+    #we might be left with the root package name
+    i = fqn.rindex(SEP_COLON)
+    i.nil? && (return fqn)
+    fqn[(i + 1)..]
   end
 
   def self.readModelFromCsv(model_dir, model)
@@ -228,7 +217,15 @@ module CCDH
         entity = package
       else
         #it's a concept row
-        entity = model.getConcept(row[H_NAME], package, true)
+        fqn = row[H_PKG] + row[H_NAME]
+        concept = model.getConcept(fqn, package, false)
+        if !concept.nil?
+          #concept.vals[]
+          buildEntry("This concept was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", concept.vals)
+          next
+        end
+        entity = model.getConcept(fqn, package, true)
+        package.entities[row[H_NAME]] = entity
       end
       entity.generated_now = false
 
@@ -268,8 +265,15 @@ module CCDH
         # it's a package row
         entity = package
       else
-        #it's a concept row
+        #it's a group row
+        entity = model.getGroup(row[H_NAME], package, false)
+        if !entity.nil?
+          #concept.vals[]
+          buildEntry("This group was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity.vals)
+          next
+        end
         entity = model.getGroup(row[H_NAME], package, true)
+        package.entities[row[H_NAME]] = entity
       end
       entity.generated_now = false
 
@@ -426,6 +430,83 @@ module CCDH
 
   def self.resolve(model)
     model.structures.each do |k, s|
+      # resolve the concepts
+      resolveStructureOrAttribute(s, model)
+      s.attributes.each do |k, a|
+        resolveStructureOrAttribute(a, model)
+      end
+    end
+  end
+
+  def self.resolveStructureOrAttribute(s, model)
+    s.vals[H_CONCEPT].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |cg|
+      # a concept group
+      cga = []
+      cg.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
+        pkgname = getPkgNameFromFqn(c)
+        cname = getEntityNameFromFqn(c)
+        pkg = model.getPackage(pkgname, false)
+        if pkg.nil?
+          buildEntry("Package #{pkgname} didn't already exist for concept #{cname}. Creating it.", s.vals)
+          pkg = model.getPackage(pkgname, true)
+        end
+
+        concept = model.getConcept(c, pkg, false)
+        if concept.nil?
+          buildEntry("Concept #{c} in in #{H_CONCEPT} didn't alraedy exist. Creating it.", s.vals)
+          concept = model.getConcept(c, pkg, true)
+          concept.vals[H_NAME] = cname
+          concept.vals[H_DESC] = V_GENERATED
+          concept.vals[H_STATUS] = V_GENERATED
+        end
+        cga << ConceptReference.new(concept)
+      end
+      cga.empty? || s.concept_refs << cga
+    end
+
+    # resolve the val concepts
+    s.vals[H_VAL_CONCEPT].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |vcg|
+      # one concept @ structure group
+      parts = vcg.split(SEP_AT).collect(&:strip)
+      cname = parts[0]
+      sgroup = parts[1]
+
+      # do the concept first
+      concept = model.getConcept(cname, pkg, false)
+      if concept.nil?
+        buildEntry("Concept #{c} in #{H_VAL_CONCEPT} didn't alraedy exist. Creating it.", s.vals)
+        concept = model.getConcept(cname, pkg, true)
+        concept.vals[H_NAME] = cname
+        concept.vals[H_DESC] = V_GENERATED
+        concept.vals[H_STATUS] = V_GENERATED
+      end
+      cref = ConceptReference.new(concept)
+      s.val_concept_refs << cref
+      # now do the @ structures
+      sgroup.nil? && return
+      sgroup.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |sg|
+        # a structure name
+        sga = []
+        sg.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |s|
+          pkgname = getPkgNameFromFqn(s)
+          sname = getEntityNameFromFqn(s)
+          pkg = model.getPackage(pkgname, false)
+          if pkg.nil?
+            buildEntry("Package #{pkgname} didn't already exist for structure #{s} in #{H_VAL_CONCEPT}. Creating it.", s.vals)
+            pkg = model.getPackage(pkgname, true)
+          end
+
+          structure = model.getStructure(s, pkg, false)
+          if structure.nil?
+            buildEntry("Structure #{s} in in #{H_VAL_CONCEPT} didn't alraedy exist. Creating it.", s.vals)
+            structure = model.getStructure(s, pkg, true)
+            structure.vals[H_NAME] = sname
+            structure.vals[H_DESC] = V_GENERATED
+            structure.vals[H_STATUS] = V_GENERATED
+          end
+          cref.structures << structure
+        end
+      end
     end
   end
 end

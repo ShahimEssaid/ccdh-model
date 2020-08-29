@@ -43,8 +43,8 @@ module CCDH
     if !File.exist?(concepts_file)
       # write empty file
       CSV.open(concepts_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PKG, H_NAME, H_SUMMARY, H_DESC, H_PARENTS, H_STATUS, H_NOTES, H_BUILD]
-        csv << [V_PKG_BASE, "Thing", "The base c:Thing concept", "Anything", "", V_STATUS_CURRENT, "", ""]
+        csv << [H_PKG, H_NAME, H_SUMMARY, H_DESC, H_PARENTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
+        csv << [V_PKG_BASE, V_CONCEPT_THING, "The base c:Thing concept", "Anything", "", "", V_STATUS_CURRENT, "", ""]
       end
     end
     model.concepts_csv = CSV.read(concepts_file, headers: true)
@@ -72,15 +72,27 @@ module CCDH
       row[H_NAME] = checkEntityName(name, "C")
       row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
+      # check parents syntax
+      # package name by default is the same package as the concept
+      parents = row[H_PARENTS]
+      row[H_PARENTS] = checkEntityRefList(row[H_PARENTS], "C", row)
+      row[H_PARENTS] == parents || buildEntry("#{H_PARENTS}: was changed from #{parents} to: #{row[H_PARENTS]}", row)
+
+      # check related syntax
+      related = row[H_RELATED]
+      relatedNew = checkEntityRefList(row[H_RELATED], "C", row)
+      row[H_RELATED] == related || buildEntry("#{H_RELATED}: was changed from #{related} to: #{row[H_RELATED]}", row)
+
       # we need a package for creating the concept
-      package = model.getPackage(row[H_PKG], false)
-      if package.nil?
-        package = model.getPackage(row[H_PKG], true)
-        package.vals[H_NAME] = row[H_PKG]
-        package.vals[H_STATUS] = V_GENERATED
-        buildEntry("Package #{row[H_PKG]} not found, generated.", row)
-        buildEntry("Generated for concept: #{row[H_NAME]}", package.vals)
-      end
+      package = getPackageGenerated(row[H_PKG], "concept #{row[H_NAME]}", model, row)
+      # package = model.getPackage(row[H_PKG], false)
+      # if package.nil?
+      #   package = model.getPackage(row[H_PKG], true)
+      #   package.vals[H_NAME] = row[H_PKG]
+      #   package.vals[H_STATUS] = V_GENERATED
+      #   buildEntry("Package #{row[H_PKG]} not found, generated.", row)
+      #   buildEntry("Generated for concept: #{row[H_NAME]}", package.vals)
+      # end
 
       concept = package.getConcept(row[H_NAME], false)
       if !concept.nil?
@@ -101,7 +113,7 @@ module CCDH
     if !File.exist?(elements_file)
       # write empty file
       CSV.open(elements_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PKG, H_NAME, H_SUMMARY, H_DESC, H_PARENT,H_DOMAINS, H_RANGES, H_STATUS, H_NOTES, H_BUILD]
+        csv << [H_PKG, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_DOMAINS, H_RANGES, H_STATUS, H_NOTES, H_BUILD]
       end
     end
     model.elements_csv = CSV.read(elements_file, headers: true)

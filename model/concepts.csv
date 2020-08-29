@@ -1,2 +1,2 @@
-"pkg","name","summary","description","parents","status","notes","build"
-"default","Thing","The base c:Thing concept","Anything","","current","",""
+"pkg","name","summary","description","parents","related","status","notes","build"
+"default","Thing","The base c:Thing concept","Anything","","","current","",""

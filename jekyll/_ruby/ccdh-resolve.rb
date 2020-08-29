@@ -1,14 +1,59 @@
+require_relative 'ccdh-util'
+require_relative 'ccdh-model'
 module CCDH
 
   def self.resolve(model)
-    model.structures.each do |k, s|
-      # resolve the concepts
-      resolveStructureOrAttribute(s, model)
-      s.attributes.each do |k, a|
-        resolveStructureOrAttribute(a, model)
+    resolveConceptParents(model)
+    resolveConceptRelated(model)
+
+
+    parentlessConceptsToThing(model)
+    # model.structures.each do |k, s|
+    #   # resolve the concepts
+    #   resolveStructureOrAttribute(s, model)
+    #   s.attributes.each do |k, a|
+    #     resolveStructureOrAttribute(a, model)
+    #   end
+    # end
+  end
+
+  def self.resolveConceptParents(model)
+    model.packages.keys.each do |pn|
+      p = model.packages[pn]
+      p.concepts.keys.each do |cn|
+        c = p.concepts[cn]
+        parents = c.vals[H_PARENTS]
+        parents.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |parentRef|
+          pkgName, conceptName = parentRef.split(SEP_COLON)
+          package = getPackageGenerated(pkgName, "concept #{c.fqn}", model, c.vals)
+          concept = getConceptGenerated(conceptName, "concept #{c.fqn} parents", package, c.vals)
+          c.parents << concept
+        end
       end
     end
   end
+
+
+  def self.resolveConceptRelated(model)
+    model.packages.keys.each do |pn|
+      p = model.packages[pn]
+      p.concepts.keys.each do |cn|
+        c = p.concepts[cn]
+        related = c.vals[H_RELATED]
+        related.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |relatedRef|
+          pkgName, conceptName = relatedRef.split(SEP_COLON)
+          package = getPackageGenerated(pkgName, "concept #{c.fqn}", model, c.vals)
+          concept = getConceptGenerated(conceptName, "concept #{c.fqn} related", package, c.vals)
+          c.related << concept
+        end
+      end
+    end
+  end
+
+  def self.parentlessConceptsToThing(model)
+    #TODO
+  end
+
 
   def self.resolveStructureOrAttribute(s, model)
     s.vals[H_CONCEPT].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |cg|

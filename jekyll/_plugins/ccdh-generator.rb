@@ -50,7 +50,7 @@ module CCDH
       CCDH.readModelFromCsv(File.expand_path(File.join(site.source, "../model")), model)
 
       #CCDH.validate(model)
-      #CCDH.resolve(model)
+      CCDH.resolve(model)
       #CCDH.resolveData(model, site)
       #data = model.data
       #publisher = ModelPublisher.new(model, site, "_template", "model")

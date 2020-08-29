@@ -17,6 +17,7 @@ module CCDH
   H_NOTES = "notes"
   H_DOMAINS = "domains"
   H_RANGES = "ranges"
+  H_RELATED = "related"
 
   F_PACKAGES_CSV = "packages.csv"
   F_CONCEPTS_CSV = "concepts.csv"
@@ -33,6 +34,7 @@ module CCDH
   V_GENERATED = "generated"
   V_STATUS_CURRENT = "current"
   V_PKG_BASE = "default"
+  V_CONCEPT_THING = "Thing"
 
   SEP_HASH = "#"
   SEP_COMMA = ","
@@ -66,11 +68,54 @@ module CCDH
     name
   end
 
+  def self.checkEntityRefList(list, defaultName, hash)
+    newList = ""
+    list.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |entityRef|
+      pkgName = nil
+      entityName = nil
+      p1, p2 = entityRef.split(SEP_COLON).collect(&:strip).reject(&:empty?)
+      if p2
+        entityName = checkEntityName(p2, defaultName)
+        pkgName = checkEntityName(p1, hash[H_PKG])
+      else
+        entityName = checkEntityName(p1, defaultName)
+        pkgName = hash[H_PKG]
+      end
+      newList.empty? || newList += " #{SEP_BAR} "
+      newList += "#{pkgName}#{SEP_COLON}#{entityName}"
+    end
+    newList
+  end
+
   def self.buildEntry(entry, hash)
     (entry.nil? || entry.empty?) && return
     hash[H_BUILD].nil? && hash[H_BUILD] = ""
     hash[H_BUILD].empty? || (hash[H_BUILD] += "\n")
     hash[H_BUILD] += entry
+  end
+
+  def self.getPackageGenerated(pkgName, generatedFor , model, sourceHash)
+    package = model.getPackage(pkgName, false)
+    if package.nil?
+      package = model.getPackage(pkgName, true)
+      package.vals[H_NAME] = pkgName
+      package.vals[H_STATUS] = V_GENERATED
+      buildEntry("Package #{pkgName} not found, generated.", sourceHash)
+      buildEntry("Generated for: #{generatedFor}", package.vals)
+    end
+    package
+  end
+
+  def self.getConceptGenerated(conceptName, generatedFor, package, sourceHash)
+    concept = package.getConcept(conceptName, false)
+    if concept.nil?
+      concept = package.getConcept(conceptName, true)
+      concept.vals[H_NAME] = conceptName
+      concept.vals[H_STATUS] = V_GENERATED
+      buildEntry("Concept #{concept.fqn} for parents not found, generated.", sourceHash)
+      buildEntry("Generated for #{generatedFor}", concept.vals)
+    end
+    concept
   end
 
 

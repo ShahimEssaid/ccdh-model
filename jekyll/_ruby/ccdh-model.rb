@@ -8,6 +8,10 @@ module CCDH
       @vals = {nil => []}
       @generated_now = true
     end
+
+    def name
+      @vals[H_NAME]
+    end
   end
 
   class PackagableModelElement < ModelElement
@@ -16,6 +20,10 @@ module CCDH
     def initialize(package, model)
       super(model)
       @package = package
+    end
+
+    def fqn
+      package.name + SEP_COLON + self.name
     end
   end
 
@@ -132,7 +140,6 @@ module CCDH
 
 
     def getConcept(name, create)
-
       concept = @concepts[name]
       if concept.nil? && create
         concept = MConcept.new(self, @model)
@@ -154,13 +161,14 @@ module CCDH
 
   class MConcept < PackagableModelElement
 
-    attr_accessor :parents #, :ancestors, :decsendants
+    attr_accessor :parents, :related
 
     def initialize(package, model)
       super(package, model)
 
       # ConceptRef
       @parents = []
+      @related = []
       #@ancestors = {}
       #@decsendants = {}
 

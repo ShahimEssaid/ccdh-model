@@ -19,42 +19,42 @@ module CCDH
   end
 
   def self.resolvePackageDependsOn(model)
-    model.packages.keys.each do |pn|
-      p = model.packages[pn]
-      p.vals[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |p|
-        package = getPackageGenerated(p, "dependant of package #{p.name}", model, p.vals)
-        p.depends_on << package
+    model[K_PACKAGES].keys.each do |pn|
+      p = model[K_PACKAGES][pn]
+      p[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |pdn|
+        package = getPackageGenerated(pdn, "dependant of package #{p[H_NAME]}", model, p)
+        p[K_DEPENDS_ON] << package
       end
     end
   end
 
   def self.resolveConceptParents(model)
-    model.packages.keys.each do |pn|
-      p = model.packages[pn]
-      p.concepts.keys.each do |cn|
-        c = p.concepts[cn]
-        parents = c.vals[H_PARENTS]
+    model[K_PACKAGES].keys.each do |pn|
+      p = model[K_PACKAGES][pn]
+      p[K_CONCEPTS].keys.each do |cn|
+        c = p[K_CONCEPTS][cn]
+        parents = c[H_PARENTS]
         parents.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |parentRef|
           pkgName, conceptName = parentRef.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "concept #{c.fqn}", model, c.vals)
-          concept = getConceptGenerated(conceptName, "concept #{c.fqn} parents", package, c.vals)
-          c.parents << concept
+          package = getPackageGenerated(pkgName, "concept #{c.fqn}", model, c)
+          concept = getConceptGenerated(conceptName, "concept #{c.fqn} parents", package, c)
+          c[K_PARENTS] << concept
         end
       end
     end
   end
 
   def self.resolveConceptRelated(model)
-    model.packages.keys.each do |pn|
-      p = model.packages[pn]
-      p.concepts.keys.each do |cn|
-        c = p.concepts[cn]
-        related = c.vals[H_RELATED]
+    model[K_PACKAGES].keys.each do |pn|
+      p =  model[K_PACKAGES][pn]
+      p[K_CONCEPTS].keys.each do |cn|
+        c = p[K_CONCEPTS][cn]
+        related = c[H_RELATED]
         related.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |relatedRef|
           pkgName, conceptName = relatedRef.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "concept #{c.fqn}", model, c.vals)
-          concept = getConceptGenerated(conceptName, "concept #{c.fqn} related", package, c.vals)
-          c.related << concept
+          package = getPackageGenerated(pkgName, "concept #{c.fqn}", model, c)
+          concept = getConceptGenerated(conceptName, "concept #{c.fqn} related", package, c)
+          c[K_RELATED] << concept
         end
       end
     end

@@ -88,14 +88,14 @@ module CCDH
         csv << [V_PKG_BASE, "The base c:Thing concept", "Anything", V_EMPTY, V_STATUS_CURRENT, "", ""]
       end
     end
-    model.packages_csv = CSV.read(packages_file, headers: true)
+    model[K_PACKAGES_CSV] = CSV.read(packages_file, headers: true)
     # save existing headers to rewrite them same way
-    model.packages_csv.headers.each do |h|
+    model[K_PACKAGES_CSV].headers.each do |h|
       unless h.nil?
-        model.packages_headers << h
+        model[K_PACKAGES_HEADERS] << h
       end
     end
-    model.packages_csv.each do |row|
+    model[K_PACKAGES_CSV].each do |row|
       row[H_BUILD].nil? && row[H_BUILD] = ""
 
       name = row[H_NAME]
@@ -114,15 +114,14 @@ module CCDH
 
       # create packages
       package = model.getPackage(row[H_NAME], true)
-      package.generated_now = false
+      package[K_GENERATED_NOW] = false
       copyRowVals(package, row)
     end
 
   end
 
   def self.readConcepts(model_dir, model)
-    # read concepts
-    #
+
     concepts_file = File.join(model_dir, F_CONCEPTS_CSV)
     ## create new file if missing
     if !File.exist?(concepts_file)
@@ -132,16 +131,16 @@ module CCDH
         csv << [V_PKG_BASE, V_CONCEPT_THING, "The base c:Thing concept", "Anything", "", "", V_STATUS_CURRENT, "", ""]
       end
     end
-    model.concepts_csv = CSV.read(concepts_file, headers: true)
+    model[K_CONCEPTS_CSV] = CSV.read(concepts_file, headers: true)
     # save existing headers to rewrite them same way
-    model.concepts_csv.headers.each do |h|
+    model[K_CONCEPTS_CSV].headers.each do |h|
       unless h.nil?
-        model.concepts_headers << h
+        model[K_CONCEPTS_HEADERS] << h
       end
     end
 
     # each row becomes a concept
-    model.concepts_csv.each { |row|
+    model[K_CONCEPTS_CSV].each { |row|
       # clean up the row before using it
 
       # make sure "build" isn't nil so we can use it as we clean up
@@ -170,24 +169,17 @@ module CCDH
 
       # we need a package for creating the concept
       package = getPackageGenerated(row[H_PKG], "concept #{row[H_NAME]}", model, row)
-      # package = model.getPackage(row[H_PKG], false)
-      # if package.nil?
-      #   package = model.getPackage(row[H_PKG], true)
-      #   package.vals[H_NAME] = row[H_PKG]
-      #   package.vals[H_STATUS] = V_GENERATED
-      #   buildEntry("Package #{row[H_PKG]} not found, generated.", row)
-      #   buildEntry("Generated for concept: #{row[H_NAME]}", package.vals)
-      # end
 
       concept = package.getConcept(row[H_NAME], false)
       if !concept.nil?
-        buildEntry("This concept was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", concept.vals)
+        buildEntry("This concept was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", concept)
         next
       end
       concept = package.getConcept(row[H_NAME], true)
-      concept.generated_now = false
+      concept[K_GENERATED_NOW] = false
 
       copyRowVals(concept, row)
+
     }
 
   end
@@ -203,16 +195,16 @@ module CCDH
         csv << [H_PKG, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_DOMAINS, H_RANGES, H_STATUS, H_NOTES, H_BUILD]
       end
     end
-    model.elements_csv = CSV.read(elements_file, headers: true)
+    model[K_ELEMENTS_CSV] = CSV.read(elements_file, headers: true)
     # save existing headers to rewrite them same way
-    model.elements_csv.headers.each do |h|
+    model[K_ELEMENTS_CSV].headers.each do |h|
       unless h.nil?
-        model.elements_headers << h
+        model[K_ELEMENTS_HEADERS] << h
       end
     end
 
     # each row becomes an element
-    model.elements_csv.each { |row|
+    model[K_ELEMENTS_CSV].each { |row|
       # clean up the row before using it
 
       # make sure "build" isn't nil so we can use it as we clean up
@@ -232,19 +224,19 @@ module CCDH
       package = model.getPackage(row[H_PKG], false)
       if package.nil?
         package = model.getPackage(row[H_PKG], true)
-        package.vals[H_NAME] = row[H_PKG]
-        package.vals[H_STATUS] = V_GENERATED
+        package[H_NAME] = row[H_PKG]
+        package[H_STATUS] = V_GENERATED
         buildEntry("Package #{row[H_PKG]} not found, generated.", row)
-        buildEntry("Generated for element: #{row[H_NAME]}", package.vals)
+        buildEntry("Generated for element: #{row[H_NAME]}", package)
       end
 
       element = package.getElement(row[H_NAME], false)
       if !element.nil?
-        buildEntry("This element was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", element.vals)
+        buildEntry("This element was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", element)
         next
       end
       element = package.getElement(row[H_NAME], true)
-      element.generated_now = false
+      element[K_GENERATED_NOW] = false
 
       copyRowVals(element, row)
     }
@@ -256,14 +248,14 @@ module CCDH
       vStripped = v.strip
       vStripped == v || buildEntry("#{k}: value: #{v} was updated to #{vStripped}", row)
       if k
-        entity.vals[k] = vStripped
+        entity[k] = vStripped
       else
         # values with nil header
-        entity.vals[k] << vStripped
+        entity[k] << vStripped
       end
     end
     # make sure the latest build entries are copied
-    entity.vals[H_BUILD] = row[H_BUILD]
+    entity[H_BUILD] = row[H_BUILD]
   end
 
 end

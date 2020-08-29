@@ -1,24 +1,59 @@
 module CCDH
   H_PKG = "pkg"
   H_NAME = "name"
-  H_DESC = "description"
-  H_MESG = "message"
-  H_WARNINGS = "warnings"
-  H_ERRORS = "errors"
-  H_OBJECT = "object"
-  H_ATTRIBUTE = "attribute"
-  H_STATUS = "status"
-  H_BUILD = "build"
-  H_CONCEPT = "concept"
-  H_VAL_CONCEPT = "val_concept"
   H_SUMMARY = "summary"
-  H_PARENTS = "parents"
-  H_PARENT = "parent"
+  H_DESC = "description"
+  H_STATUS = "status"
   H_NOTES = "notes"
+  H_BUILD = "build"
+  H_RELATED = "related"
+  #package
+  H_DEPENDS_ON = "depends_on"
+  # concept
+  H_PARENTS = "parents"
+  # element
+  H_PARENT = "parent"
   H_DOMAINS = "domains"
   H_RANGES = "ranges"
-  H_RELATED = "related"
-  H_DEPENDS_ON = "depends_on"
+
+  # H_MESG = "message"
+  # H_WARNINGS = "warnings"
+  # H_ERRORS = "errors"
+  # H_OBJECT = "object"
+  # H_ATTRIBUTE = "attribute"
+  # H_CONCEPT = "concept"
+  # H_VAL_CONCEPT = "val_concept"
+
+  K_MODEL = "@model"
+
+  K_PACKAGES_CSV="@packages_csv"
+  K_CONCEPTS_CSV="@concepts_csv"
+  K_ELEMENTS_CSV = "@elements_csv"
+  K_STRUCTURES_CSV = "@structures_csv"
+  K_PACKAGES_HEADERS = "@packages_headers"
+  K_CONCEPTS_HEADERS = "@concepts_headers"
+  K_ELEMENTS_HEADERS = "@elements_headers"
+  K_STRUCTURES_HEADERS = "@structures_headers"
+
+  K_GENERATED_NOW = "@generated_now"
+  K_PACKAGE = "@package"
+  K_PACKAGES = "@packages"
+  K_DEPENDS_ON = "@depends_on"
+  K_CONCEPTS = "@concepts"
+  K_STRUCTURES = "@structures"
+  K_ELEMENTS = "@elements"
+  K_PARENTS = "@parents"
+  K_RELATED = "@related"
+  K_ATTRIBUTES = "@attributes"
+  K_STRUCTURE = "@structure" # used in a hash to point to the vals of a structure
+
+  K_CONCEPT_REFS = "@concept_refs"
+  K_VAL_CONCEPT_REFS = "@val_concept_refs"
+
+  # K_PACKAGES_ROOT = "@packages_root"
+  # K_CHILDREN = "@children"
+  # K_ATTRIBUTE_VALUES = "@attribute_values"
+  # K_ATTRIBUTE = "@attribute" # used in a hash to point to the vals of an attribute
 
   F_PACKAGES_CSV = "packages.csv"
   F_CONCEPTS_CSV = "concepts.csv"
@@ -26,10 +61,10 @@ module CCDH
   F_GROUPS_CSV = "groups.csv"
   F_STRUCTURES_CSV = "structures.csv"
 
-  P_CONCEPTS = "c:"
-  P_STRUCTURES = "s:"
-  P_GROUPS = "g:"
-  P_MODEL = "m:"
+  # P_CONCEPTS = "c:"
+  # P_STRUCTURES = "s:"
+  # P_GROUPS = "g:"
+  # P_MODEL = "m:"
 
   V_SELF = "_self_"
   V_GENERATED = "generated"
@@ -43,20 +78,6 @@ module CCDH
   SEP_COLON = ":"
   SEP_AT = "@"
   SEP_BAR = "|"
-
-  K_GENERATED_NOW = "@generated_now"
-  K_PACKAGE = "@package"
-  K_PACKAGES = "@packages"
-  K_PACKAGES_ROOT = "@packages_root"
-  K_CHILDREN = "@children"
-  K_CONCEPTS = "@concepts"
-  K_STRUCTURES = "@structures"
-  K_GROUPS = "@groups"
-  K_ENTITIES = "@entities"
-  K_ATTRIBUTES = "@attributes"
-  K_ATTRIBUTE_VALUES = "@attribute_values"
-  K_ATTRIBUTE = "@attribute" # used in a hash to point to the vals of an attribute
-  K_STRUCTURE = "@structure" # used in a hash to point to the vals of a structure
 
 
   # Allows a-z, A-Z, 0-9, and _

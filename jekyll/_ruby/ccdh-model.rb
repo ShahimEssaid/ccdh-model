@@ -1,25 +1,22 @@
 module CCDH
 
-  class ModelElement
-    attr_accessor :model, :vals, :generated_now
-
+  class ModelElement < Hash
     def initialize(model)
-      @model = model
-      @vals = {nil => []}
-      @generated_now = true
+      super("N/A")
+      self[K_MODEL] = model
+      self[nil] = []
+      self[K_GENERATED_NOW] = true
     end
 
     def name
-      @vals[H_NAME]
+      self[H_NAME]
     end
   end
 
   class PackagableModelElement < ModelElement
-    attr_accessor :package
-
     def initialize(package, model)
       super(model)
-      @package = package
+      self[K_PACKAGE] = package
     end
 
     def fqn
@@ -28,40 +25,25 @@ module CCDH
   end
 
   class Model < ModelElement
-    attr_accessor :packages, :packages_csv, :packages_headers,
-                  :concepts_csv, :concepts_headers,
-                  :elements_csv, :elements_headers,
-                  :groups_csv, :groups_headers,
-                  :structures_csv, :structures_headers
-
-
     def initialize(name)
       super(self)
-      @vals[H_NAME] = name
-      #
-      # @vals[K_GROUPS] = {}
-      # @vals[K_STRUCTURES] = {}
-      # @vals[K_PACKAGES] = {}
-      # @vals[K_PACKAGES_ROOT] = {}
+      self[H_NAME] = name
+      self[K_PACKAGES] = {}
 
-      @packages = {}
-
-      @packages_headers = []
-      @concepts_headers = []
-      @elements_headers = []
-      @structures_headers = []
-
-      @groups_headers = []
+      self[K_PACKAGES_HEADERS] = []
+      self[K_CONCEPTS_HEADERS] = []
+      self[K_ELEMENTS_HEADERS] = []
+      self[K_STRUCTURES_HEADERS] = []
     end
 
     ##
     # get package from packages map
     #
     def getPackage(name, create)
-      package = @packages[name]
+      package = self[K_PACKAGES][name]
       if package.nil? && create
         package = MPkg.new(self)
-        @packages[name] = package
+        self[K_PACKAGES][name] = package
       end
       package
     end
@@ -125,126 +107,73 @@ module CCDH
   end
 
   class MPkg < ModelElement
-    attr_accessor :depends_on, :concepts, :elements
-
     def initialize(model)
       super(model)
-      @depends_on = []
-      @concepts = {}
-      @elements = {}
+      self[K_DEPENDS_ON] = []
+      self[K_CONCEPTS] = {}
+      self[K_STRUCTURE] = {}
+      self[K_ELEMENTS] = {}
     end
 
-    # def name
-    #   @vals[H_PKG]
-    # end
-
-
     def getConcept(name, create)
-      concept = @concepts[name]
+      concept = self[K_CONCEPTS][name]
       if concept.nil? && create
-        concept = MConcept.new(self, @model)
-        @concepts[name] = concept
+        concept = MConcept.new(self, self[K_MODEL])
+        self[K_CONCEPTS][name] = concept
       end
       concept
     end
 
     def getElement(name, create)
-      element = @elements[name]
+      element = self[K_ELEMENTS][name]
       if element.nil? && create
-        element = MElement.new(self, @model)
-        @elements[name] = element
+        element = MElement.new(self, self[K_MODEL])
+        self[K_ELEMENTS][name] = element
       end
       element
     end
-
   end
 
   class MConcept < PackagableModelElement
-
-    attr_accessor :parents, :related
-
     def initialize(package, model)
       super(package, model)
-
       # ConceptRef
-      @parents = []
-      @related = []
-      #@ancestors = {}
-      #@decsendants = {}
-
-      # @vals[K_ATTRIBUTES] = {}
-      # @vals[K_ATTRIBUTE_VALUES] = {}
+      self[K_PARENTS] = []
+      self[K_RELATED] = []
     end
-
-    # def name
-    #   @vals[H_NAME]
-    # end
-
   end
-
 
   class MElement < PackagableModelElement
 
   end
 
-
-  # class MGroup < PackagableModelElement
-  #   attr_accessor :vals
-  #
-  #   def initialize(package, model)
-  #     super(package, model)
-  #   end
-  # end
-
   class MStructure < PackagableModelElement
-    attr_accessor :attributes,
-                  :concept_refs #, :val_concept_refs
+    # attr_accessor :attributes,
+    #               :concept_refs #, :val_concept_refs
 
     def initialize(package, model)
       super(package, model)
-      @attributes = {}
-      @concept_refs = []
-    end
-
-    def name
-      @vals[H_NAME]
+      self[K_ATTRIBUTES] = {}
+      #@concept_refs = []
     end
 
     def getAttribute(name, create)
-      if @attributes[name].nil? && create
-        attribute = MSAttribute.new(self, @model)
-        @attributes[name] = attribute
-        attribute.vals[H_ATTRIBUTE] = name
+      if self[K_ATTRIBUTES][name].nil? && create
+        attribute = MSAttribute.new(self, self[K_MODEL])
+        self[K_ATTRIBUTES][name] = attribute
+        #attribute.vals[H_ATTRIBUTE] = name
       end
-      @attributes[name]
+      self[K_ATTRIBUTES][name]
     end
   end
 
   class MSAttribute < ModelElement
-    attr_accessor :concept_refs, :val_concept_refs
-
+    # attr_accessor :concept_refs, :val_concept_refs
     def initialize(structure, model)
       super(model)
-      @structure = structure
-      @concept_refs = []
-      @val_concept_refs = []
-    end
-
-    def name
-      @vals[H_ATTRIBUTE]
-    end
-
-    def fqn
-      "#{@structure.fqn}.#{self.name}"
+      self[K_STRUCTURE] = structure
+      self[K_CONCEPT_REFS] = []
+      self[K_VAL_CONCEPT_REFS] = []
     end
   end
-
-
-  # class ConceptReferenceGroup
-  #   attr_accessor :concepts
-  #
-  #   def initialize()
-  #     @references = []
-  #   end
-  # end
 end

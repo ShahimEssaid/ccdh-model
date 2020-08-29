@@ -74,6 +74,7 @@ module CCDH
   end
 
 
+
   # =========================================================
   # =========================================================
   # =========================================================
@@ -89,6 +90,22 @@ module CCDH
   # package name is not unique to each model entity.
   # no need to prefix with entity type
   #
+
+
+  class ConceptRef
+    attr_accessor :structures
+
+    def initialize(concept)
+      @concept = concept
+      @structures = []
+
+    end
+
+    def concept
+      @concept
+    end
+  end
+
 
   def self.checkPackageReference(ref)
 
@@ -266,89 +283,6 @@ module CCDH
     element.vals[K_GENERATED_NOW] = element.generated_now
   end
 
-  def self.resolve(model)
-    model.structures.each do |k, s|
-      # resolve the concepts
-      resolveStructureOrAttribute(s, model)
-      s.attributes.each do |k, a|
-        resolveStructureOrAttribute(a, model)
-      end
-    end
-  end
-
-  def self.resolveStructureOrAttribute(s, model)
-    s.vals[H_CONCEPT].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |cg|
-      # a concept group
-      cga = []
-      cg.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-        pkgname = getPkgNameFromFqn(c)
-        cname = getEntityNameFromFqn(c)
-        pkg = model.getPackage(pkgname, false)
-        if pkg.nil?
-          buildEntry("Package #{pkgname} didn't already exist for concept #{cname}. Creating it.", s.vals)
-          pkg = model.getPackage(pkgname, true)
-        end
-
-        concept = model.getConcept(c, pkg, false)
-        if concept.nil?
-          buildEntry("Concept #{c} in in #{H_CONCEPT} didn't alraedy exist. Creating it.", s.vals)
-          concept = model.getConcept(c, pkg, true)
-          concept.vals[H_NAME] = cname
-          concept.vals[H_DESC] = V_GENERATED
-          concept.vals[H_STATUS] = V_GENERATED
-        end
-        cga << ConceptRef.new(concept)
-      end
-      cga.empty? || s.concept_refs << cga
-    end
-
-    s.vals[H_ATTRIBUTE] == V_SELF && return
-
-    # resolve the val concepts
-    s.vals[H_VAL_CONCEPT].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |vcg|
-      # one concept @ structure group
-      parts = vcg.split(SEP_AT).collect(&:strip)
-      cname = parts[0]
-      sgroup = parts[1]
-
-      # do the concept first
-      concept = model.getConcept(cname, pkg, false)
-      if concept.nil?
-        buildEntry("Concept #{c} in #{H_VAL_CONCEPT} didn't alraedy exist. Creating it.", s.vals)
-        concept = model.getConcept(cname, pkg, true)
-        concept.vals[H_NAME] = cname
-        concept.vals[H_DESC] = V_GENERATED
-        concept.vals[H_STATUS] = V_GENERATED
-      end
-      cref = ConceptRef.new(concept)
-      s.val_concept_refs << cref
-      # now do the @ structures
-      sgroup.nil? && return
-      sgroup.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |sg|
-        # a structure name
-        sga = []
-        sg.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |s|
-          pkgname = getPkgNameFromFqn(s)
-          sname = getEntityNameFromFqn(s)
-          pkg = model.getPackage(pkgname, false)
-          if pkg.nil?
-            buildEntry("Package #{pkgname} didn't already exist for structure #{s} in #{H_VAL_CONCEPT}. Creating it.", s.vals)
-            pkg = model.getPackage(pkgname, true)
-          end
-
-          structure = model.getStructure(s, pkg, false)
-          if structure.nil?
-            buildEntry("Structure #{s} in in #{H_VAL_CONCEPT} didn't alraedy exist. Creating it.", s.vals)
-            structure = model.getStructure(s, pkg, true)
-            structure.vals[H_NAME] = sname
-            structure.vals[H_DESC] = V_GENERATED
-            structure.vals[H_STATUS] = V_GENERATED
-          end
-          cref.structures << structure
-        end
-      end
-    end
-  end
 
   def self.conceptStructures(concept)
     structures = []

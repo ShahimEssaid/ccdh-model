@@ -150,7 +150,6 @@ module CCDH
       copyRowVals(element, row)
     }
 
-
     #
     # model.groups_csv = CSV.read(File.join(model_dir, F_GROUPS_CSV), headers: true)
     # model.groups_csv.headers.each do |h|

@@ -10,6 +10,7 @@ require_relative "../_ruby/ccdh-model"
 require_relative "../_ruby/ccdh-util"
 require_relative "../_ruby/ccdh-writer"
 require_relative "../_ruby/ccdh-reader"
+require_relative "../_ruby/ccdh-resolve"
 require_relative "../_ruby/ccdh-publisher"
 
 module Jekyll

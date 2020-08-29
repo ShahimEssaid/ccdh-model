@@ -1,4 +1,4 @@
-require_relative "ccdh-util"
+require_relative "../ccdh-util"
 
 module CCDH
 #   puts "HELLO"

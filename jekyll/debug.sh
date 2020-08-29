@@ -14,4 +14,4 @@ while [ -h "$SOURCE" ]; do
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-bundle exec rdebug-ide --host 127.0.0.1 --port 1234 -- ${DIR}/../gems/ruby/2.6.0/bin/jekyll b --trace 
+bundle exec rdebug-ide --host 127.0.0.1 --port 1234 -- ${DIR}/../gems/ruby/2.6.0/bin/jekyll b --trace

@@ -11,8 +11,16 @@ module CCDH
   H_BUILD = "build"
   H_CONCEPT = "concept"
   H_VAL_CONCEPT = "val_concept"
+  H_SUMMARY = "summary"
+  H_PARENTS = "parents"
+  H_PARENT = "parent"
+  H_NOTES = "notes"
+  H_DOMAINS = "domains"
+  H_RANGES = "ranges"
 
+  F_PACKAGES_CSV = "packages.csv"
   F_CONCEPTS_CSV = "concepts.csv"
+  F_ELEMENTS_CSV = "elements.csv"
   F_GROUPS_CSV = "groups.csv"
   F_STRUCTURES_CSV = "structures.csv"
 
@@ -23,6 +31,8 @@ module CCDH
 
   V_SELF = "_self_"
   V_GENERATED = "generated"
+  V_STATUS_CURRENT = "current"
+  V_PKG_BASE = "default"
 
   SEP_HASH = "#"
   SEP_COMMA = ","
@@ -30,50 +40,65 @@ module CCDH
   SEP_AT = "@"
   SEP_BAR = "|"
 
+  K_GENERATED_NOW = "@generated_now"
+  K_PACKAGE = "@package"
+  K_PACKAGES = "@packages"
+  K_PACKAGES_ROOT = "@packages_root"
+  K_CHILDREN = "@children"
+  K_CONCEPTS = "@concepts"
+  K_STRUCTURES = "@structures"
+  K_GROUPS = "@groups"
+  K_ENTITIES = "@entities"
+  K_ATTRIBUTES = "@attributes"
+  K_ATTRIBUTE_VALUES = "@attribute_values"
+  K_ATTRIBUTE = "@attribute" # used in a hash to point to the vals of an attribute
+  K_STRUCTURE = "@structure" # used in a hash to point to the vals of a structure
+
+
+  # Allows a-z, A-Z, 0-9, and _
+  # If empty, generate with defaultName_randomNumber
+  def self.checkEntityName(name, defaultName)
+    (name.nil? || name.empty?) && name = +"defaultName_#{rand(100000..999999)}"
+    # remove all none alpha numeric
+    name = name.gsub(/[^a-zA-Z0-9_]/, "")
+    # in case name had some characters but empty now. create new name
+    name.empty? && name = +"defaultName_#{rand(100000..999999)}"
+    name
+  end
+
+  def self.buildEntry(entry, hash)
+    (entry.nil? || entry.empty?) && return
+    hash[H_BUILD].nil? && hash[H_BUILD] = ""
+    hash[H_BUILD].empty? || (hash[H_BUILD] += "\n")
+    hash[H_BUILD] += entry
+  end
+
+
+  # =========================================================
+  # =========================================================
+  # =========================================================
+  #
   ##
   # Takes a fqn package refernce and checks it, checks it agains the prefix, and fixes if indicated
   # Return nil if it's not a proper reference
   # Optionally tries to fix it if it can and return the fixed version
   # a proper package name is prefixed, all lower case, single : separated, and ends with :, and only alpha and :
   # returns nil if fails all checks and not requesting fixing.
+  #
+  # new version
+  # package name is not unique to each model entity.
+  # no need to prefix with entity type
+  #
 
-  def self.checkPackageReference(ref, prefix)
-    !prefix.end_with?(SEP_COLON) && prefix += SEP_COLON
+  def self.checkPackageReference(ref)
 
     # nil or empty?
-    (ref.nil? || ref.empty?) && ref = prefix
-
-    # not prefixed?
-    !ref.start_with?(prefix) && ref = prefix + ref
-
+    (ref.nil? || ref.empty?) && ref = V_PKG_BASE
     # replace any odd characters
-    ref = ref.gsub(/[^a-zA-Z:]/, SEP_COLON)
-
-    # replace multiple : in a row
-    ref = ref.gsub(/[:]+/, SEP_COLON)
-
-    # all donw case
-    ref = ref.downcase
-
-    # ends with :?
-    !ref.end_with?(SEP_COLON) && ref += SEP_COLON
-
+    ref = ref.gsub(/[^a-zA-Z0-9_]/, "")
     ref
   end
 
-  def self.checkEntityName(name, defaultName)
-    (name.nil? || name.empty?) && name = defaultName + "#{rand(100000..999999)}"
-    # check for old self
-    if name.match?("self")
-      name = V_SELF
-    else
-      # remove all none alpha numeric
-      name = name.gsub(/[^a-zA-Z0-9]/, "")
-      # in case name had some characters but empty now. create new name
-      name.empty? && name = defaultName + "#{rand(100000..999999)}"
-    end
-    name
-  end
 
   def self.checkFqnEntityName(name, defaultName, packagePrefix)
     (name.nil? || name.empty?) && name = defaultName + "#{rand(100000..999999)}"
@@ -145,25 +170,20 @@ module CCDH
     newRef
   end
 
-  def self.parseConceptReference(reference, containingEntity)
-    group = ConceptReferenceGroup.new
-    reference.split(SEP_HASH).collect(&:strip).each do |r|
-      ref_parts = r.split(SEP_AT).collect(&:strip)
-      concept_name = ref_parts[0]
-      concept = nil
-      structure_names = []
-      if ref_parts.length == 2 && (not ref_parts[1].empty?)
-        structure_names = ref_parts[1].split(SEP_COMMA).collect(&:strip)
-      end
-      #TODO:
-    end
-  end
+  # def self.parseConceptReference(reference, containingEntity)
+  #   group = ConceptReferenceGroup.new
+  #   reference.split(SEP_HASH).collect(&:strip).each do |r|
+  #     ref_parts = r.split(SEP_AT).collect(&:strip)
+  #     concept_name = ref_parts[0]
+  #     concept = nil
+  #     structure_names = []
+  #     if ref_parts.length == 2 && (not ref_parts[1].empty?)
+  #       structure_names = ref_parts[1].split(SEP_COMMA).collect(&:strip)
+  #     end
+  #     #TODO:
+  #   end
+  # end
 
-  def self.buildEntry(entry, row)
-    (entry.nil? || entry.empty?) && return
-    row[H_BUILD].empty? || (row[H_BUILD] += "\n")
-    row[H_BUILD] += entry
-  end
 
   def self.getPkgNameFromFqn(fqn)
     (fqn.nil? || fqn.empty?) && (return nil)
@@ -186,246 +206,64 @@ module CCDH
     fqn[(i + 1)..]
   end
 
-  def self.readModelFromCsv(model_dir, model)
-    model.concepts_csv = CSV.read(File.join(model_dir, F_CONCEPTS_CSV), headers: true)
-    model.concepts_csv.headers.each do |h|
-      unless h.nil?
-        model.concepts_headers << h
+
+  def self.validate(model) end
+
+  def self.resolveData(model, site)
+    # here we link data/vals between different model entitie
+
+    site.data["model-current"] = model.vals
+
+    # packages
+
+    model.packages.keys.sort.each do |k|
+      package = model.packages[k]
+      resolveElementData(package)
+      #link model to packages
+      model.vals[K_PACKAGES][k] = package.vals
+      #link model to root packages
+      package.package.nil? && model.vals[K_PACKAGES_ROOT][k] = package
+
+      #link package to child packages
+      package.vals[K_CHILDREN] = {}
+      package.children.keys.sort.each do |ck|
+        package.vals[K_CHILDREN][ck] = package.children[ck].vals
+      end
+      package.vals[K_ENTITIES] = {}
+      package.entities.keys.sort.each do |ck|
+        package.vals[K_ENTITIES][ck] = package.entities[ck].vals
       end
     end
-    model.concepts_csv.each { |row|
-      # clean up the row before using it
-      # make sure "build" isn't nil
-      row[H_BUILD].nil? && row[H_BUILD] = ""
 
-      #check package name
-      pkg_ref = row[H_PKG]
-      row[H_PKG] = checkPackageReference(pkg_ref, P_CONCEPTS)
-      row[H_PKG] == pkg_ref || buildEntry("#{H_PKG}: #{pkg_ref} was updated to: #{row[H_PKG]}", row)
+    # concepts
+    model.concepts.keys.sort.each do |c|
+      concept = model.concepts[c]
+      resolveElementData(concept)
+      model.vals[K_CONCEPTS][concept.fqn] = concept.vals
 
-      #check name
-      name = row[H_NAME]
-      row[H_NAME] = checkEntityName(name, "Concept")
-      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
-
-      # we need a pakcage for creating the concept
-      package = model.getPackage(row[H_PKG], true)
-      entity = nil
-
-      if row[H_NAME] == V_SELF
-        # it's a package row
-        entity = package
-      else
-        #it's a concept row
-        fqn = row[H_PKG] + row[H_NAME]
-        concept = model.getConcept(fqn, package, false)
-        if !concept.nil?
-          #concept.vals[]
-          buildEntry("This concept was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", concept.vals)
-          next
-        end
-        entity = model.getConcept(fqn, package, true)
-        package.entities[row[H_NAME]] = entity
+      # link to structures tagged with this concept
+      CCDH.conceptStructures(concept).each do |s|
+        concept.vals[K_STRUCTURES][s.fqn] = s.vals
       end
-      entity.generated_now = false
 
-      row.each do |k, v|
-        if k
-          entity.vals[k] = v
-        else
-          entity.vals[k] << v
-        end
+      # link to attributes tagged with this concept
+      CCDH.conceptAttributes(concept).each do |a|
+        concept.vals[K_ATTRIBUTES][a.fqn] = a.vals
       end
-    }
 
-    model.groups_csv = CSV.read(File.join(model_dir, F_GROUPS_CSV), headers: true)
-    model.groups_csv.headers.each do |h|
-      unless h.nil?
-        model.groups_headers << h
+      # link to attribute values tagged with this concept
+      CCDH.conceptAttributeValues(concept).each do |a|
+        concept.vals[K_ATTRIBUTE_VALUES][a.fqn] = a.vals
       end
     end
-    model.groups_csv.each { |row|
-      # cleanup
-      row[H_BUILD].nil? && row[H_BUILD] = ""
 
-      #check package name
-      pkg_ref = row[H_PKG]
-      row[H_PKG] = checkPackageReference(pkg_ref, P_GROUPS)
-      row[H_PKG] == pkg_ref || buildEntry("#{H_PKG}: #{pkg_ref} was updated to: #{row[H_PKG]}", row)
+    # structures
 
-      #check name
-      name = row[H_NAME]
-      row[H_NAME] = checkEntityName(name, "Group")
-      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
-
-      # we need a pakcage for creating the entity
-      package = model.getPackage(row[H_PKG], true)
-      entity = nil
-      if row[H_NAME] == V_SELF
-        # it's a package row
-        entity = package
-      else
-        #it's a group row
-        entity = model.getGroup(row[H_NAME], package, false)
-        if !entity.nil?
-          #concept.vals[]
-          buildEntry("This group was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity.vals)
-          next
-        end
-        entity = model.getGroup(row[H_NAME], package, true)
-        package.entities[row[H_NAME]] = entity
-      end
-      entity.generated_now = false
-
-      row.each do |k, v|
-        if k
-          entity.vals[k] = v
-        else
-          entity.vals[k] << v
-        end
-      end
-    }
-
-    model.structures_csv = CSV.read(File.join(model_dir, F_STRUCTURES_CSV), headers: true)
-    model.structures_csv.headers.each do |h|
-      unless h.nil?
-        model.structures_headers << h
-      end
-    end
-    model.structures_csv.each { |row|
-      # clean up the row before using it
-
-      # make sure "build" isn't nil
-      row[H_BUILD].nil? && row[H_BUILD] = ""
-
-      #check package name
-      pkg_ref = row[H_PKG]
-      row[H_PKG] = checkPackageReference(pkg_ref, P_STRUCTURES)
-      row[H_PKG] == pkg_ref || buildEntry("#{H_PKG}: #{pkg_ref} was updated to: #{row[H_PKG]}", row)
-
-      #check name for structure
-      name = row[H_NAME]
-      row[H_NAME] = checkEntityName(name, "Structure")
-      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
-
-      #check name for attribute
-      name = row[H_ATTRIBUTE]
-      row[H_ATTRIBUTE] = checkEntityName(name, "attribute")
-      row[H_ATTRIBUTE] == name || buildEntry("#{H_ATTRIBUTE}: #{name} was updated to: #{row[H_ATTRIBUTE]}", row)
-
-      # check concept refs
-      cref = row[H_CONCEPT]
-      row[H_CONCEPT] = checkStructureConceptRef(row[H_CONCEPT])
-      row[H_CONCEPT] == cref || buildEntry("#{H_CONCEPT}: #{cref} was updated to #{row[H_CONCEPT]}", row)
-
-      # check val refs
-      vref = row[H_VAL_CONCEPT]
-      row[H_VAL_CONCEPT] = checkStructureValRef(row[H_VAL_CONCEPT])
-      row[H_VAL_CONCEPT] == cref || buildEntry("#{H_VAL_CONCEPT}: #{vref} was updated to #{row[H_VAL_CONCEPT]}", row)
-
-      # build the model
-
-      # we need a pakcage for creating the concept
-      package = model.getPackage(row[H_PKG], true)
-      entity = nil
-
-      if row[H_NAME] == V_SELF
-        # this is a package definition row
-        entity = package
-      else
-        # this is a structure or attribute definition row. we need a structure either way
-        structure = model.getStructure(row[H_NAME], package, true)
-        if row[H_ATTRIBUTE] == V_SELF
-          # this is a structure definition row
-          entity = structure
-        else
-          # this is an attribute definition row
-          entity = structure.getAttribute(row[H_ATTRIBUTE], true)
-        end
-      end
-      entity.generated_now = false
-      row.each do |k, v|
-        if k
-          entity.vals[k] = v
-        else
-          entity.vals[k] << v
-        end
-      end
-    }
   end
 
-  def self.writeModelToCSV(model, dir)
-    FileUtils.mkdir_p(dir)
-
-    CSV.open(File.join(dir, F_CONCEPTS_CSV), mode = "wb", { force_quotes: true }) do |csv|
-      csv << model.concepts_headers
-      model.concepts.keys.sort.each do |k|
-        row = []
-        concept = model.concepts[k]
-        concept.generated_now && concept.vals[H_STATUS] = V_GENERATED
-        model.concepts_headers.each do |h|
-          row << concept.vals[h]
-        end
-        concept.vals[nil].each do |v|
-          row << v
-        end
-        csv << row
-      end
-    end
-
-    CSV.open(File.join(dir, F_GROUPS_CSV), mode = "wb", { force_quotes: true }) do |csv|
-      csv << model.groups_headers
-      model.groups.keys.sort.each do |k|
-        row = []
-        group = model.groups[k]
-        model.groups_headers.each do |h|
-          row << group.vals[h]
-        end
-        group.vals[nil].each do |v|
-          row << v
-        end
-        csv << row
-      end
-    end
-
-    CSV.open(File.join(dir, F_STRUCTURES_CSV), mode = "wb", { force_quotes: true }) do |csv|
-      csv << model.structures_headers
-      model.structures.keys.sort.each do |sk|
-        row = []
-        structure = model.structures[sk]
-        structure.generated_now && structure.vals[H_STATUS] = V_GENERATED
-        model.structures_headers.each do |h|
-          row << structure.vals[h]
-        end
-        structure.vals[nil].each do |v|
-          row << v
-        end
-        csv << row
-
-        structure.attributes.keys.sort.each do |ak|
-          row = []
-          attribute = structure.attributes[ak]
-          attribute.generated_now && attribute.vals[H_STATUS] = V_GENERATED
-          model.structures_headers.each do |h|
-            row << attribute.vals[h]
-          end
-          attribute.vals[nil].each do |v|
-            row << v
-          end
-          csv << row
-        end
-      end
-    end
-  end
-
-  def self.readRow(row, name, default = "")
-    value = row[name] || default
-  end
-
-  def self.validate(model)
-  end
-
-  def self.resolveData(model)
+  def self.resolveElementData(element)
+    element.package.nil? || element.vals[K_PACKAGE] = element.package.vals
+    element.vals[K_GENERATED_NOW] = element.generated_now
   end
 
   def self.resolve(model)
@@ -459,10 +297,12 @@ module CCDH
           concept.vals[H_DESC] = V_GENERATED
           concept.vals[H_STATUS] = V_GENERATED
         end
-        cga << ConceptReference.new(concept)
+        cga << ConceptRef.new(concept)
       end
       cga.empty? || s.concept_refs << cga
     end
+
+    s.vals[H_ATTRIBUTE] == V_SELF && return
 
     # resolve the val concepts
     s.vals[H_VAL_CONCEPT].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |vcg|
@@ -480,7 +320,7 @@ module CCDH
         concept.vals[H_DESC] = V_GENERATED
         concept.vals[H_STATUS] = V_GENERATED
       end
-      cref = ConceptReference.new(concept)
+      cref = ConceptRef.new(concept)
       s.val_concept_refs << cref
       # now do the @ structures
       sgroup.nil? && return
@@ -508,5 +348,46 @@ module CCDH
         end
       end
     end
+  end
+
+  def self.conceptStructures(concept)
+    structures = []
+    concept.model.structures.keys.sort.each do |sk|
+      structure = concept.model.structures[sk]
+      structure.concept_refs.each do |cr|
+        cr.concept.equal? (concept) && structures << cr.concept
+      end
+    end
+    structures
+  end
+
+
+  def self.conceptAttributes(concept)
+    attributes = []
+    concept.model.structures.keys.sort.each do |sk|
+      structure = concept.model.structures[sk]
+      structure.attributes.keys.sort.each do |a|
+        attribute = structure.attributes[a]
+        attribute.concept_refs.each do |cr|
+          cr.concept.equal?(concept) && attributes << attribute
+        end
+      end
+    end
+    attributes
+  end
+
+
+  def self.conceptAttributeValues(concept)
+    attributes = []
+    concept.model.structures.keys.sort.each do |sk|
+      structure = concept.model.structures[sk]
+      structure.attributes.keys.sort.each do |a|
+        attribute = structure.attributes[a]
+        attribute.val_concept_refs.each do |vcr|
+          vcr.concept.equal?(concept) && attributes << attribute
+        end
+      end
+    end
+    attributes
   end
 end

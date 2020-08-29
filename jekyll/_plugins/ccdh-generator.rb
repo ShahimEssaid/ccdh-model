@@ -8,6 +8,8 @@ require "fileutils"
 # Dir.glob(ruby_files + "/ccdh-*.rb", &method(:puts))
 require_relative "../_ruby/ccdh-model"
 require_relative "../_ruby/ccdh-util"
+require_relative "../_ruby/ccdh-writer"
+require_relative "../_ruby/ccdh-reader"
 require_relative "../_ruby/ccdh-publisher"
 
 module Jekyll
@@ -43,20 +45,18 @@ module CCDH
       #CCDH.generator = self
       @site = site
       model = Model.new("build")
-      mpkg = model.getPackage(P_MODEL, true)
-      model.package = mpkg
 
       CCDH.readModelFromCsv(File.expand_path(File.join(site.source, "../model")), model)
 
-      CCDH.validate(model)
-      CCDH.resolve(model)
-      CCDH.resolveData(model)
+      #CCDH.validate(model)
+      #CCDH.resolve(model)
+      #CCDH.resolveData(model, site)
       #data = model.data
       #publisher = ModelPublisher.new(model, site, "_template", "model")
       #publisher.publishModelFile.
-      CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))
+      # CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))
 
-      #puts model.data.to_json
+      #pp model.vals
     end
   end
 end

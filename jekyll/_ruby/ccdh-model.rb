@@ -1,93 +1,63 @@
 module CCDH
   class ModelElement
-    attr_accessor :model, :package, :vals, :generated_now
+    attr_accessor :model, :vals, :generated_now
 
-    def initialize(package, model)
+    def initialize(model)
       @model = model
-      @package = package
-      @vals = { nil => [] }
+      @vals = {nil => []}
       @generated_now = true
     end
+  end
 
-    def description
-      @vals[H_DESC]
+  class PackagableModelElement < ModelElement
+    attr_accessor :package
+
+    def initialize(package, model)
+      super(model)
+      @package = package
     end
-
-    def isGenerated
-      @vals[H_STATUS] = V_GENERATED
-    end
-
-    def isGeneratedNow
-      @generated_now
-    end
-
-    def isGeneratedEither
-      isGenerated || isGeneratedNow
-    end
-
-    # def warn(message, object)
-    #   @vals[H_WARNINGS] << { H_MESG => message, H_OBJECT => object }
-    # end
-
-    # def error(message, object)
-    #   @vals[H_ERRORS] << { H_MESG => message, H_OBJECT => object }
-    # end
   end
 
   class Model < ModelElement
-    attr_accessor :concepts, :groups, :structures,
-      :concepts_csv, :concepts_headers,
-      :groups_csv, :groups_headers,
-      :structures_csv, :structures_headers,
-      :packages
+    attr_accessor :packages, :packages_csv, :packages_headers,
+                  :concepts_csv, :concepts_headers,
+                  :elements_csv, :elements_headers,
+                  :groups_csv, :groups_headers,
+                  :structures_csv, :structures_headers
 
-    def initialize(name)
-      super(nil, self)
-      @vals[H_NAME] = name
-      @concepts = {}
-      @groups = {}
-      @structures = {}
-      @packages = {}
-      @concepts_headers = []
-      @groups_headers = []
-      @structures_headers = []
-    end
+
+        def initialize(name)
+          super(self)
+          @vals[H_NAME] = name
+
+          @vals[K_GROUPS] = {}
+          @vals[K_STRUCTURES] = {}
+          @vals[K_PACKAGES] = {}
+          @vals[K_PACKAGES_ROOT] = {}
+
+          @packages = {}
+
+          @packages_headers = []
+          @concepts_headers = []
+          @elements_headers = []
+
+          @groups_headers = []
+          @structures_headers = []
+
+        end
 
     ##
-    # get package from a fqn package name
-    # the name is assumed to be clean
-    # entities are tracked in thier parent package
-    def getPackage(fqn, create)
-      package = @packages[fqn]
+    # get package from packages map
+    #
+    def getPackage(name, create)
+      package = @packages[name]
       if package.nil? && create
-        name = CCDH.getEntityNameFromFqn(fqn)
-        parentname = CCDH.getPkgNameFromFqn(fqn)
-        parent = nil
-        if parentname
-          parent = getPackage(parentname, create)
-        end
-        package = MPkg.new(parent, self)
-        @packages[fqn] = package
-        parent.nil? || parent.children[name] = package
-        package.vals[H_PKG] = fqn
+        package = MPkg.new(self)
+        @packages[name] = package
       end
       package
     end
 
-    ##
-    # name is fully qualified
-    #
-    def getConcept(fqn, package, create)
-      package.nil? && raise("Null package when creating concept #{fqn}")
-      concept = @concepts[fqn]
-      if concept.nil? && create
-        concept = MConcept.new(package, self)
-        @concepts[fqn] = concept
-        concept.vals[H_NAME] = CCDH.getEntityNameFromFqn(fqn)
-        package.entities[concept.vals[H_NAME]] = concept
-      end
-      concept
-    end
 
     def getGroup(fqn, package, create)
       package.nil? && raise("Null package when creating group #{fqn}")
@@ -131,7 +101,7 @@ module CCDH
       package_fqn = parts.join(SEP_COLON)
 
       # get the package
-      package = getPackage(package_fqn)
+      package = getPackage(package_fqn, false)
       if package.nil?
         if model.resolve_strict
           entity.error("S: package #{package_fqn} not found when resolving concept #{name}. Aborting.")
@@ -149,22 +119,57 @@ module CCDH
   end
 
   class MPkg < ModelElement
-    attr_accessor :parent, :children, :entities
+    attr_accessor :concepts, :elements
 
-    def initialize(package, model)
-      super(package, model)
-      @children = {}
-      @entities = {}
+    def initialize(model)
+      super(model)
+      @vals[K_ENTITIES] = {}
+      @concepts = {}
+      @elements = {}
     end
 
-    def name
-      @vals[H_PKG]
+    # def name
+    #   @vals[H_PKG]
+    # end
+
+    ##
+    # name is fully qualified
+    #
+    def getConcept(name, create)
+
+      concept = @concepts[name]
+      if concept.nil? && create
+        concept = MConcept.new(self, @model)
+        @concepts[name] = concept
+      end
+      concept
     end
+
+    def getElement(name, create)
+      element = @elements[name]
+      if element.nil? && create
+        element = MElement.new(self, @model)
+        @elements[name] = element
+      end
+      element
+    end
+
   end
 
-  class MConcept < ModelElement
+  class MConcept < PackagableModelElement
+
+    attr_accessor :parents #, :ancestors, :decsendants
+
     def initialize(package, model)
       super(package, model)
+
+      # ConceptRef
+      @parents = []
+      #@ancestors = {}
+      #@decsendants = {}
+
+      @vals[K_ATTRIBUTES] = {}
+      @vals[K_ATTRIBUTE_VALUES] = {}
     end
 
     def name
@@ -172,11 +177,11 @@ module CCDH
     end
 
     def fqn
-      package.fqn + name
+      package.name + name
     end
   end
 
-  class MGroup < ModelElement
+  class MGroup < PackagableModelElement
     attr_accessor :vals
 
     def initialize(package, model)
@@ -184,15 +189,14 @@ module CCDH
     end
   end
 
-  class MStructure < ModelElement
+  class MStructure < PackagableModelElement
     attr_accessor :attributes,
-                  :concept_refs, :val_concept_refs
+                  :concept_refs #, :val_concept_refs
 
-    def initialize(package, mode)
+    def initialize(package, model)
       super(package, model)
       @attributes = {}
       @concept_refs = []
-      @val_concept_refs = []
     end
 
     def name
@@ -213,7 +217,7 @@ module CCDH
     attr_accessor :concept_refs, :val_concept_refs
 
     def initialize(structure, model)
-      super(nil, model)
+      super(model)
       @structure = structure
       @concept_refs = []
       @val_concept_refs = []
@@ -228,12 +232,17 @@ module CCDH
     end
   end
 
-  class ConceptReference
+  class MElement < PackagableModelElement
+
+  end
+
+  class ConceptRef
     attr_accessor :structures
 
     def initialize(concept)
       @concept = concept
       @structures = []
+
     end
 
     def concept
@@ -241,11 +250,11 @@ module CCDH
     end
   end
 
-  class ConceptReferenceGroup
-    attr_accessor :concepts
-
-    def initialize()
-      @references = []
-    end
-  end
+  # class ConceptReferenceGroup
+  #   attr_accessor :concepts
+  #
+  #   def initialize()
+  #     @references = []
+  #   end
+  # end
 end

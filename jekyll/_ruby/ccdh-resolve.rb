@@ -44,7 +44,6 @@ module CCDH
     end
   end
 
-
   def self.resolveConceptRelated(model)
     model.packages.keys.each do |pn|
       p = model.packages[pn]

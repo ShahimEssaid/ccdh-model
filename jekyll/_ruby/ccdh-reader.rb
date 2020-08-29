@@ -23,9 +23,9 @@ module CCDH
     #   row[H_BUILD].nil? && row[H_BUILD] = ""
     #
     #   #check package name
-    #   pkg_ref = row[H_PKG]
-    #   row[H_PKG] = checkPackageReference(pkg_ref, P_STRUCTURES)
-    #   row[H_PKG] == pkg_ref || buildEntry("#{H_PKG}: #{pkg_ref} was updated to: #{row[H_PKG]}", row)
+    #   pkg_ref = row[H_PACKAGE]
+    #   row[H_PACKAGE] = checkPackageReference(pkg_ref, P_STRUCTURES)
+    #   row[H_PACKAGE] == pkg_ref || buildEntry("#{H_PACKAGE}: #{pkg_ref} was updated to: #{row[H_PACKAGE]}", row)
     #
     #   #check name for structure
     #   name = row[H_NAME]
@@ -50,7 +50,7 @@ module CCDH
     #   # build the model
     #
     #   # we need a pakcage for creating the concept
-    #   package = model.getPackage(row[H_PKG], true)
+    #   package = model.getPackage(row[H_PACKAGE], true)
     #   entity = nil
     #
     #   if row[H_NAME] == V_SELF
@@ -127,7 +127,7 @@ module CCDH
     if !File.exist?(concepts_file)
       # write empty file
       CSV.open(concepts_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PKG, H_NAME, H_SUMMARY, H_DESC, H_PARENTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
+        csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
         csv << [V_PKG_BASE, V_CONCEPT_THING, "The base c:Thing concept", "Anything", "", "", V_STATUS_CURRENT, "", ""]
       end
     end
@@ -147,9 +147,9 @@ module CCDH
       row[H_BUILD].nil? && row[H_BUILD] = ""
 
       #check package name
-      pkg = row[H_PKG]
-      row[H_PKG] = checkEntityName(pkg, "P")
-      row[H_PKG] == pkg || buildEntry("#{H_PKG}: #{pkg} was updated to: #{row[H_PKG]}", row)
+      pkg = row[H_PACKAGE]
+      row[H_PACKAGE] = checkEntityName(pkg, "P")
+      row[H_PACKAGE] == pkg || buildEntry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
 
       #check concept name
       name = row[H_NAME]
@@ -168,7 +168,7 @@ module CCDH
       row[H_RELATED] == related || buildEntry("#{H_RELATED}: was changed from #{related} to: #{row[H_RELATED]}", row)
 
       # we need a package for creating the concept
-      package = getPackageGenerated(row[H_PKG], "concept #{row[H_NAME]}", model, row)
+      package = getPackageGenerated(row[H_PACKAGE], "concept #{row[H_NAME]}", model, row)
 
       concept = package.getConcept(row[H_NAME], false)
       if !concept.nil?
@@ -192,7 +192,7 @@ module CCDH
     if !File.exist?(elements_file)
       # write empty file
       CSV.open(elements_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PKG, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_DOMAINS, H_RANGES, H_STATUS, H_NOTES, H_BUILD]
+        csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_DOMAINS, H_RANGES, H_STATUS, H_NOTES, H_BUILD]
       end
     end
     model[K_ELEMENTS_CSV] = CSV.read(elements_file, headers: true)
@@ -211,9 +211,9 @@ module CCDH
       row[H_BUILD].nil? && row[H_BUILD] = ""
 
       #check package name
-      pkg = row[H_PKG]
-      row[H_PKG] = checkEntityName(pkg, "P")
-      row[H_PKG] == pkg || buildEntry("#{H_PKG}: #{pkg} was updated to: #{row[H_PKG]}", row)
+      pkg = row[H_PACKAGE]
+      row[H_PACKAGE] = checkEntityName(pkg, "P")
+      row[H_PACKAGE] == pkg || buildEntry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
 
       #check name
       name = row[H_NAME]
@@ -221,12 +221,12 @@ module CCDH
       row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
       # we need a package for creating the element
-      package = model.getPackage(row[H_PKG], false)
+      package = model.getPackage(row[H_PACKAGE], false)
       if package.nil?
-        package = model.getPackage(row[H_PKG], true)
-        package[H_NAME] = row[H_PKG]
+        package = model.getPackage(row[H_PACKAGE], true)
+        package[H_NAME] = row[H_PACKAGE]
         package[H_STATUS] = V_GENERATED
-        buildEntry("Package #{row[H_PKG]} not found, generated.", row)
+        buildEntry("Package #{row[H_PACKAGE]} not found, generated.", row)
         buildEntry("Generated for element: #{row[H_NAME]}", package)
       end
 

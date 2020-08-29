@@ -1,5 +1,5 @@
 module CCDH
-  H_PKG = "pkg"
+  H_PACKAGE = "package"
   H_NAME = "name"
   H_SUMMARY = "summary"
   H_DESC = "description"
@@ -99,10 +99,10 @@ module CCDH
       p1, p2 = entityRef.split(SEP_COLON).collect(&:strip).reject(&:empty?)
       if p2
         entityName = checkEntityName(p2, defaultName)
-        pkgName = checkEntityName(p1, hash[H_PKG])
+        pkgName = checkEntityName(p1, hash[H_PACKAGE])
       else
         entityName = checkEntityName(p1, defaultName)
-        pkgName = hash[H_PKG]
+        pkgName = hash[H_PACKAGE]
       end
       newList.empty? || newList += " #{SEP_BAR} "
       newList += "#{pkgName}#{SEP_COLON}#{entityName}"
@@ -121,10 +121,10 @@ module CCDH
     package = model.getPackage(pkgName, false)
     if package.nil?
       package = model.getPackage(pkgName, true)
-      package.vals[H_NAME] = pkgName
-      package.vals[H_STATUS] = V_GENERATED
+      package[H_NAME] = pkgName
+      package[H_STATUS] = V_GENERATED
       buildEntry("Package #{pkgName} not found, generated.", sourceHash)
-      buildEntry("Generated for: #{generatedFor}", package.vals)
+      buildEntry("Generated for: #{generatedFor}", package)
     end
     package
   end
@@ -133,10 +133,10 @@ module CCDH
     concept = package.getConcept(conceptName, false)
     if concept.nil?
       concept = package.getConcept(conceptName, true)
-      concept.vals[H_NAME] = conceptName
-      concept.vals[H_STATUS] = V_GENERATED
+      concept[H_NAME] = conceptName
+      concept[H_STATUS] = V_GENERATED
       buildEntry("Concept #{concept.fqn} for parents not found, generated.", sourceHash)
-      buildEntry("Generated for #{generatedFor}", concept.vals)
+      buildEntry("Generated for #{generatedFor}", concept)
     end
     concept
   end
@@ -297,7 +297,7 @@ module CCDH
   def self.resolveData(model, site)
     # here we link data/vals between different model entitie
 
-    site.data["model-current"] = model.vals
+    site.data["model-current"] = model
 
     # packages
 
@@ -305,18 +305,18 @@ module CCDH
       package = model.packages[k]
       resolveElementData(package)
       #link model to packages
-      model.vals[K_PACKAGES][k] = package.vals
+      model[K_PACKAGES][k] = package
       #link model to root packages
-      package.package.nil? && model.vals[K_PACKAGES_ROOT][k] = package
+      package.package.nil? && model[K_PACKAGES_ROOT][k] = package
 
       #link package to child packages
-      package.vals[K_CHILDREN] = {}
+      package[K_CHILDREN] = {}
       package.children.keys.sort.each do |ck|
-        package.vals[K_CHILDREN][ck] = package.children[ck].vals
+        package[K_CHILDREN][ck] = package.children[ck]
       end
-      package.vals[K_ENTITIES] = {}
+      package[K_ENTITIES] = {}
       package.entities.keys.sort.each do |ck|
-        package.vals[K_ENTITIES][ck] = package.entities[ck].vals
+        package[K_ENTITIES][ck] = package.entities[ck]
       end
     end
 
@@ -324,11 +324,11 @@ module CCDH
     model.concepts.keys.sort.each do |c|
       concept = model.concepts[c]
       resolveElementData(concept)
-      model.vals[K_CONCEPTS][concept.fqn] = concept.vals
+      model[K_CONCEPTS][concept.fqn] = concept
 
       # link to structures tagged with this concept
       CCDH.conceptStructures(concept).each do |s|
-        concept.vals[K_STRUCTURES][s.fqn] = s.vals
+        concept[K_STRUCTURES][s.fqn] = s
       end
 
       # link to attributes tagged with this concept

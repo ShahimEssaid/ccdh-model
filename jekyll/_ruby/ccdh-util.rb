@@ -18,6 +18,7 @@ module CCDH
   H_DOMAINS = "domains"
   H_RANGES = "ranges"
   H_RELATED = "related"
+  H_DEPENDS_ON = "depends_on"
 
   F_PACKAGES_CSV = "packages.csv"
   F_CONCEPTS_CSV = "concepts.csv"
@@ -35,6 +36,7 @@ module CCDH
   V_STATUS_CURRENT = "current"
   V_PKG_BASE = "default"
   V_CONCEPT_THING = "Thing"
+  V_EMPTY = ""
 
   SEP_HASH = "#"
   SEP_COMMA = ","

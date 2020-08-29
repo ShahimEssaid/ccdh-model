@@ -3,11 +3,12 @@ require_relative 'ccdh-model'
 module CCDH
 
   def self.resolve(model)
+    resolvePackageDependsOn(model)
     resolveConceptParents(model)
     resolveConceptRelated(model)
 
-
     parentlessConceptsToThing(model)
+
     # model.structures.each do |k, s|
     #   # resolve the concepts
     #   resolveStructureOrAttribute(s, model)
@@ -15,6 +16,16 @@ module CCDH
     #     resolveStructureOrAttribute(a, model)
     #   end
     # end
+  end
+
+  def self.resolvePackageDependsOn(model)
+    model.packages.keys.each do |pn|
+      p = model.packages[pn]
+      p.vals[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |p|
+        package = getPackageGenerated(p, "dependant of package #{p.name}", model, p.vals)
+        p.depends_on << package
+      end
+    end
   end
 
   def self.resolveConceptParents(model)

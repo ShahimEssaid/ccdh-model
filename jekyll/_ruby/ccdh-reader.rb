@@ -11,8 +11,8 @@ module CCDH
     if !File.exist?(packages_file)
       # write empty file
       CSV.open(packages_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_NAME, H_SUMMARY, H_DESC, H_STATUS, H_NOTES, H_BUILD]
-        csv << [V_PKG_BASE, "The base c:Thing concept", "Anything", V_STATUS_CURRENT, "", ""]
+        csv << [H_NAME, H_SUMMARY, H_DESC, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD]
+        csv << [V_PKG_BASE, "The base c:Thing concept", "Anything",V_EMPTY, V_STATUS_CURRENT, "", ""]
       end
     end
     model.packages_csv = CSV.read(packages_file, headers: true)
@@ -28,6 +28,16 @@ module CCDH
       name = row[H_NAME]
       row[H_NAME] = checkEntityName(name, "P")
       row[H_NAME] == name || buildEntry("#{H_NAME}: was updated from #{name} to: #{row[H_NAME]}", row)
+
+      # check H_DEPENDS_ON
+      depends_on_old = row[H_DEPENDS_ON]
+      row[H_DEPENDS_ON] = ""
+      depends_on_old.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |pkgRef|
+        pkgRef = checkEntityName(pkgRef, "P")
+        row[H_DEPENDS_ON].empty? || row[H_DEPENDS_ON] += " #{SEP_BAR} "
+        row[H_DEPENDS_ON] += pkgRef
+      end
+      row[H_DEPENDS_ON] == depends_on_old || buildEntry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to: #{row[H_DEPENDS_ON]}.", row)
 
       # create packages
       package = model.getPackage(row[H_NAME], true)

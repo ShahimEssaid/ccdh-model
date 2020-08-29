@@ -125,11 +125,11 @@ module CCDH
   end
 
   class MPkg < ModelElement
-    attr_accessor :concepts, :elements
+    attr_accessor :depends_on, :concepts, :elements
 
     def initialize(model)
       super(model)
-
+      @depends_on = []
       @concepts = {}
       @elements = {}
     end

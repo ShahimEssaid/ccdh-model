@@ -57,7 +57,7 @@ module CCDH
       #publisher.publishModelFile.
       # CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))
 
-      #pp model.vals
+      puts "END"
     end
   end
 end

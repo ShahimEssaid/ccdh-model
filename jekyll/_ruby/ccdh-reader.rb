@@ -99,14 +99,14 @@ module CCDH
       row[H_BUILD].nil? && row[H_BUILD] = ""
 
       name = row[H_NAME]
-      row[H_NAME] = checkEntityName(name, "P")
+      row[H_NAME] = checkSimpleEntityName(name, "P")
       row[H_NAME] == name || buildEntry("#{H_NAME}: was updated from #{name} to: #{row[H_NAME]}", row)
 
       # check H_DEPENDS_ON
       depends_on_old = row[H_DEPENDS_ON]
       row[H_DEPENDS_ON] = ""
       depends_on_old.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |pkgRef|
-        pkgRef = checkEntityName(pkgRef, "P")
+        pkgRef = checkSimpleEntityName(pkgRef, "P")
         row[H_DEPENDS_ON].empty? || row[H_DEPENDS_ON] += " #{SEP_BAR} "
         row[H_DEPENDS_ON] += pkgRef
       end
@@ -148,23 +148,23 @@ module CCDH
 
       #check package name
       pkg = row[H_PACKAGE]
-      row[H_PACKAGE] = checkEntityName(pkg, "P")
+      row[H_PACKAGE] = checkSimpleEntityName(pkg, "P")
       row[H_PACKAGE] == pkg || buildEntry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
 
       #check concept name
       name = row[H_NAME]
-      row[H_NAME] = checkEntityName(name, "C")
+      row[H_NAME] = checkSimpleEntityName(name, "C")
       row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
       # check parents syntax
       # package name by default is the same package as the concept
       parents = row[H_PARENTS]
-      row[H_PARENTS] = checkEntityRefList(row[H_PARENTS], "C", row)
+      row[H_PARENTS] = checkEntityFqnNameBarCommaList(row[H_PARENTS], "C", row[H_PACKAGE])
       row[H_PARENTS] == parents || buildEntry("#{H_PARENTS}: was changed from #{parents} to: #{row[H_PARENTS]}", row)
 
       # check related syntax
       related = row[H_RELATED]
-      relatedNew = checkEntityRefList(row[H_RELATED], "C", row)
+      relatedNew = checkEntityFqnNameBarCommaList(row[H_RELATED], "C", row[H_PACKAGE])
       row[H_RELATED] == related || buildEntry("#{H_RELATED}: was changed from #{related} to: #{row[H_RELATED]}", row)
 
       # we need a package for creating the concept
@@ -192,7 +192,8 @@ module CCDH
     if !File.exist?(elements_file)
       # write empty file
       CSV.open(elements_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_DOMAINS, H_RANGES, H_STATUS, H_NOTES, H_BUILD]
+        csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_CONCEPTS, H_DOMAINS, H_RANGES, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
+        csv << [V_PKG_BASE, V_ELEMENT_HAS_THING, "The base hasThing.", "The base hasThing", "", V_CONCEPT_THING_FQN, V_CONCEPT_THING_FQN, V_CONCEPT_THING_FQN, "", V_STATUS_CURRENT, "", "" ]
       end
     end
     model[K_ELEMENTS_CSV] = CSV.read(elements_file, headers: true)
@@ -212,16 +213,49 @@ module CCDH
 
       #check package name
       pkg = row[H_PACKAGE]
-      row[H_PACKAGE] = checkEntityName(pkg, "P")
+      row[H_PACKAGE] = checkSimpleEntityName(pkg, "P")
       row[H_PACKAGE] == pkg || buildEntry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
 
       #check name
       name = row[H_NAME]
-      row[H_NAME] = checkEntityName(name, "E")
+      row[H_NAME] = checkSimpleEntityName(name, "E")
       row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
+      # check parent element name
+      parent = row[K_PARENT]
+      parentNew = checkEntityFqnNameBarCommaList(parent, "E", row[H_PACKAGE])
+      # only one is allowed
+      parentNew = parentNew.split(SEP_BAR)[0]
+      parentNew.nil? && parentNew = ""
+      parentNew = parentNew.split(SEP_COMMA)[0]
+      parentNew.nil? && parentNew = ""
+      row[K_PARENT] = parentNew.strip
+      parentNew == parent || buildEntry("#{H_PARENT}: #{parent} was updated to: #{row[H_PARENT]}", row)
+
+      # check concepts
+      concepts = row[H_CONCEPTS]
+      row[H_CONCEPTS] = checkEntityFqnNameBarCommaList(concepts, "C", row[H_PACKAGE])
+      row[H_CONCEPTS] == concepts || buildEntry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
+
+
+      # check domain concepts
+      domains = row[H_DOMAINS]
+      row[H_DOMAINS] = checkEntityFqnNameBarCommaList(domains, "C", row[H_PACKAGE])
+      row[H_DOMAINS] == domains || buildEntry("#{H_DOMAINS}: #{domains} was updated to: #{row[H_DOMAINS]}", row)
+
+      # check range concepts
+      ranges = row[H_RANGES]
+      row[H_RANGES] = checkEntityFqnNameBarCommaList(ranges, "C", row[H_PACKAGE])
+      row[H_RANGES] == ranges || buildEntry("#{H_RANGES}: #{ranges} was updated to: #{row[H_RANGES]}", row)
+
+      # check related elements
+      related = row[H_RELATED]
+      row[H_RELATED] = checkEntityFqnNameBarCommaList(related, "E", row[H_PACKAGE])
+      row[H_RELATED] == related || buildEntry("#{H_RELATED}: #{related} was updated to: #{row[H_RELATED]}", row)
+
+
       # we need a package for creating the element
-      package = model.getPackage(row[H_PACKAGE], false)
+      package = getPackageGenerated(row[H_PACKAGE], "element #{row[H_NAME]}", model, row)
       if package.nil?
         package = model.getPackage(row[H_PACKAGE], true)
         package[H_NAME] = row[H_PACKAGE]

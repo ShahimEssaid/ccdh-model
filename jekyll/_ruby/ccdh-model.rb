@@ -1,8 +1,9 @@
 module CCDH
 
   class ModelElement < Hash
-    def initialize(model)
+    def initialize(model, type)
       super("N/A")
+      self[K_TYPE] = type
       self[K_MODEL] = model
       self[nil] = []
       self[K_GENERATED_NOW] = true
@@ -14,19 +15,19 @@ module CCDH
   end
 
   class PackagableModelElement < ModelElement
-    def initialize(package, model)
-      super(model)
+    def initialize(package, model, type)
+      super(model, type)
       self[K_PACKAGE] = package
     end
 
     def fqn
-      package.name + SEP_COLON + self.name
+      self[K_PACKAGE].name + SEP_COLON + self.name
     end
   end
 
   class Model < ModelElement
     def initialize(name)
-      super(self)
+      super(self, V_TYPE_MODEL)
       self[H_NAME] = name
       self[K_PACKAGES] = {}
 
@@ -42,7 +43,7 @@ module CCDH
     def getPackage(name, create)
       package = self[K_PACKAGES][name]
       if package.nil? && create
-        package = MPkg.new(self)
+        package = MPackage.new(self)
         self[K_PACKAGES][name] = package
       end
       package
@@ -106,9 +107,9 @@ module CCDH
     # end
   end
 
-  class MPkg < ModelElement
+  class MPackage < ModelElement
     def initialize(model)
-      super(model)
+      super(model, V_TYPE_PACKAGE)
       self[K_DEPENDS_ON] = []
       self[K_CONCEPTS] = {}
       self[K_STRUCTURE] = {}
@@ -136,14 +137,34 @@ module CCDH
 
   class MConcept < PackagableModelElement
     def initialize(package, model)
-      super(package, model)
+      super(package, model, V_TYPE_CONCEPT)
       # ConceptRef
       self[K_PARENTS] = []
       self[K_RELATED] = []
+      self[K_CHILDREN] = []
+
+      self[K_ANCESTORS] = Set.new().compare_by_identity
+      self[K_DESCENDANTS] = Set.new().compare_by_identity
     end
   end
 
   class MElement < PackagableModelElement
+
+    def initialize(package, model)
+      super(package, model, V_TYPE_ELEMENT)
+      self[K_PARENT] = nil
+
+      self[K_CONCEPTS] = []
+      self[K_E_CONCEPTS]= Set.new().compare_by_identity
+
+      self[K_DOMAINS] = []
+      self[K_E_DOMAINS]= Set.new().compare_by_identity
+
+      self[K_RANGES] = []
+      self[K_E_RANGES] = Set.new().compare_by_identity
+
+      self[K_RELATED] = []
+    end
 
   end
 
@@ -152,7 +173,7 @@ module CCDH
     #               :concept_refs #, :val_concept_refs
 
     def initialize(package, model)
-      super(package, model)
+      super(package, model, V_TYPE_STRUCTURE)
       self[K_ATTRIBUTES] = {}
       #@concept_refs = []
     end
@@ -170,7 +191,7 @@ module CCDH
   class MSAttribute < ModelElement
     # attr_accessor :concept_refs, :val_concept_refs
     def initialize(structure, model)
-      super(model)
+      super(model, V_TYPE_ATTRIBUTE)
       self[K_STRUCTURE] = structure
       self[K_CONCEPT_REFS] = []
       self[K_VAL_CONCEPT_REFS] = []

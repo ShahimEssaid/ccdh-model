@@ -1,4 +1,10 @@
 module CCDH
+  SEP_HASH = "#"
+  SEP_COMMA = ","
+  SEP_COLON = ":"
+  SEP_AT = "@"
+  SEP_BAR = "|"
+
   H_PACKAGE = "package"
   H_NAME = "name"
   H_SUMMARY = "summary"
@@ -15,6 +21,8 @@ module CCDH
   H_PARENT = "parent"
   H_DOMAINS = "domains"
   H_RANGES = "ranges"
+  H_CONCEPTS = "concepts"
+
 
   # H_MESG = "message"
   # H_WARNINGS = "warnings"
@@ -25,9 +33,10 @@ module CCDH
   # H_VAL_CONCEPT = "val_concept"
 
   K_MODEL = "@model"
+  K_TYPE = "@type"
 
-  K_PACKAGES_CSV="@packages_csv"
-  K_CONCEPTS_CSV="@concepts_csv"
+  K_PACKAGES_CSV = "@packages_csv"
+  K_CONCEPTS_CSV = "@concepts_csv"
   K_ELEMENTS_CSV = "@elements_csv"
   K_STRUCTURES_CSV = "@structures_csv"
   K_PACKAGES_HEADERS = "@packages_headers"
@@ -43,15 +52,23 @@ module CCDH
   K_STRUCTURES = "@structures"
   K_ELEMENTS = "@elements"
   K_PARENTS = "@parents"
+  K_CHILDREN = "@children"
+  K_ANCESTORS = "@ancestors"
+  K_DESCENDANTS = "@descendant"
+  K_PARENT = "@parent"
   K_RELATED = "@related"
   K_ATTRIBUTES = "@attributes"
   K_STRUCTURE = "@structure" # used in a hash to point to the vals of a structure
+  K_DOMAINS = "@domains"
+  K_RANGES = "@ranges"
+  K_E_RANGES = "@e_ranges"
+  K_E_DOMAINS = "@e_domains"
+  K_E_CONCEPTS = "@e_concepts"
 
   K_CONCEPT_REFS = "@concept_refs"
   K_VAL_CONCEPT_REFS = "@val_concept_refs"
 
   # K_PACKAGES_ROOT = "@packages_root"
-  # K_CHILDREN = "@children"
   # K_ATTRIBUTE_VALUES = "@attribute_values"
   # K_ATTRIBUTE = "@attribute" # used in a hash to point to the vals of an attribute
 
@@ -71,41 +88,51 @@ module CCDH
   V_STATUS_CURRENT = "current"
   V_PKG_BASE = "default"
   V_CONCEPT_THING = "Thing"
+  V_CONCEPT_THING_FQN = V_PKG_BASE + SEP_COLON + V_CONCEPT_THING
+  V_ELEMENT_HAS_THING = "hasThing"
   V_EMPTY = ""
 
-  SEP_HASH = "#"
-  SEP_COMMA = ","
-  SEP_COLON = ":"
-  SEP_AT = "@"
-  SEP_BAR = "|"
+  V_TYPE_MODEL = "model"
+  V_TYPE_PACKAGE = "package"
+  V_TYPE_CONCEPT = "concept"
+  V_TYPE_ELEMENT = "element"
+  V_TYPE_STRUCTURE = "structure"
+  V_TYPE_ATTRIBUTE = "attribute"
+
+
 
 
   # Allows a-z, A-Z, 0-9, and _
   # If empty, generate with defaultName_randomNumber
-  def self.checkEntityName(name, defaultName)
-    (name.nil? || name.empty?) && name = +"defaultName_#{rand(100000..999999)}"
+  def self.checkSimpleEntityName(name, defaultName)
+    defaultName.length == 1 && defaultName = "#{defaultName}_#{rand(100000..999999)}"
+    (name.nil? || name.empty?) && name = defaultName
     # remove all none alpha numeric
     name = name.gsub(/[^a-zA-Z0-9_]/, "")
     # in case name had some characters but empty now. create new name
-    name.empty? && name = +"defaultName_#{rand(100000..999999)}"
+    name.empty? && name = defaultName
     name
   end
 
-  def self.checkEntityRefList(list, defaultName, hash)
+  def self.checkEntityFqnNameBarCommaList(list, defaultName, defaultPackage)
     newList = ""
-    list.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |entityRef|
-      pkgName = nil
-      entityName = nil
-      p1, p2 = entityRef.split(SEP_COLON).collect(&:strip).reject(&:empty?)
-      if p2
-        entityName = checkEntityName(p2, defaultName)
-        pkgName = checkEntityName(p1, hash[H_PACKAGE])
-      else
-        entityName = checkEntityName(p1, defaultName)
-        pkgName = hash[H_PACKAGE]
+    list.nil? && (return newList)
+    list.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |sublist|
+      newSublist = ""
+      sublist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |name|
+        p1, p2 = name.split(SEP_COLON).collect(&:strip).reject(&:empty?)
+        if p2
+          entityName = checkSimpleEntityName(p2, defaultName)
+          pkgName = checkSimpleEntityName(p1, defaultPackage)
+        else
+          entityName = checkSimpleEntityName(p1, defaultName)
+          pkgName = defaultPackage
+        end
+        newSublist.empty? || newSublist += "#{SEP_COMMA} "
+        newSublist += "#{pkgName}#{SEP_COLON}#{entityName}"
       end
-      newList.empty? || newList += " #{SEP_BAR} "
-      newList += "#{pkgName}#{SEP_COLON}#{entityName}"
+      (newList.empty? || newSublist.empty?) || newList += " #{SEP_BAR} "
+      newList += newSublist
     end
     newList
   end
@@ -117,14 +144,14 @@ module CCDH
     hash[H_BUILD] += entry
   end
 
-  def self.getPackageGenerated(pkgName, generatedFor , model, sourceHash)
+  def self.getPackageGenerated(pkgName, generatedFor, model, sourceHash)
     package = model.getPackage(pkgName, false)
     if package.nil?
       package = model.getPackage(pkgName, true)
       package[H_NAME] = pkgName
       package[H_STATUS] = V_GENERATED
-      buildEntry("Package #{pkgName} not found, generated.", sourceHash)
-      buildEntry("Generated for: #{generatedFor}", package)
+      buildEntry("Package not found: #{generatedFor}, generated.", sourceHash)
+      buildEntry("Generated: for #{generatedFor}.", package)
     end
     package
   end
@@ -135,12 +162,23 @@ module CCDH
       concept = package.getConcept(conceptName, true)
       concept[H_NAME] = conceptName
       concept[H_STATUS] = V_GENERATED
-      buildEntry("Concept #{concept.fqn} for parents not found, generated.", sourceHash)
-      buildEntry("Generated for #{generatedFor}", concept)
+      buildEntry("Concept not found: #{generatedFor}, generated.", sourceHash)
+      buildEntry("Generated: for #{generatedFor}", concept)
     end
     concept
   end
 
+  def self.getElementGenerated(elementName, generatedFor, package, sourceHash)
+    element = package.getElement(elementName, false)
+    if element.nil?
+      element = package.getElement(elementName, true)
+      element[H_NAME] = elementName
+      element[H_STATUS] = V_GENERATED
+      buildEntry("Element not found: #{generatedFor}, generated.", sourceHash)
+      buildEntry("Generated: for #{generatedFor}", element)
+    end
+    element
+  end
 
 
   # =========================================================
@@ -188,7 +226,7 @@ module CCDH
   def self.checkFqnEntityName(name, defaultName, packagePrefix)
     (name.nil? || name.empty?) && name = defaultName + "#{rand(100000..999999)}"
     fqnParts = name.split(SEP_COLON).collect(&:strip).reject(&:empty?)
-    conceptName = checkEntityName(fqnParts.pop, defaultName)
+    conceptName = checkSimpleEntityName(fqnParts.pop, defaultName)
     packageName = checkPackageReference(fqnParts.join(SEP_COLON), packagePrefix)
     packageName + conceptName
   end

@@ -7,22 +7,25 @@ module CCDH
     resolveConceptParents(model)
     resolveConceptRelated(model)
 
-    parentlessConceptsToThing(model)
+    resolveElementParent(model)
+    resolveElementConcepts(model)
+    resolveElementDomains(model)
+    resolveElementRanges(model)
+    resolveElementRelated(model)
 
-    # model.structures.each do |k, s|
-    #   # resolve the concepts
-    #   resolveStructureOrAttribute(s, model)
-    #   s.attributes.each do |k, a|
-    #     resolveStructureOrAttribute(a, model)
-    #   end
-    # end
+    # all other things that could generate concepts
+
+    parentlessConceptsToThing(model)
+    conceptCheckDAGAndClosure(model)
+    effectiveElementConcepts(model)
+
   end
 
   def self.resolvePackageDependsOn(model)
     model[K_PACKAGES].keys.each do |pn|
       p = model[K_PACKAGES][pn]
       p[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |pdn|
-        package = getPackageGenerated(pdn, "dependant of package #{p[H_NAME]}", model, p)
+        package = getPackageGenerated(pdn, "package #{p[H_NAME]} depnds on #{pdn}", model, p)
         p[K_DEPENDS_ON] << package
       end
     end
@@ -34,11 +37,11 @@ module CCDH
       p[K_CONCEPTS].keys.each do |cn|
         c = p[K_CONCEPTS][cn]
         parents = c[H_PARENTS]
-        parents.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |parentRef|
+        parents.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |parentRef|
           pkgName, conceptName = parentRef.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "concept #{c.fqn}", model, c)
-          concept = getConceptGenerated(conceptName, "concept #{c.fqn} parents", package, c)
-          c[K_PARENTS] << concept
+          package = getPackageGenerated(pkgName, "concept #{c.fqn} has parent #{parentRef}", model, c)
+          concept = getConceptGenerated(conceptName, "concept #{c.fqn} has parent #{parentRef}", package, c)
+          c[K_PARENTS].index(concept) || c[K_PARENTS] << concept
         end
       end
     end
@@ -46,7 +49,7 @@ module CCDH
 
   def self.resolveConceptRelated(model)
     model[K_PACKAGES].keys.each do |pn|
-      p =  model[K_PACKAGES][pn]
+      p = model[K_PACKAGES][pn]
       p[K_CONCEPTS].keys.each do |cn|
         c = p[K_CONCEPTS][cn]
         related = c[H_RELATED]
@@ -54,86 +57,164 @@ module CCDH
           pkgName, conceptName = relatedRef.split(SEP_COLON)
           package = getPackageGenerated(pkgName, "concept #{c.fqn}", model, c)
           concept = getConceptGenerated(conceptName, "concept #{c.fqn} related", package, c)
-          c[K_RELATED] << concept
+          c[K_RELATED].index(concept) || c[K_RELATED] << concept
+        end
+      end
+    end
+  end
+
+  def self.resolveElementParent(model)
+    model[K_PACKAGES].keys.each do |pn|
+      p = model[K_PACKAGES][pn]
+      p[K_ELEMENTS].keys.each do |en|
+        e = p[K_ELEMENTS][en]
+        parent = e[H_PARENT]
+        (parent.nil? || parent.empty?) && next
+        pkgName, elementName = parent.split(SEP_COLON)
+        package = getPackageGenerated(pkgName, "element #{e.fqn} has parent #{parent}", model, e)
+        element = getElementGenerated(elementName, "element #{e.fqn} has parent #{parent}", package, e)
+        e[K_PARENT] = element
+      end
+    end
+  end
+
+
+  def self.resolveElementConcepts(model)
+    generalElementResovleConcepts(model, H_CONCEPTS, K_CONCEPTS, "concept")
+  end
+
+  def self.resolveElementDomains(model)
+    generalElementResovleConcepts(model, H_DOMAINS, K_DOMAINS, "domain")
+  end
+
+  def self.resolveElementRanges(model)
+    generalElementResovleConcepts(model, H_RANGES, K_RANGES, "range")
+  end
+
+  def self.resolveElementRelated(model)
+    model[K_PACKAGES].keys.each do |pn|
+      p = model[K_PACKAGES][pn]
+      p[K_ELEMENTS].keys.each do |en|
+        element = p[K_ELEMENTS][en]
+        related = element[H_RELATED]
+        related.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |e|
+          pkgName, elementName = e.split(SEP_COLON)
+          package = getPackageGenerated(pkgName, "element #{e.fqn} has related #{e}", model, element)
+          e[K_RELATED] << getElementGenerated(elementName, "element #{e.fqn} has related #{e}", package, element)
+        end
+      end
+
+    end
+  end
+
+  def self.generalElementResovleConcepts(model, header, key, generatedFor)
+    model[K_PACKAGES].keys.each do |pn|
+      p = model[K_PACKAGES][pn]
+      p[K_ELEMENTS].keys.each do |en|
+        e = p[K_ELEMENTS][en]
+        concepts = e[header]
+        concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
+          clist_array = []
+          clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
+            pkg_name, concept_name = c.split(SEP_COLON)
+            package = getPackageGenerated(pkg_name, "element #{e.fqn} has #{generatedFor} #{c}", model, e)
+            clist_array << getConceptGenerated(concept_name, "element #{e.fqn} has #{generatedFor} #{c}", package, e)
+          end
+          e[key] << clist_array
         end
       end
     end
   end
 
   def self.parentlessConceptsToThing(model)
-    #TODO
+    thing = model[K_PACKAGES][V_PKG_BASE][K_CONCEPTS][V_CONCEPT_THING]
+    model[K_PACKAGES].each do |pk, p|
+      p[K_CONCEPTS].each do |ck, c|
+        c == thing && next
+        c[K_PARENTS].empty? && c[K_PARENTS] << thing
+      end
+    end
+
+    model[K_PACKAGES].each do |pk, p|
+      p[K_CONCEPTS].each do |ck, c|
+        c[K_PARENTS].each do |parent|
+          parent[K_CHILDREN].index(c) || parent[K_CHILDREN] << c
+        end
+      end
+    end
   end
 
 
-  def self.resolveStructureOrAttribute(s, model)
-    s.vals[H_CONCEPT].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |cg|
-      # a concept group
-      cga = []
-      cg.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-        pkgname = getPkgNameFromFqn(c)
-        cname = getEntityNameFromFqn(c)
-        pkg = model.getPackage(pkgname, false)
-        if pkg.nil?
-          buildEntry("Package #{pkgname} didn't already exist for concept #{cname}. Creating it.", s.vals)
-          pkg = model.getPackage(pkgname, true)
-        end
+  def self.conceptCheckDAGAndClosure(model)
+    thing = model[K_PACKAGES][V_PKG_BASE][K_CONCEPTS][V_CONCEPT_THING]
+    path = []
+    conceptCheckDAGAndClosureRecursive(model, path, thing)
+  end
 
-        concept = model.getConcept(c, pkg, false)
-        if concept.nil?
-          buildEntry("Concept #{c} in in #{H_CONCEPT} didn't alraedy exist. Creating it.", s.vals)
-          concept = model.getConcept(c, pkg, true)
-          concept.vals[H_NAME] = cname
-          concept.vals[H_DESC] = V_GENERATED
-          concept.vals[H_STATUS] = V_GENERATED
-        end
-        cga << ConceptRef.new(concept)
+  def self.conceptCheckDAGAndClosureRecursive(model, path, concept)
+
+    if path.index(concept)
+      # a circle is found
+      pathString = ""
+      path.each do |c|
+        pathString += "#{c.fqn} > "
       end
-      cga.empty? || s.concept_refs << cga
+      buildEntry("DAG: concept #{c.fqn} is circular with path: #{pathString}", concept)
+      concept[K_ANCESTORS].merge(path)
+      populateConceptDescendants(path)
+    else
+      path << concept
+      concept[K_CHILDREN].each do |c|
+        conceptCheckDAGAndClosureRecursive(model, path, c)
+      end
+      concept[K_ANCESTORS].merge(path)
+      populateConceptDescendants(path)
+      path.pop
     end
 
-    s.vals[H_ATTRIBUTE] == V_SELF && return
+  end
 
-    # resolve the val concepts
-    s.vals[H_VAL_CONCEPT].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |vcg|
-      # one concept @ structure group
-      parts = vcg.split(SEP_AT).collect(&:strip)
-      cname = parts[0]
-      sgroup = parts[1]
+  def self.populateConceptDescendants(path)
+    path.each.with_index.map do |v, i|
+      v[K_DESCENDANTS].merge(path[i..])
+    end
+  end
 
-      # do the concept first
-      concept = model.getConcept(cname, pkg, false)
-      if concept.nil?
-        buildEntry("Concept #{c} in #{H_VAL_CONCEPT} didn't alraedy exist. Creating it.", s.vals)
-        concept = model.getConcept(cname, pkg, true)
-        concept.vals[H_NAME] = cname
-        concept.vals[H_DESC] = V_GENERATED
-        concept.vals[H_STATUS] = V_GENERATED
-      end
-      cref = ConceptRef.new(concept)
-      s.val_concept_refs << cref
-      # now do the @ structures
-      sgroup.nil? && return
-      sgroup.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |sg|
-        # a structure name
-        sga = []
-        sg.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |s|
-          pkgname = getPkgNameFromFqn(s)
-          sname = getEntityNameFromFqn(s)
-          pkg = model.getPackage(pkgname, false)
-          if pkg.nil?
-            buildEntry("Package #{pkgname} didn't already exist for structure #{s} in #{H_VAL_CONCEPT}. Creating it.", s.vals)
-            pkg = model.getPackage(pkgname, true)
+  def self.effectiveElementConcepts(model)
+    model[K_PACKAGES].each do |pn, p|
+      p[K_ELEMENTS].each do |en, e|
+
+        # effecitve concepts
+        e[K_CONCEPTS].each do |ca|
+          arrayConcepts = Set.new.compare_by_identity
+          ca.each do |c|
+            # we have a concept from an AND array
+            arrayConcepts.empty? && arrayConcepts.merge(c[K_DESCENDANTS])
+            arrayConcepts = arrayConcepts.intersection(c[K_DESCENDANTS])
           end
+          e[K_E_CONCEPTS].merge(arrayConcepts)
+        end
 
-          structure = model.getStructure(s, pkg, false)
-          if structure.nil?
-            buildEntry("Structure #{s} in in #{H_VAL_CONCEPT} didn't alraedy exist. Creating it.", s.vals)
-            structure = model.getStructure(s, pkg, true)
-            structure.vals[H_NAME] = sname
-            structure.vals[H_DESC] = V_GENERATED
-            structure.vals[H_STATUS] = V_GENERATED
+        # effective domains
+        e[K_DOMAINS].each do |ca|
+          arrayConcepts = Set.new.compare_by_identity
+          ca.each do |c|
+            # we have a concept from an AND array
+            arrayConcepts.empty? && arrayConcepts.merge(c[K_DESCENDANTS])
+            arrayConcepts = arrayConcepts.intersection(c[K_DESCENDANTS])
           end
-          cref.structures << structure
+          e[K_E_DOMAINS].merge(arrayConcepts)
+        end
+
+        # effective ranges
+        e[K_RANGES].each do |ca|
+          arrayConcepts = Set.new.compare_by_identity
+          ca.each do |c|
+            # we have a concept from an AND array
+            arrayConcepts.empty? && arrayConcepts.merge(c[K_DESCENDANTS])
+            arrayConcepts = arrayConcepts.intersection(c[K_DESCENDANTS])
+          end
+          e[K_E_RANGES].merge(arrayConcepts)
         end
       end
     end

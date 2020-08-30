@@ -61,9 +61,14 @@ module CCDH
   K_STRUCTURE = "@structure" # used in a hash to point to the vals of a structure
   K_DOMAINS = "@domains"
   K_RANGES = "@ranges"
+
   K_E_RANGES = "@e_ranges"
   K_E_DOMAINS = "@e_domains"
   K_E_CONCEPTS = "@e_concepts"
+
+  K_NE_RANGES = "@ne_ranges"
+  K_NE_DOMAINS = "@ne_domains"
+  K_NE_CONCEPTS = "@ne_concepts"
 
   K_CONCEPT_REFS = "@concept_refs"
   K_VAL_CONCEPT_REFS = "@val_concept_refs"

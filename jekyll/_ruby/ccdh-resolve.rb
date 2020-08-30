@@ -19,7 +19,8 @@ module CCDH
     parentlessElementsToHasSomething(model)
     conceptCheckDAGAndClosure(model)
     effectiveElementConcepts(model)
-
+    # this filters our effective concepts that are not a subset of the parent's concepts
+    notEffectiveElementConcepts(model)
   end
 
   def self.resolvePackageDependsOn(model)
@@ -147,6 +148,8 @@ module CCDH
 
   def self.parentlessElementsToHasSomething(model)
     hasThing = model[K_PACKAGES][V_PKG_BASE][K_ELEMENTS][V_ELEMENT_HAS_THING]
+
+    # link to hashThing if no parent
     model[K_PACKAGES].each do |pk, p|
       p[K_ELEMENTS].each do |ek, e|
         e == hasThing && next
@@ -154,6 +157,7 @@ module CCDH
       end
     end
 
+    #link children
     model[K_PACKAGES].each do |pk, p|
       p[K_ELEMENTS].each do |ek, e|
         e == hasThing && next
@@ -235,6 +239,33 @@ module CCDH
           e[K_E_RANGES].merge(arrayConcepts)
         end
       end
+    end
+  end
+
+  def self.notEffectiveElementConcepts(model)
+    hasThing = model[K_PACKAGES][V_PKG_BASE][K_ELEMENTS][V_ELEMENT_HAS_THING]
+    hasThing[K_CHILDREN].each do |e|
+      notEffecitveElementConceptsRecursive(e)
+    end
+  end
+
+  def self.notEffecitveElementConceptsRecursive(element)
+    parent = element[K_PARENT]
+
+    oldConcepts = element[K_E_CONCEPTS]
+    element[K_E_CONCEPTS] = parent[K_E_CONCEPTS].difference(element[K_E_CONCEPTS]).compare_by_identity
+    element[K_NE_CONCEPTS] = oldConcepts.difference(element[K_E_CONCEPTS]).compare_by_identity
+
+    oldConcepts = element[K_E_DOMAINS]
+    element[K_E_DOMAINS] = parent[K_E_DOMAINS].difference(element[K_E_DOMAINS]).compare_by_identity
+    element[K_NE_DOMAINS] = oldConcepts.difference(element[K_E_DOMAINS]).compare_by_identity
+
+    oldConcepts = element[K_E_RANGES]
+    element[K_E_RANGES] = parent[K_E_RANGES].difference(element[K_E_RANGES]).compare_by_identity
+    element[K_NE_RANGES] = oldConcepts.difference(element[K_E_RANGES]).compare_by_identity
+
+    element[K_CHILDREN].each do |e|
+      notEffecitveElementConceptsRecursive(e)
     end
   end
 end

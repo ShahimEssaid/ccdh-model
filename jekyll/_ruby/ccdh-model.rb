@@ -165,12 +165,15 @@ module CCDH
 
       self[K_CONCEPTS] = []
       self[K_E_CONCEPTS]= Set.new().compare_by_identity
+      self[K_NE_CONCEPTS]= Set.new().compare_by_identity
 
       self[K_DOMAINS] = []
       self[K_E_DOMAINS]= Set.new().compare_by_identity
+      self[K_NE_DOMAINS]= Set.new().compare_by_identity
 
       self[K_RANGES] = []
       self[K_E_RANGES] = Set.new().compare_by_identity
+      self[K_NE_RANGES] = Set.new().compare_by_identity
 
       self[K_RELATED] = []
     end

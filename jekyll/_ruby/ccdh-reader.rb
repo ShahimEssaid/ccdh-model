@@ -222,15 +222,15 @@ module CCDH
       row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
       # check parent element name
-      parent = row[K_PARENT]
+      parent = row[H_PARENT]
       parentNew = checkEntityFqnNameBarCommaList(parent, "E", row[H_PACKAGE])
       # only one is allowed
       parentNew = parentNew.split(SEP_BAR)[0]
       parentNew.nil? && parentNew = ""
       parentNew = parentNew.split(SEP_COMMA)[0]
       parentNew.nil? && parentNew = ""
-      row[K_PARENT] = parentNew.strip
-      parentNew == parent || buildEntry("#{H_PARENT}: #{parent} was updated to: #{row[H_PARENT]}", row)
+      row[H_PARENT] = parentNew.strip
+      row[H_PARENT] == parent || buildEntry("#{H_PARENT}: #{parent} was updated to: #{row[H_PARENT]}", row)
 
       # check concepts
       concepts = row[H_CONCEPTS]

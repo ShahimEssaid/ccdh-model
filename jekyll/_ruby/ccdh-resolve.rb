@@ -21,6 +21,7 @@ module CCDH
     effectiveElementConcepts(model)
     # this filters our effective concepts that are not a subset of the parent's concepts
     notEffectiveElementConcepts(model)
+
   end
 
   def self.resolvePackageDependsOn(model)
@@ -253,15 +254,15 @@ module CCDH
     parent = element[K_PARENT]
 
     oldConcepts = element[K_E_CONCEPTS]
-    element[K_E_CONCEPTS] = parent[K_E_CONCEPTS].difference(element[K_E_CONCEPTS]).compare_by_identity
+    element[K_E_CONCEPTS] = parent[K_E_CONCEPTS].intersection(element[K_E_CONCEPTS]).compare_by_identity
     element[K_NE_CONCEPTS] = oldConcepts.difference(element[K_E_CONCEPTS]).compare_by_identity
 
     oldConcepts = element[K_E_DOMAINS]
-    element[K_E_DOMAINS] = parent[K_E_DOMAINS].difference(element[K_E_DOMAINS]).compare_by_identity
+    element[K_E_DOMAINS] = parent[K_E_DOMAINS].intersection(element[K_E_DOMAINS]).compare_by_identity
     element[K_NE_DOMAINS] = oldConcepts.difference(element[K_E_DOMAINS]).compare_by_identity
 
     oldConcepts = element[K_E_RANGES]
-    element[K_E_RANGES] = parent[K_E_RANGES].difference(element[K_E_RANGES]).compare_by_identity
+    element[K_E_RANGES] = parent[K_E_RANGES].intersection(element[K_E_RANGES]).compare_by_identity
     element[K_NE_RANGES] = oldConcepts.difference(element[K_E_RANGES]).compare_by_identity
 
     element[K_CHILDREN].each do |e|

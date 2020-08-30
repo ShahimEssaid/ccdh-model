@@ -67,8 +67,7 @@ module CCDH
     #     package.entities[entity.vals[H_NAME]] = entity
     #   end
     #   entity
-    # end
-    #
+    # end    #
     # def getStructure(fqn, package, create)
     #   entity = @structures[fqn]
     #   if entity.nil? && create

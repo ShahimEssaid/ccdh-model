@@ -16,6 +16,7 @@ module CCDH
     # all other things that could generate concepts
 
     parentlessConceptsToThing(model)
+    parentlessElementsToHasSomething(model)
     conceptCheckDAGAndClosure(model)
     effectiveElementConcepts(model)
 
@@ -144,6 +145,23 @@ module CCDH
     end
   end
 
+  def self.parentlessElementsToHasSomething(model)
+    hasThing = model[K_PACKAGES][V_PKG_BASE][K_ELEMENTS][V_ELEMENT_HAS_THING]
+    model[K_PACKAGES].each do |pk, p|
+      p[K_ELEMENTS].each do |ek, e|
+        e == hasThing && next
+        e[K_PARENT].nil? && e[K_PARENT] = hasThing
+      end
+    end
+
+    model[K_PACKAGES].each do |pk, p|
+      p[K_ELEMENTS].each do |ek, e|
+        e == hasThing && next
+        parent = e[K_PARENT]
+        parent[K_CHILDREN].index(e) || parent[K_CHILDREN] << e
+      end
+    end
+  end
 
   def self.conceptCheckDAGAndClosure(model)
     thing = model[K_PACKAGES][V_PKG_BASE][K_CONCEPTS][V_CONCEPT_THING]

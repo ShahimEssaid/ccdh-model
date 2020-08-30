@@ -153,6 +153,7 @@ module CCDH
     def initialize(package, model)
       super(package, model, V_TYPE_ELEMENT)
       self[K_PARENT] = nil
+      self[K_CHILDREN] = []
 
       self[K_CONCEPTS] = []
       self[K_E_CONCEPTS]= Set.new().compare_by_identity

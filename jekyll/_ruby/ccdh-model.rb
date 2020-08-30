@@ -12,6 +12,10 @@ module CCDH
     def name
       self[H_NAME]
     end
+
+    def to_s
+      "Type:#{self[K_TYPE]}_Name:#{self.name}_Status:#{self[H_STATUS]}_Generated:#{self[K_GENERATED_NOW]}"
+    end
   end
 
   class PackagableModelElement < ModelElement
@@ -22,6 +26,10 @@ module CCDH
 
     def fqn
       self[K_PACKAGE].name + SEP_COLON + self.name
+    end
+
+    def to_s
+      "P:#{self[H_PACKAGE]}_#{super}"
     end
   end
 

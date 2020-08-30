@@ -46,9 +46,7 @@ module CCDH
       #CCDH.generator = self
       @site = site
       model = Model.new("build")
-
       CCDH.readModelFromCsv(File.expand_path(File.join(site.source, "../model")), model)
-
       #CCDH.validate(model)
       CCDH.resolve(model)
       #CCDH.resolveData(model, site)
@@ -56,8 +54,7 @@ module CCDH
       #publisher = ModelPublisher.new(model, site, "_template", "model")
       #publisher.publishModelFile.
       # CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))
-
-      puts "END"
+      
     end
   end
 end

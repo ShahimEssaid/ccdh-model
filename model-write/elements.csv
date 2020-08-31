@@ -1,5 +1,4 @@
 "package","name","summary","description","parent","concepts","domains","ranges","related","status","notes","build"
 "default","hasThing","The base hasThing.","The base hasThing","","default:c:Thing","default:c:Thing","default:c:Thing","","current","","concepts: default:Thing was updated to: default:c:Thing
 domains: default:Thing was updated to: default:c:Thing
-ranges: default:Thing was updated to: default:c:Thing
-Concept not found: default:e:hasThing has concept default:c:Thing, generated."
+ranges: default:Thing was updated to: default:c:Thing"

@@ -13,8 +13,12 @@ module CCDH
       self[H_NAME]
     end
 
+    def fqn
+      "#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
+    end
+
     def to_s
-      "Type:#{self[K_TYPE]}_Name:#{self.name}_Status:#{self[H_STATUS]}_Generated:#{self[K_GENERATED_NOW]}"
+      "#{self.fqn}_#{self[H_STATUS]}_#{self[K_GENERATED_NOW]}"
     end
   end
 
@@ -25,12 +29,9 @@ module CCDH
     end
 
     def fqn
-      self[K_PACKAGE].name + SEP_COLON + self[K_TYPE] + SEP_COLON + self.name
+      "#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{super}"
     end
 
-    def to_s
-      "P:#{self[H_PACKAGE]}_#{super}"
-    end
   end
 
   class Model < ModelElement

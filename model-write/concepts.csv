@@ -1,4 +1,2 @@
 "package","name","summary","description","parents","related","status","notes","build"
 "default","Thing","The base c:Thing concept","Anything","","","current","",""
-"N/A","c","N/A","N/A","N/A","N/A","generated","N/A","N/A
-Generated: for default:e:hasThing has concept default:c:Thing"

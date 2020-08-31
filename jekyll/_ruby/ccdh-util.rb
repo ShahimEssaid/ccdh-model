@@ -122,8 +122,8 @@ module CCDH
     list.nil? && (return newList)
     list.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |sublist|
       newSublist = ""
-      sublist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |name|
-        parts = name.split(SEP_COLON).collect(&:strip).reject(&:empty?)
+      sublist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |fqnname|
+        parts = fqnname.split(SEP_COLON).collect(&:strip).reject(&:empty?)
         pkg = nil
         type = nil
         name = nil
@@ -238,6 +238,7 @@ module CCDH
 
 
   def self.checkFqnEntityName(name, defaultName, packagePrefix)
+    raise("OLD code")
     (name.nil? || name.empty?) && name = defaultName + "#{rand(100000..999999)}"
     fqnParts = name.split(SEP_COLON).collect(&:strip).reject(&:empty?)
     conceptName = checkSimpleEntityName(fqnParts.pop, defaultName)

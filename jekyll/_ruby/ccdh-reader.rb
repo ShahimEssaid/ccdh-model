@@ -159,12 +159,12 @@ module CCDH
       # check parents syntax
       # package name by default is the same package as the concept
       parents = row[H_PARENTS]
-      row[H_PARENTS] = checkEntityFqnNameBarCommaList(row[H_PARENTS], "C", row[H_PACKAGE])
+      row[H_PARENTS] = checkEntityFqnNameBarCommaList(row[H_PARENTS], "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_PARENTS] == parents || buildEntry("#{H_PARENTS}: was changed from #{parents} to: #{row[H_PARENTS]}", row)
 
       # check related syntax
       related = row[H_RELATED]
-      relatedNew = checkEntityFqnNameBarCommaList(row[H_RELATED], "C", row[H_PACKAGE])
+      relatedNew = checkEntityFqnNameBarCommaList(row[H_RELATED], "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_RELATED] == related || buildEntry("#{H_RELATED}: was changed from #{related} to: #{row[H_RELATED]}", row)
 
       # we need a package for creating the concept
@@ -223,7 +223,7 @@ module CCDH
 
       # check parent element name
       parent = row[H_PARENT]
-      parentNew = checkEntityFqnNameBarCommaList(parent, "E", row[H_PACKAGE])
+      parentNew = checkEntityFqnNameBarCommaList(parent, "E", row[H_PACKAGE], V_TYPE_ELEMENT)
       # only one is allowed
       parentNew = parentNew.split(SEP_BAR)[0]
       parentNew.nil? && parentNew = ""
@@ -234,23 +234,23 @@ module CCDH
 
       # check concepts
       concepts = row[H_CONCEPTS]
-      row[H_CONCEPTS] = checkEntityFqnNameBarCommaList(concepts, "C", row[H_PACKAGE])
+      row[H_CONCEPTS] = checkEntityFqnNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_CONCEPTS] == concepts || buildEntry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
 
 
       # check domain concepts
       domains = row[H_DOMAINS]
-      row[H_DOMAINS] = checkEntityFqnNameBarCommaList(domains, "C", row[H_PACKAGE])
+      row[H_DOMAINS] = checkEntityFqnNameBarCommaList(domains, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_DOMAINS] == domains || buildEntry("#{H_DOMAINS}: #{domains} was updated to: #{row[H_DOMAINS]}", row)
 
       # check range concepts
       ranges = row[H_RANGES]
-      row[H_RANGES] = checkEntityFqnNameBarCommaList(ranges, "C", row[H_PACKAGE])
+      row[H_RANGES] = checkEntityFqnNameBarCommaList(ranges, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_RANGES] == ranges || buildEntry("#{H_RANGES}: #{ranges} was updated to: #{row[H_RANGES]}", row)
 
       # check related elements
       related = row[H_RELATED]
-      row[H_RELATED] = checkEntityFqnNameBarCommaList(related, "E", row[H_PACKAGE])
+      row[H_RELATED] = checkEntityFqnNameBarCommaList(related, "E", row[H_PACKAGE], V_TYPE_ELEMENT)
       row[H_RELATED] == related || buildEntry("#{H_RELATED}: #{related} was updated to: #{row[H_RELATED]}", row)
 
 

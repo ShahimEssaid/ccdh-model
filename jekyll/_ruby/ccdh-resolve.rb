@@ -42,8 +42,8 @@ module CCDH
         parents = c[H_PARENTS]
         parents.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |parentRef|
           pkgName, conceptName = parentRef.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "concept #{c.fqn} has parent #{parentRef}", model, c)
-          concept = getConceptGenerated(conceptName, "concept #{c.fqn} has parent #{parentRef}", package, c)
+          package = getPackageGenerated(pkgName, "#{c.fqn} has parent #{parentRef}", model, c)
+          concept = getConceptGenerated(conceptName, "#{c.fqn} has parent #{parentRef}", package, c)
           c[K_PARENTS].index(concept) || c[K_PARENTS] << concept
         end
       end
@@ -58,8 +58,8 @@ module CCDH
         related = c[H_RELATED]
         related.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |relatedRef|
           pkgName, conceptName = relatedRef.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "concept #{c.fqn}", model, c)
-          concept = getConceptGenerated(conceptName, "concept #{c.fqn} related", package, c)
+          package = getPackageGenerated(pkgName, "#{c.fqn}", model, c)
+          concept = getConceptGenerated(conceptName, "#{c.fqn} related", package, c)
           c[K_RELATED].index(concept) || c[K_RELATED] << concept
         end
       end
@@ -74,8 +74,8 @@ module CCDH
         parent = e[H_PARENT]
         (parent.nil? || parent.empty?) && next
         pkgName, elementName = parent.split(SEP_COLON)
-        package = getPackageGenerated(pkgName, "element #{e.fqn} has parent #{parent}", model, e)
-        element = getElementGenerated(elementName, "element #{e.fqn} has parent #{parent}", package, e)
+        package = getPackageGenerated(pkgName, "#{e.fqn} has parent #{parent}", model, e)
+        element = getElementGenerated(elementName, "#{e.fqn} has parent #{parent}", package, e)
         e[K_PARENT] = element
       end
     end
@@ -102,8 +102,8 @@ module CCDH
         related = element[H_RELATED]
         related.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |e|
           pkgName, elementName = e.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "element #{e.fqn} has related #{e}", model, element)
-          e[K_RELATED] << getElementGenerated(elementName, "element #{e.fqn} has related #{e}", package, element)
+          package = getPackageGenerated(pkgName, "#{e.fqn} has related #{e}", model, element)
+          e[K_RELATED] << getElementGenerated(elementName, "#{e.fqn} has related #{e}", package, element)
         end
       end
 
@@ -120,8 +120,8 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, concept_name = c.split(SEP_COLON)
-            package = getPackageGenerated(pkg_name, "element #{e.fqn} has #{generatedFor} #{c}", model, e)
-            clist_array << getConceptGenerated(concept_name, "element #{e.fqn} has #{generatedFor} #{c}", package, e)
+            package = getPackageGenerated(pkg_name, "#{e.fqn} has #{generatedFor} #{c}", model, e)
+            clist_array << getConceptGenerated(concept_name, "#{e.fqn} has #{generatedFor} #{c}", package, e)
           end
           e[key] << clist_array
         end
@@ -182,7 +182,7 @@ module CCDH
       path.each do |c|
         pathString += "#{c.fqn} > "
       end
-      buildEntry("DAG: concept #{c.fqn} is circular with path: #{pathString}", concept)
+      buildEntry("DAG: #{c.fqn} is circular with path: #{pathString}", concept)
       concept[K_ANCESTORS].merge(path)
       populateConceptDescendants(path)
     else

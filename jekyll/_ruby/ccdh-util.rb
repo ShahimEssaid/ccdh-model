@@ -97,21 +97,19 @@ module CCDH
   V_ELEMENT_HAS_THING = "hasThing"
   V_EMPTY = ""
 
-  V_TYPE_MODEL = "model"
-  V_TYPE_PACKAGE = "package"
-  V_TYPE_CONCEPT = "concept"
-  V_TYPE_ELEMENT = "element"
-  V_TYPE_STRUCTURE = "structure"
-  V_TYPE_ATTRIBUTE = "attribute"
-
-
+  V_TYPE_MODEL = "m"
+  V_TYPE_PACKAGE = "p"
+  V_TYPE_CONCEPT = "c"
+  V_TYPE_ELEMENT = "e"
+  V_TYPE_STRUCTURE = "s"
+  V_TYPE_ATTRIBUTE = "a"
 
 
   # Allows a-z, A-Z, 0-9, and _
   # If empty, generate with defaultName_randomNumber
-  def self.checkSimpleEntityName(name, defaultName)
-    defaultName.length == 1 && defaultName = "#{defaultName}_#{rand(100000..999999)}"
-    (name.nil? || name.empty?) && name = defaultName
+  def self.checkSimpleEntityName(name, defaultName, randomSuffix = true)
+    defaultName.length == 1 && randomSuffix && defaultName = "#{defaultName}_#{rand(100000..999999)}"
+    name.nil? && name = defaultName
     # remove all none alpha numeric
     name = name.gsub(/[^a-zA-Z0-9_]/, "")
     # in case name had some characters but empty now. create new name
@@ -119,22 +117,33 @@ module CCDH
     name
   end
 
-  def self.checkEntityFqnNameBarCommaList(list, defaultName, defaultPackage)
+  def self.checkEntityFqnNameBarCommaList(list, defaultName, defaultPackage, defaultType)
     newList = ""
     list.nil? && (return newList)
     list.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |sublist|
       newSublist = ""
       sublist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |name|
-        p1, p2 = name.split(SEP_COLON).collect(&:strip).reject(&:empty?)
-        if p2
-          entityName = checkSimpleEntityName(p2, defaultName)
-          pkgName = checkSimpleEntityName(p1, defaultPackage)
-        else
-          entityName = checkSimpleEntityName(p1, defaultName)
-          pkgName = defaultPackage
+        parts = name.split(SEP_COLON).collect(&:strip).reject(&:empty?)
+        pkg = nil
+        type = nil
+        name = nil
+        if parts.length == 3
+          pkg, type, name = parts
+        elsif parts.length == 2
+          type = defaultType
+          pkg = parts[0]
+          name = parts[1]
+        elsif parts.lenght == 1
+          pkg = defaultPackage
+          type = defaultType
+          name = parts[0]
         end
+        pkg = checkSimpleEntityName(pkg, defaultPackage)
+        type = checkSimpleEntityName(type, defaultType, false)
+        name = checkSimpleEntityName(name, defaultName)
+
         newSublist.empty? || newSublist += "#{SEP_COMMA} "
-        newSublist += "#{pkgName}#{SEP_COLON}#{entityName}"
+        newSublist += "#{pkg}#{SEP_COLON}#{type}#{SEP_COLON}#{name}"
       end
       (newList.empty? || newSublist.empty?) || newList += " #{SEP_BAR} "
       newList += newSublist

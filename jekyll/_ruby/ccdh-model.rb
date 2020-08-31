@@ -25,7 +25,7 @@ module CCDH
     end
 
     def fqn
-      self[K_PACKAGE].name + SEP_COLON + self.name
+      self[K_PACKAGE].name + SEP_COLON + self[K_TYPE] + SEP_COLON + self.name
     end
 
     def to_s
@@ -163,12 +163,12 @@ module CCDH
       self[K_CHILDREN] = []
 
       self[K_CONCEPTS] = []
-      self[K_E_CONCEPTS]= Set.new().compare_by_identity
-      self[K_NE_CONCEPTS]= Set.new().compare_by_identity
+      self[K_E_CONCEPTS] = Set.new().compare_by_identity
+      self[K_NE_CONCEPTS] = Set.new().compare_by_identity
 
       self[K_DOMAINS] = []
-      self[K_E_DOMAINS]= Set.new().compare_by_identity
-      self[K_NE_DOMAINS]= Set.new().compare_by_identity
+      self[K_E_DOMAINS] = Set.new().compare_by_identity
+      self[K_NE_DOMAINS] = Set.new().compare_by_identity
 
       self[K_RANGES] = []
       self[K_E_RANGES] = Set.new().compare_by_identity
@@ -206,6 +206,10 @@ module CCDH
       self[K_STRUCTURE] = structure
       self[K_CONCEPT_REFS] = []
       self[K_VAL_CONCEPT_REFS] = []
+    end
+
+    def fqn
+      raise("NOT IMPLEMENTED YET") #TODO
     end
   end
 end

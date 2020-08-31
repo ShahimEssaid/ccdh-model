@@ -193,7 +193,7 @@ module CCDH
       # write empty file
       CSV.open(elements_file, mode = "wb", {force_quotes: true}) do |csv|
         csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_CONCEPTS, H_DOMAINS, H_RANGES, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
-        csv << [V_PKG_BASE, V_ELEMENT_HAS_THING, "The base hasThing.", "The base hasThing", "", V_CONCEPT_THING_FQN, V_CONCEPT_THING_FQN, V_CONCEPT_THING_FQN, "", V_STATUS_CURRENT, "", "" ]
+        csv << [V_PKG_BASE, V_ELEMENT_HAS_THING, "The base hasThing.", "The base hasThing", "", V_CONCEPT_THING_FQN, V_CONCEPT_THING_FQN, V_CONCEPT_THING_FQN, "", V_STATUS_CURRENT, "", ""]
       end
     end
     model[K_ELEMENTS_CSV] = CSV.read(elements_file, headers: true)

@@ -46,7 +46,7 @@ require 'pp'
 # puts Hello.hello
 
 h = {nil => "nill",
-"1" => "one"}
+     "1" => "one"}
 pp h
 puts h.delete(nil)
 

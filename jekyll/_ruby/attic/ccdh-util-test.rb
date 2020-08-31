@@ -1,12 +1,12 @@
 require_relative "../ccdh-util"
 
 module CCDH
-#   puts "HELLO"
+  #   puts "HELLO"
 
-  puts "1. "+checkPackageReference("some(*crazy###SHIT
+  puts "1. " + checkPackageReference("some(*crazy###SHIT
          ", "c:")
 
-  puts "2. "+checkPackageReference("----...44abc----", "c::")
+  puts "2. " + checkPackageReference("----...44abc----", "c::")
 
   puts "3. Checking entity name Abc*.Efg55: #{checkSimpleEntityName("Abc*.Efg55", "Concept")}"
   puts "4. Checking entity name nil: #{checkSimpleEntityName(nil, "Concept")}"

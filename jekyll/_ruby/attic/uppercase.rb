@@ -1,6 +1,5 @@
-
 if /[[:upper:]]/.match("sTring"[0])
-    puts true
+  puts true
 else
-    puts false
+  puts false
 end

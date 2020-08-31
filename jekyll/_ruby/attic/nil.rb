@@ -5,5 +5,5 @@ require 'pp'
 # pp a
 # pp a===nil
 
-a="hi"
-puts ( a.nil? || "hello")
+a = "hi"
+puts (a.nil? || "hello")

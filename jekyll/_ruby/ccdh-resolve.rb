@@ -101,7 +101,7 @@ module CCDH
         element = p[K_ELEMENTS][en]
         related = element[H_RELATED]
         related.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |e|
-          pkgName,typeName, elementName = e.split(SEP_COLON)
+          pkgName, typeName, elementName = e.split(SEP_COLON)
           package = getPackageGenerated(pkgName, "#{e.fqn} has related #{e}", model, element)
           e[K_RELATED] << getElementGenerated(elementName, "#{e.fqn} has related #{e}", package, element)
         end

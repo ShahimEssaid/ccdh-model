@@ -29,7 +29,7 @@ module CCDH
       p = model[K_PACKAGES][pn]
       p[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |pdn|
         package = getPackageGenerated(pdn, "package #{p[H_NAME]} depnds on #{pdn}", model, p)
-        p[K_DEPENDS_ON] << package
+        p[package.fqn] = package
       end
     end
   end

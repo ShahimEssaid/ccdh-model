@@ -58,34 +58,35 @@ module CCDH
       end
     end
 
-    # CSV.open(File.join(dir, F_STRUCTURES_CSV), mode = "wb", {force_quotes: true}) do |csv|
-    #   csv << model.structures_headers
-    #   model.structures.keys.sort.each do |sk|
-    #     row = []
-    #     structure = model.structures[sk]
-    #     structure.generated_now && structure.vals[H_STATUS] = V_GENERATED
-    #     model.structures_headers.each do |h|
-    #       row << structure.vals[h]
-    #     end
-    #     structure.vals[nil].each do |v|
-    #       row << v
-    #     end
-    #     csv << row
-    #
-    #     structure.attributes.keys.sort.each do |ak|
-    #       row = []
-    #       attribute = structure.attributes[ak]
-    #       attribute.generated_now && attribute.vals[H_STATUS] = V_GENERATED
-    #       model.structures_headers.each do |h|
-    #         row << attribute.vals[h]
-    #       end
-    #       attribute.vals[nil].each do |v|
-    #         row << v
-    #       end
-    #       csv << row
-    #     end
-    #   end
-    # end
+
+    CSV.open(File.join(dir, F_STRUCTURES_CSV), mode = "wb", {force_quotes: true}) do |csv|
+      csv << model[K_STRUCTURES_HEADERS]
+      model[K_PACKAGES].keys.sort.each do |pk|
+        package = model[K_PACKAGES][pk]
+        package[K_STRUCTURES].keys.sort.each do |ck|
+          row = []
+          structure = package[K_STRUCTURES][ck]
+          structure[K_GENERATED_NOW] && structure[H_STATUS] = V_GENERATED
+          model[K_STRUCTURES_HEADERS].each do |h|
+            row << structure[h]
+          end
+          structure[nil].each do |v|
+            row << v
+          end
+          csv << row
+
+          structure[K_ATTRIBUTES].keys.sort.each do |an|
+            row = []
+            a = structure[K_ATTRIBUTES][an]
+            a[K_GENERATED_NOW] && a[H_STATUS] = V_GENERATED # this should not happen
+            model[K_STRUCTURES_HEADERS].each do |h|
+              row << a[h]
+            end
+            csv << row
+          end
+        end
+      end
+    end
   end
 
 end

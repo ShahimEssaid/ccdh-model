@@ -7,75 +7,7 @@ module CCDH
     readPackages(model_dir, model)
     readConcepts(model_dir, model)
     readElements(model_dir, model)
-
-
-    #
-    # model.structures_csv = CSV.read(File.join(model_dir, F_STRUCTURES_CSV), headers: true)
-    # model.structures_csv.headers.each do |h|
-    #   unless h.nil?
-    #     model.structures_headers << h
-    #   end
-    # end
-    # model.structures_csv.each do |row|
-    #   # clean up the row before using it
-    #
-    #   # make sure "build" isn't nil
-    #   row[H_BUILD].nil? && row[H_BUILD] = ""
-    #
-    #   #check package name
-    #   pkg_ref = row[H_PACKAGE]
-    #   row[H_PACKAGE] = checkPackageReference(pkg_ref, P_STRUCTURES)
-    #   row[H_PACKAGE] == pkg_ref || buildEntry("#{H_PACKAGE}: #{pkg_ref} was updated to: #{row[H_PACKAGE]}", row)
-    #
-    #   #check name for structure
-    #   name = row[H_NAME]
-    #   row[H_NAME] = checkEntityName(name, "Structure")
-    #   row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
-    #
-    #   #check name for attribute
-    #   name = row[H_ATTRIBUTE]
-    #   row[H_ATTRIBUTE] = checkEntityName(name, "attribute")
-    #   row[H_ATTRIBUTE] == name || buildEntry("#{H_ATTRIBUTE}: #{name} was updated to: #{row[H_ATTRIBUTE]}", row)
-    #
-    #   # check concept refs
-    #   cref = row[H_CONCEPT]
-    #   row[H_CONCEPT] = checkStructureConceptRef(row[H_CONCEPT])
-    #   row[H_CONCEPT] == cref || buildEntry("#{H_CONCEPT}: #{cref} was updated to #{row[H_CONCEPT]}", row)
-    #
-    #   # check val refs
-    #   vref = row[H_VAL_CONCEPT]
-    #   row[H_VAL_CONCEPT] = checkStructureValRef(row[H_VAL_CONCEPT])
-    #   row[H_VAL_CONCEPT] == cref || buildEntry("#{H_VAL_CONCEPT}: #{vref} was updated to #{row[H_VAL_CONCEPT]}", row)
-    #
-    #   # build the model
-    #
-    #   # we need a pakcage for creating the concept
-    #   package = model.getPackage(row[H_PACKAGE], true)
-    #   entity = nil
-    #
-    #   if row[H_NAME] == V_SELF
-    #     # this is a package definition row
-    #     entity = package
-    #   else
-    #     # this is a structure or attribute definition row. we need a structure either way
-    #     structure = model.getStructure(row[H_NAME], package, true)
-    #     if row[H_ATTRIBUTE] == V_SELF
-    #       # this is a structure definition row
-    #       entity = structure
-    #     else
-    #       # this is an attribute definition row
-    #       entity = structure.getAttribute(row[H_ATTRIBUTE], true)
-    #     end
-    #   end
-    #   entity.generated_now = false
-    #   row.each do |k, v|
-    #     if k
-    #       entity.vals[k] = v
-    #     else
-    #       entity.vals[k] << v
-    #     end
-    #   end
-    # end
+    readStructures(model_dir, model)
   end
 
   def self.readPackages(model_dir, model)
@@ -92,7 +24,7 @@ module CCDH
     # save existing headers to rewrite them same way
     model[K_PACKAGES_CSV].headers.each do |h|
       unless h.nil?
-        model[K_PACKAGES_HEADERS] << h
+        model[K_PACKAGES_HEADERS] << h.strip
       end
     end
     model[K_PACKAGES_CSV].each do |row|
@@ -115,6 +47,8 @@ module CCDH
       # create packages
       package = model.getPackage(row[H_NAME], true)
       package[K_GENERATED_NOW] = false
+
+
       copyRowVals(package, row)
     end
 
@@ -135,7 +69,7 @@ module CCDH
     # save existing headers to rewrite them same way
     model[K_CONCEPTS_CSV].headers.each do |h|
       unless h.nil?
-        model[K_CONCEPTS_HEADERS] << h
+        model[K_CONCEPTS_HEADERS] << h.strip
       end
     end
 
@@ -200,7 +134,7 @@ module CCDH
     # save existing headers to rewrite them same way
     model[K_ELEMENTS_CSV].headers.each do |h|
       unless h.nil?
-        model[K_ELEMENTS_HEADERS] << h
+        model[K_ELEMENTS_HEADERS] << h.strip
       end
     end
 
@@ -253,16 +187,8 @@ module CCDH
       row[H_RELATED] = checkEntityFqnNameBarCommaList(related, "E", row[H_PACKAGE], V_TYPE_ELEMENT)
       row[H_RELATED] == related || buildEntry("#{H_RELATED}: #{related} was updated to: #{row[H_RELATED]}", row)
 
-
       # we need a package for creating the element
       package = getPackageGenerated(row[H_PACKAGE], "element #{row[H_NAME]}", model, row)
-      if package.nil?
-        package = model.getPackage(row[H_PACKAGE], true)
-        package[H_NAME] = row[H_PACKAGE]
-        package[H_STATUS] = V_GENERATED
-        buildEntry("Package #{row[H_PACKAGE]} not found, generated.", row)
-        buildEntry("Generated for element: #{row[H_NAME]}", package)
-      end
 
       element = package.getElement(row[H_NAME], false)
       if !element.nil?
@@ -276,8 +202,108 @@ module CCDH
     }
   end
 
+  def self.readStructures(model_dir, model)
+
+
+    structures_file = File.join(model_dir, F_STRUCTURES_CSV)
+    ## create new file if missing
+    if !File.exist?(structures_file)
+      # write empty file
+      CSV.open(structures_file, mode = "wb", {force_quotes: true}) do |csv|
+        csv << [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESC, H_CONCEPTS, H_RANGES, H_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
+      end
+    end
+    model[K_STRUCTURES_CSV] = CSV.read(structures_file, headers: true)
+    # save existing headers to rewrite them same way
+    model[K_STRUCTURES_CSV].headers.each do |h|
+      unless h.nil?
+        model[K_STRUCTURES_HEADERS] << h.strip
+      end
+    end
+
+    # each row becomes a concept
+    model[K_STRUCTURES_CSV].each { |row|
+      # clean up the row before using it
+
+      # make sure "build" isn't nil so we can use it as we clean up
+      row[H_BUILD].nil? && row[H_BUILD] = ""
+
+      #check package name
+      pkg = row[H_PACKAGE]
+      row[H_PACKAGE] = checkSimpleEntityName(pkg, "P")
+      row[H_PACKAGE] == pkg || buildEntry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
+
+      #check structure name
+      name = row[H_NAME]
+      row[H_NAME] = checkSimpleEntityName(name, "S")
+      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
+
+      #check attribute name
+      name = row[H_ATTRIBUTE_NAME]
+      row[H_ATTRIBUTE_NAME] = checkSimpleEntityName(name, "A")
+      row[H_ATTRIBUTE_NAME] == name || buildEntry("#{H_ATTRIBUTE_NAME}: #{name} was updated to: #{row[H_ATTRIBUTE_NAME]}", row)
+
+      #check element name
+      name = row[H_ELEMENT]
+      row[H_ELEMENT] = checkEntityFqnNameBarCommaList(name, "E", "P", V_TYPE_ELEMENT)
+      if !row[H_ELEMENT].nil?
+        # only one allowed, in case there are multiple
+        row[H_ELEMENT] = row[H_ELEMENT].split(SEP_BAR)[0]
+
+        row[H_ELEMENT].nil? && row[H_ELEMENT] =""
+      end
+      row[H_ELEMENT] == name || buildEntry("#{H_ELEMENT}: #{name} was updated to: #{row[H_ELEMENT]}", row)
+
+
+      # check concepts
+      concepts = row[H_CONCEPTS]
+      row[H_CONCEPTS] = checkEntityFqnNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
+      row[H_CONCEPTS] == concepts || buildEntry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
+
+      # check range
+      concepts = row[H_RANGES]
+      row[H_RANGES] = checkEntityFqnNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
+      row[H_RANGES] == concepts || buildEntry("#{H_RANGES}: #{concepts} was updated to: #{row[H_RANGES]}", row)
+
+      # check structures
+      structures = row[H_STRUCTURES]
+      row[H_STRUCTURES] = checkEntityFqnNameBarCommaList(structures, "S", row[H_PACKAGE], V_TYPE_STRUCTURE)
+      row[H_STRUCTURES] == structures || buildEntry("#{H_STRUCTURES}: #{structures} was updated to: #{row[H_STRUCTURES]}", row)
+
+
+      # we need a package for creating the entity
+      package = getPackageGenerated(row[H_PACKAGE], "structure #{row[H_NAME]}", model, row)
+
+      entity = nil
+      if row[H_ATTRIBUTE_NAME] == V_SELF
+        # this is a structure row
+        # there should only be one of these in a sheet
+        entity = package.getStructure(row[H_NAME], false)
+        if !entity.nil?
+          buildEntry("This structure was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity)
+          next
+        end
+        entity = package.getStructure(row[H_NAME], true)
+      else
+        # this is an attribute row
+        # there should only be one row
+        structure = getStructureGenerated( row[H_NAME], "attribute #{row[H_ATTRIBUTE_NAME]}", package, row)
+        entity = structure.getAttribute(row[H_ATTRIBUTE_NAME], false)
+        if !entity.nil?
+          buildEntry("This entity was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity)
+          next
+        end
+        entity = structure.getAttribute(row[H_ATTRIBUTE_NAME], true)
+
+      end
+      entity[K_GENERATED_NOW] = false
+      copyRowVals(entity, row)
+    }
+  end
+
   def self.copyRowVals(entity, row)
     row.each do |k, v|
+      # puts "K:#{k} V:#{v}"
       k.nil? || k = k.strip
       vStripped = v.strip
       vStripped == v || buildEntry("#{k}: value: #{v} was updated to #{vStripped}", row)

@@ -118,9 +118,9 @@ module CCDH
   class MPackage < ModelElement
     def initialize(model)
       super(model, V_TYPE_PACKAGE)
-      self[K_DEPENDS_ON] = []
+      self[K_DEPENDS_ON] = {}
       self[K_CONCEPTS] = {}
-      self[K_STRUCTURE] = {}
+      self[K_STRUCTURES] = {}
       self[K_ELEMENTS] = {}
     end
 
@@ -141,6 +141,16 @@ module CCDH
       end
       element
     end
+
+    def getStructure(name, create)
+      structure = self[K_STRUCTURES][name]
+      if structure.nil? && create
+        structure = MStructure.new(self, self[K_MODEL])
+        self[K_STRUCTURES][name] = structure
+      end
+      structure
+    end
+
   end
 
   class MConcept < PackagableModelElement
@@ -194,7 +204,6 @@ module CCDH
       if self[K_ATTRIBUTES][name].nil? && create
         attribute = MSAttribute.new(self, self[K_MODEL])
         self[K_ATTRIBUTES][name] = attribute
-        #attribute.vals[H_ATTRIBUTE] = name
       end
       self[K_ATTRIBUTES][name]
     end

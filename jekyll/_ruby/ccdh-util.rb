@@ -22,6 +22,9 @@ module CCDH
   H_DOMAINS = "domains"
   H_RANGES = "ranges"
   H_CONCEPTS = "concepts"
+  H_ATTRIBUTE_NAME = "attribute_name"
+  H_ELEMENT = "element"
+  H_STRUCTURES="structures"
 
 
   # H_MESG = "message"
@@ -192,6 +195,19 @@ module CCDH
       buildEntry("Generated: for #{generatedFor}", element)
     end
     element
+  end
+
+
+  def self.getStructureGenerated(structureName, generatedFor, package, sourceHash)
+    structure = package.getStructure(structureName, false)
+    if structure.nil?
+      structure = package.getStructure(structureName, true)
+      structure[H_NAME] = structureName
+      structure[H_STATUS] = V_GENERATED
+      buildEntry("Structure not found: #{generatedFor}, generated.", sourceHash)
+      buildEntry("Generated: for #{generatedFor}", structure)
+    end
+    structure
   end
 
 

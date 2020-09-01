@@ -51,6 +51,7 @@ module CCDH
   K_PACKAGE = "@package"
   K_PACKAGES = "@packages"
   K_DEPENDS_ON = "@depends_on"
+  K_DEPENDED_ON = "@depended_on"
   K_CONCEPTS = "@concepts"
   K_STRUCTURES = "@structures"
   K_ELEMENTS = "@elements"
@@ -94,9 +95,9 @@ module CCDH
   V_SELF = "_self_"
   V_GENERATED = "generated"
   V_STATUS_CURRENT = "current"
-  V_PKG_BASE = "default"
+  V_PKG_DEFAULT = "default"
   V_CONCEPT_THING = "Thing"
-  V_CONCEPT_THING_FQN = V_PKG_BASE + SEP_COLON + V_CONCEPT_THING
+  V_CONCEPT_THING_FQN = V_PKG_DEFAULT + SEP_COLON + V_CONCEPT_THING
   V_ELEMENT_HAS_THING = "hasThing"
   V_EMPTY = ""
 
@@ -246,7 +247,7 @@ module CCDH
   def self.checkPackageReference(ref)
 
     # nil or empty?
-    (ref.nil? || ref.empty?) && ref = V_PKG_BASE
+    (ref.nil? || ref.empty?) && ref = V_PKG_DEFAULT
     # replace any odd characters
     ref = ref.gsub(/[^a-zA-Z0-9_]/, "")
     ref

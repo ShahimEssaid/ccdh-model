@@ -119,9 +119,17 @@ module CCDH
     def initialize(model)
       super(model, V_TYPE_PACKAGE)
       self[K_DEPENDS_ON] = {}
+      self[K_DEPENDED_ON] = {}
       self[K_CONCEPTS] = {}
       self[K_STRUCTURES] = {}
       self[K_ELEMENTS] = {}
+
+      self[K_ANCESTORS] = Set.new().compare_by_identity
+      self[K_DESCENDANTS] = Set.new().compare_by_identity
+    end
+
+    def fqn
+      self[H_NAME]
     end
 
     def getConcept(name, create)
@@ -214,8 +222,7 @@ module CCDH
     def initialize(structure, model)
       super(model, V_TYPE_ATTRIBUTE)
       self[K_STRUCTURE] = structure
-      self[K_CONCEPT_REFS] = []
-      self[K_VAL_CONCEPT_REFS] = []
+      self[K_ATTRIBUTES] = {}
     end
 
     def fqn

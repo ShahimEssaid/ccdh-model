@@ -165,9 +165,9 @@ module CCDH
     def initialize(package, model)
       super(package, model, V_TYPE_CONCEPT)
       # ConceptRef
-      self[K_PARENTS] = []
-      self[K_RELATED] = []
-      self[K_CHILDREN] = []
+      self[K_PARENTS] = {}
+      self[K_RELATED] = {}
+      self[K_CHILDREN] = {}
 
       self[K_ANCESTORS] = Set.new().compare_by_identity
       self[K_DESCENDANTS] = Set.new().compare_by_identity
@@ -179,23 +179,22 @@ module CCDH
     def initialize(package, model)
       super(package, model, V_TYPE_ELEMENT)
       self[K_PARENT] = nil
-      self[K_CHILDREN] = []
+      self[K_CHILDREN] = {}
 
-      self[K_CONCEPTS] = []
+      self[K_CONCEPTS] = [] # two dimensional
       self[K_E_CONCEPTS] = Set.new().compare_by_identity
       self[K_NE_CONCEPTS] = Set.new().compare_by_identity
 
-      self[K_DOMAINS] = []
+      self[K_DOMAINS] = [] # two dimensional
       self[K_E_DOMAINS] = Set.new().compare_by_identity
       self[K_NE_DOMAINS] = Set.new().compare_by_identity
 
-      self[K_RANGES] = []
+      self[K_RANGES] = [] # two dimensional
       self[K_E_RANGES] = Set.new().compare_by_identity
       self[K_NE_RANGES] = Set.new().compare_by_identity
 
-      self[K_RELATED] = []
+      self[K_RELATED] = {}
     end
-
   end
 
   class MStructure < PackagableModelElement
@@ -205,7 +204,6 @@ module CCDH
     def initialize(package, model)
       super(package, model, V_TYPE_STRUCTURE)
       self[K_ATTRIBUTES] = {}
-      #@concept_refs = []
     end
 
     def getAttribute(name, create)

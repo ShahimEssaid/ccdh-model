@@ -50,7 +50,7 @@ module CCDH
           pkgName, typeName, conceptName = parentRef.split(SEP_COLON)
           package = getPackageGenerated(pkgName, "#{c.fqn} has parent #{parentRef}", model, c)
           concept = getConceptGenerated(conceptName, "#{c.fqn} has parent #{parentRef}", package, c)
-          c[K_PARENTS].index(concept) || c[K_PARENTS] << concept
+          c[K_PARENTS][concept.fqn] = concept
         end
       end
     end
@@ -66,7 +66,7 @@ module CCDH
           pkgName, typeName, conceptName = relatedRef.split(SEP_COLON)
           package = getPackageGenerated(pkgName, "#{c.fqn}", model, c)
           concept = getConceptGenerated(conceptName, "#{c.fqn} related", package, c)
-          c[K_RELATED].index(concept) || c[K_RELATED] << concept
+          c[K_RELATED][concept.fqn] = concept
         end
       end
     end
@@ -82,7 +82,7 @@ module CCDH
         pkgName, typeName, elementName = parent.split(SEP_COLON)
         package = getPackageGenerated(pkgName, "#{e.fqn} has parent #{parent}", model, e)
         element = getElementGenerated(elementName, "#{e.fqn} has parent #{parent}", package, e)
-        e[K_PARENT] = element
+        e[K_PARENT][element.fqn] = element
       end
     end
   end
@@ -105,14 +105,13 @@ module CCDH
       p = model[K_PACKAGES][pn]
       p[K_ELEMENTS].keys.each do |en|
         element = p[K_ELEMENTS][en]
-        related = element[H_RELATED]
-        related.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |e|
+        element[H_RELATED].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |e|
           pkgName, typeName, elementName = e.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "#{e.fqn} has related #{e}", model, element)
-          e[K_RELATED] << getElementGenerated(elementName, "#{e.fqn} has related #{e}", package, element)
+          package = getPackageGenerated(pkgName, "#{element.fqn} has related #{e}", model, element)
+          re = getElementGenerated(elementName, "#{element.fqn} has related #{e}", package, element)
+          e[K_RELATED][re.fqn] = re
         end
       end
-
     end
   end
 
@@ -120,16 +119,16 @@ module CCDH
     model[K_PACKAGES].keys.each do |pn|
       p = model[K_PACKAGES][pn]
       p[pkgKey].keys.each do |en|
-        e = p[pkgKey][en]
-        concepts = e[entityHeader]
+        entity = p[pkgKey][en]
+        concepts = entity[entityHeader]
         concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getPackageGenerated(pkg_name, "#{e.fqn} has #{generatedFor} #{c}", model, e)
-            clist_array << getConceptGenerated(concept_name, "#{e.fqn} has #{generatedFor} #{c}", package, e)
+            package = getPackageGenerated(pkg_name, "#{entity.fqn} has #{generatedFor} #{c}", model, entity)
+            clist_array << getConceptGenerated(concept_name, "#{entity.fqn} has #{generatedFor} #{c}", package, entity)
           end
-          e[entityKey] << clist_array
+          entity[entityKey] << clist_array
         end
       end
     end
@@ -256,10 +255,7 @@ module CCDH
   #
   #
 
-  def self.resolveConceptGraph(model)
-
-
-  end
+  def self.resolveConceptGraph(model) end
 
   def self.parentlessConceptsToThing(model)
     thing = model[K_PACKAGES][V_PKG_DEFAULT][K_CONCEPTS][V_CONCEPT_THING]

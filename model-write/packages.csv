@@ -1,7 +1,7 @@
 "name","summary","description","depends_on","status","notes","build"
 "N/A","generated","N/A","N/A","generated","N/A","N/A
 Generated: for package one depnds on N/A."
-"default","The base c:Thing concept","Anything","","current","","DAG: default is circular with path: default > "
+"default","The base c:Thing concept","Anything","","current","",""
 "one","generated","N/A","N/A","generated","N/A","N/A
 Generated: for structure Specimen.
 Package not found: package one depnds on N/A, generated."

@@ -19,6 +19,7 @@ module CCDH
     # only after all possible entities are generated
 
     resolvePackageGraph(model)
+    resolveConceptGraph(model)
 
     parentlessConceptsToThing(model)
     parentlessElementsToHasSomething(model)
@@ -197,12 +198,20 @@ module CCDH
   #
   # after all possible generated entities created
   #
+
+
+  ##
+  #
+  #  packages stuff
+  #
+  #
   def self.resolvePackageGraph(model)
     defaultPkg = model[K_PACKAGES][V_PKG_DEFAULT]
 
     # at least depend on default package
     # and add inverse dependency
     model[K_PACKAGES].each do |pn, p|
+      p == defaultPkg && next
       p[K_DEPENDS_ON].empty? && p[K_DEPENDS_ON][defaultPkg.fqn] = defaultPkg
       p[K_DEPENDS_ON].each do |dpn, dp|
         dp[K_DEPENDED_ON][p.fqn] = p
@@ -238,6 +247,18 @@ module CCDH
     path.each.with_index.map do |v, i|
       v[K_DESCENDANTS].merge(path[i..])
     end
+  end
+
+
+  ##
+  #
+  #  concept stuff
+  #
+  #
+
+  def self.resolveConceptGraph(model)
+
+
   end
 
   def self.parentlessConceptsToThing(model)

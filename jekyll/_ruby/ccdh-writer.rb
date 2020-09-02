@@ -91,7 +91,7 @@ module CCDH
 
   def self.createDefaultModel(dir)
     config = File.join(dir, F_MODE_JSON)
-    if ! file.exist?(config)
+    if !File.exist?(config)
       File.open(File.join(dir, F_MODE_JSON), "w") do |f|
         f.write({K_MODEL_CONFIG_NAME => V_MODEL_DEFAULT, K_MODEL_CONFIG_DEPENDS_ON => []}.to_json)
       end
@@ -142,7 +142,7 @@ module CCDH
 
   def self.createModel(dir, modelName)
     config = File.join(dir, F_MODE_JSON)
-    if ! file.exist?(config)
+    if !File.exist?(config)
       File.open(File.join(dir, F_MODE_JSON), "w") do |f|
         f.write({K_MODEL_CONFIG_NAME => modelName, K_MODEL_CONFIG_DEPENDS_ON => []}.to_json)
       end
@@ -175,7 +175,7 @@ module CCDH
         csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_CONCEPTS, H_DOMAINS, H_RANGES, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
       end
     end
-    
+
     structures_file = File.join(dir, F_STRUCTURES_CSV)
     ## create new file if missing
     if !File.exist?(structures_file)

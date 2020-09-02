@@ -27,7 +27,7 @@ module CCDH
   class Model < ModelElement
     def initialize(directory, directoryName)
       super(self, V_TYPE_MODEL)
-      createModel(directory, directoryName) # create any missing files based on the directory name
+      CCDH.createModel(directory, directoryName) # create any missing files based on the directory name
       self[K_CONFIG] = JSON.parse(File.read(File.join(directory, F_MODE_JSON)))
       self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].empty? &&
           self[K_CONFIG][K_MODEL_CONFIG_NAME] != V_MODEL_DEFAULT &&

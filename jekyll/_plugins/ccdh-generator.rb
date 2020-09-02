@@ -45,8 +45,9 @@ module CCDH
     def generate(site)
       #CCDH.generator = self
       @site = site
-      model = Model.new("build")
-      CCDH.readModelFromCsv(File.expand_path(File.join(site.source, "../model")), model)
+      models = CCDH.readModels(File.expand_path(File.join(site.source, "../models")), V_MODEL_CURRENT)
+
+      CCDH.readModelFromCsv(models[V_MODEL_CURRENT])
       #CCDH.validate(model)
       CCDH.resolve(model)
       #CCDH.resolveData(model, site)

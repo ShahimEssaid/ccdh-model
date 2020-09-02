@@ -4,6 +4,7 @@ module CCDH
   SEP_COLON = ":"
   SEP_AT = "@"
   SEP_BAR = "|"
+  SEP_DOT = "."
 
   H_PACKAGE = "package"
   H_NAME = "name"
@@ -24,7 +25,7 @@ module CCDH
   H_CONCEPTS = "concepts"
   H_ATTRIBUTE_NAME = "attribute_name"
   H_ELEMENT = "element"
-  H_STRUCTURES="structures"
+  H_STRUCTURES = "structures"
 
 
   # H_MESG = "message"
@@ -35,8 +36,16 @@ module CCDH
   # H_CONCEPT = "concept"
   # H_VAL_CONCEPT = "val_concept"
 
+  K_NAME = "@name"
+  K_FQN = "@fqn"
+  K_ENTITY_NAME = "@entity_name" # this is the FQN without the model name prefix. It's a FQN within a model.
   K_MODEL = "@model"
   K_TYPE = "@type"
+  K_CONFIG = "@config"
+
+  K_MODEL_DIR = "@model_dir"
+  K_MODEL_CONFIG_NAME = "name"
+  K_MODEL_CONFIG_DEPENDS_ON = "depends_on"
 
   K_PACKAGES_CSV = "@packages_csv"
   K_CONCEPTS_CSV = "@concepts_csv"
@@ -86,6 +95,7 @@ module CCDH
   F_ELEMENTS_CSV = "elements.csv"
   F_GROUPS_CSV = "groups.csv"
   F_STRUCTURES_CSV = "structures.csv"
+  F_MODE_JSON = "model.json"
 
   # P_CONCEPTS = "c:"
   # P_STRUCTURES = "s:"
@@ -107,6 +117,8 @@ module CCDH
   V_TYPE_ELEMENT = "e"
   V_TYPE_STRUCTURE = "s"
   V_TYPE_ATTRIBUTE = "a"
+  V_MODEL_CURRENT = "current"
+  V_MODEL_DEFAULT = "default"
 
 
   # Allows a-z, A-Z, 0-9, and _

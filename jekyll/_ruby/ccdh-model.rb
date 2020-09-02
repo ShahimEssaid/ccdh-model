@@ -1,4 +1,10 @@
 module CCDH
+  @models = {}
+
+  def self.models
+    @models
+  end
+
 
   class ModelElement < Hash
     def initialize(model, type)
@@ -9,17 +15,6 @@ module CCDH
       self[K_GENERATED_NOW] = true
     end
 
-    def name
-      self[H_NAME]
-    end
-
-    def fqn
-      "#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
-    end
-
-    def to_s
-      "#{self.fqn}_#{self[H_STATUS]}_#{self[K_GENERATED_NOW]}"
-    end
   end
 
   class PackagableModelElement < ModelElement
@@ -28,18 +23,20 @@ module CCDH
       self[K_PACKAGE] = package
     end
 
-    def fqn
-      "#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{super}"
-    end
-
   end
 
   class Model < ModelElement
-    def initialize(name)
+    def initialize(directory)
       super(self, V_TYPE_MODEL)
-      self[H_NAME] = name
-      self[K_PACKAGES] = {}
+      self[K_CONFIG] = JSON.parse(File.read(File.join(directory, F_MODE_JSON)))
+      self[K_MODEL_DIR] = directory
+      self[K_NAME] = self[K_CONFIG][K_MODEL_CONFIG_NAME]
+      self[K_FQN] = self[K_CONFIG][K_MODEL_CONFIG_NAME]
 
+      self[K_DEPENDS_ON] = {}
+      self[K_DEPENDED_ON] = {}
+
+      self[K_PACKAGES] = {}
       self[K_PACKAGES_HEADERS] = []
       self[K_CONCEPTS_HEADERS] = []
       self[K_ELEMENTS_HEADERS] = []
@@ -52,72 +49,20 @@ module CCDH
     def getPackage(name, create)
       package = self[K_PACKAGES][name]
       if package.nil? && create
-        package = MPackage.new(self)
+        package = MPackage.new(name, self)
         self[K_PACKAGES][name] = package
       end
       package
     end
-
-    # def getGroup(fqn, package, create)
-    #   package.nil? && raise("Null package when creating group #{fqn}")
-    #   entity = @groups[fqn]
-    #   if entity.nil? && create
-    #     entity = MGroup.new(package, self)
-    #     @groups[fqn] = entity
-    #     entity.vals[H_NAME] = CCDH.getEntityNameFromFqn(fqn)
-    #     package.entities[entity.vals[H_NAME]] = entity
-    #   end
-    #   entity
-    # end    #
-    # def getStructure(fqn, package, create)
-    #   entity = @structures[fqn]
-    #   if entity.nil? && create
-    #     entity = MStructure.new(package, self)
-    #     @structures[fqn] = entity
-    #     entity.vals[H_NAME] = CCDH.getEntityNameFromFqn(fqn)
-    #     package.entities[entity.vals[H_NAME]] = entity
-    #   end
-    #   entity
-    # end
-
-    # this will marke generated ones
-    # def resolveConceptRef(name, entity)
-    #   model = entity.model
-    #
-    #   # check package name
-    #   if not name.start_with?(P_CONCEPTS + ":")
-    #     if model.resolve_strict
-    #       entity.error("S: concept ref: #{name} not prefixed with c: in entity: #{entity.fqn}. Aborting")
-    #       return nil
-    #     else
-    #       entity.warn("NS: concept ref: #{name} not prefixed with c: in entity: #{entity.fqn}. Prepending it.")
-    #       name += P_CONCEPTS + ":"
-    #     end
-    #   end
-    #   parts = name.split(SEP_COLON).collect(&:strip)
-    #   concept_name = parts.pop
-    #   package_fqn = parts.join(SEP_COLON)
-    #
-    #   # get the package
-    #   package = getPackage(package_fqn, false)
-    #   if package.nil?
-    #     if model.resolve_strict
-    #       entity.error("S: package #{package_fqn} not found when resolving concept #{name}. Aborting.")
-    #       return nil
-    #     else
-    #       entity.warn("NS: package #{package_fqn} not found when resolving concept #{name}. Creating it.")
-    #       package = getPackage(package_fqn, true)
-    #       package.generated_now = true
-    #     end
-    #   end
-    #
-    #   # get concept
-    # end
   end
 
   class MPackage < ModelElement
-    def initialize(model)
+    def initialize(name, model)
       super(model, V_TYPE_PACKAGE)
+      self[K_NAME] = name
+      self[K_FQN] = model[K_FQN] + SEP_COLON + name
+      self[K_ENTITY_NAME] = name
+
       self[K_DEPENDS_ON] = {}
       self[K_DEPENDED_ON] = {}
       self[K_CONCEPTS] = {}
@@ -135,7 +80,7 @@ module CCDH
     def getConcept(name, create)
       concept = self[K_CONCEPTS][name]
       if concept.nil? && create
-        concept = MConcept.new(self, self[K_MODEL])
+        concept = MConcept.new(name, self, self[K_MODEL])
         self[K_CONCEPTS][name] = concept
       end
       concept
@@ -144,7 +89,7 @@ module CCDH
     def getElement(name, create)
       element = self[K_ELEMENTS][name]
       if element.nil? && create
-        element = MElement.new(self, self[K_MODEL])
+        element = MElement.new(name, self, self[K_MODEL])
         self[K_ELEMENTS][name] = element
       end
       element
@@ -153,7 +98,7 @@ module CCDH
     def getStructure(name, create)
       structure = self[K_STRUCTURES][name]
       if structure.nil? && create
-        structure = MStructure.new(self, self[K_MODEL])
+        structure = MStructure.new(name, self, self[K_MODEL])
         self[K_STRUCTURES][name] = structure
       end
       structure
@@ -162,8 +107,11 @@ module CCDH
   end
 
   class MConcept < PackagableModelElement
-    def initialize(package, model)
+    def initialize(name, package, model)
       super(package, model, V_TYPE_CONCEPT)
+      self[K_NAME] = name
+      self[K_FQN] = package[K_FQN] + SEP_COLON + V_TYPE_CONCEPT + SEP_COLON + name
+      self[K_ENTITY_NAME] = package[K_ENTITY_NAME] + SEP_COLON + V_TYPE_CONCEPT + SEP_COLON + name
       # ConceptRef
       self[K_PARENTS] = {}
       self[K_RELATED] = {}
@@ -176,8 +124,12 @@ module CCDH
 
   class MElement < PackagableModelElement
 
-    def initialize(package, model)
+    def initialize(name, package, model)
       super(package, model, V_TYPE_ELEMENT)
+      self[K_NAME] = name
+      self[K_FQN] = package[K_FQN] + SEP_COLON + V_TYPE_ELEMENT + SEP_COLON + name
+      self[K_ENTITY_NAME] = package[K_ENTITY_NAME] + SEP_COLON + V_TYPE_ELEMENT + SEP_COLON + name
+
       self[K_PARENT] = nil
       self[K_CHILDREN] = {}
 
@@ -201,14 +153,21 @@ module CCDH
     # attr_accessor :attributes,
     #               :concept_refs #, :val_concept_refs
 
-    def initialize(package, model)
+    def initialize(name, package, model)
       super(package, model, V_TYPE_STRUCTURE)
+      self[K_NAME] = name
+      self[K_FQN] = package[K_FQN] + SEP_COLON + V_TYPE_STRUCTURE + SEP_COLON + name
+      self[K_ENTITY_NAME] = package[K_ENTITY_NAME] + SEP_COLON + V_TYPE_STRUCTURE + SEP_COLON + name
+
+      self[K_CONCEPTS] = []
+      self[K_RANGES] = []
+
       self[K_ATTRIBUTES] = {}
     end
 
     def getAttribute(name, create)
       if self[K_ATTRIBUTES][name].nil? && create
-        attribute = MSAttribute.new(self, self[K_MODEL])
+        attribute = MSAttribute.new(name, self, self[K_MODEL])
         self[K_ATTRIBUTES][name] = attribute
       end
       self[K_ATTRIBUTES][name]
@@ -217,14 +176,17 @@ module CCDH
 
   class MSAttribute < ModelElement
     # attr_accessor :concept_refs, :val_concept_refs
-    def initialize(structure, model)
+    def initialize(name, structure, model)
       super(model, V_TYPE_ATTRIBUTE)
+      self[K_NAME] = name
+      self[K_FQN] = structure[K_FQN] + SEP_DOT + name
+      self[K_ENTITY_NAME] = structure[K_ENTITY_NAME] + SEP_DOT + name
+
       self[K_STRUCTURE] = structure
-      self[K_ATTRIBUTES] = {}
+
+      self[K_CONCEPTS] = []
+      self[K_RANGES] = []
     end
 
-    def fqn
-      raise("NOT IMPLEMENTED YET") #TODO
-    end
   end
 end

@@ -1,7 +1,48 @@
 module CCDH
 
 
-  def self.readModelFromCsv(model_dir, model)
+  def self.readModels(models_dir, startModel)
+
+    dir = File.join(models_dir, V_MODEL_DEFAULT)
+    if !Dir.exist?(dir)
+      FileUtils.mkdir_p(dir)
+      File.open(File.join(dir, F_MODE_JSON), "w") do |f|
+        f.write({K_MODEL_CONFIG_NAME => V_MODEL_DEFAULT, K_MODEL_CONFIG_DEPENDS_ON => []}.to_json)
+
+      end
+    end
+    dir = File.join(models_dir, V_MODEL_CURRENT)
+    if !Dir.exist?(dir)
+      FileUtils.mkdir_p(dir)
+      File.open(File.join(dir, F_MODE_JSON), "w") do |f|
+        f.write({K_MODEL_CONFIG_NAME => V_MODEL_CURRENT, K_MODEL_CONFIG_DEPENDS_ON => [V_MODEL_DEFAULT]}.to_json)
+
+      end
+    end
+
+    Dir.glob("*", base: models_dir).each do |f|
+      dir = File.join(models_dir, f)
+      next if !File.directory?(dir)
+      model = Model.new(dir)
+      CCDH.models[model[K_FQN]] = model
+    end
+
+    models.each do |name, model|
+      model[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].each do |depName|
+        depModel = models[depName]
+        depModel.nil? && raise("Couldn't find model #{depName} as a dependency for model #{name}")
+        model[K_DEPENDS_ON][depModel[K_FQN]] = depModel
+        depModel[K_DEPENDED_ON][model[K_FQN]] = model
+      end
+    end
+
+    # add default as dependency if non is there
+    default = models[V_MODEL_DEFAULT]
+
+  end
+
+  def self.readModelFromCsv(model)
+    model_dir = model[K_MODEL_DIR]
     Dir.exist?(model_dir) || FileUtils.mkdir_p(model_dir)
 
     readPackages(model_dir, model)
@@ -250,7 +291,7 @@ module CCDH
         # only one allowed, in case there are multiple
         row[H_ELEMENT] = row[H_ELEMENT].split(SEP_BAR)[0]
 
-        row[H_ELEMENT].nil? && row[H_ELEMENT] =""
+        row[H_ELEMENT].nil? && row[H_ELEMENT] = ""
       end
       row[H_ELEMENT] == name || buildEntry("#{H_ELEMENT}: #{name} was updated to: #{row[H_ELEMENT]}", row)
 
@@ -287,7 +328,7 @@ module CCDH
       else
         # this is an attribute row
         # there should only be one row
-        structure = getStructureGenerated( row[H_NAME], "attribute #{row[H_ATTRIBUTE_NAME]}", package, row)
+        structure = getStructureGenerated(row[H_NAME], "attribute #{row[H_ATTRIBUTE_NAME]}", package, row)
         entity = structure.getAttribute(row[H_ATTRIBUTE_NAME], false)
         if !entity.nil?
           buildEntry("This entity was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity)
@@ -308,6 +349,12 @@ module CCDH
       vStripped = v.strip
       vStripped == v || buildEntry("#{k}: value: #{v} was updated to #{vStripped}", row)
       if k
+
+        if k == H_BUILD && !entity[k].empty?
+          # make sure we don't lose any build logging on the entity before adding any build from the headers
+          vStripped.empty? || vStripped += "\n"
+          vStripped = (vStripped + entity[k]).strip
+        end
         entity[k] = vStripped
       else
         # values with nil header

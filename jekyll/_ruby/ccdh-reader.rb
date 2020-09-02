@@ -2,35 +2,27 @@ module CCDH
 
 
   def self.readModels(models_dir, startModel)
-    createModelDirsIfNeeded(models_dir)
+    createBaseModelDirsIfNeeded(models_dir)
     instantiateModelObjects(models_dir)
     linkModels(CCDH.models[V_MODEL_CURRENT], [])
     readModelsCsv(CCDH.models[V_MODEL_CURRENT])
   end
 
-  def self.createModelDirsIfNeeded(models_dir)
+  def self.createBaseModelDirsIfNeeded(models_dir)
     dir = File.join(models_dir, V_MODEL_DEFAULT)
-    if !Dir.exist?(dir)
-      FileUtils.mkdir_p(dir)
-      createDefaultModel(dir)
-      File.open(File.join(dir, F_MODE_JSON), "w") do |f|
-        f.write({K_MODEL_CONFIG_NAME => V_MODEL_DEFAULT, K_MODEL_CONFIG_DEPENDS_ON => []}.to_json)
-      end
-    end
+    !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
+    createDefaultModel(dir)
+
     dir = File.join(models_dir, V_MODEL_CURRENT)
-    if !Dir.exist?(dir)
-      FileUtils.mkdir_p(dir)
-      File.open(File.join(dir, F_MODE_JSON), "w") do |f|
-        f.write({K_MODEL_CONFIG_NAME => V_MODEL_CURRENT, K_MODEL_CONFIG_DEPENDS_ON => [V_MODEL_DEFAULT]}.to_json)
-      end
-    end
+    !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
+    createModel(dir, V_MODEL_CURRENT)
   end
 
   def self.instantiateModelObjects(models_dir)
     Dir.glob("*", base: models_dir).each do |f|
       dir = File.join(models_dir, f)
       next if !File.directory?(dir)
-      model = Model.new(dir)
+      model = Model.new(dir, f)
       CCDH.models[model[K_FQN]] = model
     end
 
@@ -41,7 +33,7 @@ module CCDH
         depModel.nil? && raise("Couldn't find model #{depName} as a dependency for model #{name}")
 
         # the default model should be firt in the search path to not allow overrides
-        model[K_DEPENDS_ON_PATH].index(CCDH.models[V_MODEL_DEFAULT]) ||  model[K_DEPENDS_ON_PATH] << CCDH.models[V_MODEL_DEFAULT]
+        model[K_DEPENDS_ON_PATH].index(CCDH.models[V_MODEL_DEFAULT]) || model[K_DEPENDS_ON_PATH] << CCDH.models[V_MODEL_DEFAULT]
       end
     end
   end
@@ -102,14 +94,6 @@ module CCDH
 
   def self.readPackages(model_dir, model)
     packages_file = File.join(model_dir, F_PACKAGES_CSV)
-    ## create new file if missing
-    if !File.exist?(packages_file)
-      # write empty file
-      CSV.open(packages_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_NAME, H_SUMMARY, H_DESC, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD]
-        csv << [V_PKG_DEFAULT, "The base c:Thing concept", "Anything", V_EMPTY, V_STATUS_CURRENT, "", ""]
-      end
-    end
     model[K_PACKAGES_CSV] = CSV.read(packages_file, headers: true)
     # save existing headers to rewrite them same way
     model[K_PACKAGES_CSV].headers.each do |h|
@@ -146,14 +130,6 @@ module CCDH
   def self.readConcepts(model_dir, model)
 
     concepts_file = File.join(model_dir, F_CONCEPTS_CSV)
-    ## create new file if missing
-    if !File.exist?(concepts_file)
-      # write empty file
-      CSV.open(concepts_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
-        csv << [V_PKG_DEFAULT, V_CONCEPT_THING, "The base c:Thing concept", "Anything", "", "", V_STATUS_CURRENT, "", ""]
-      end
-    end
     model[K_CONCEPTS_CSV] = CSV.read(concepts_file, headers: true)
     # save existing headers to rewrite them same way
     model[K_CONCEPTS_CSV].headers.each do |h|
@@ -211,14 +187,7 @@ module CCDH
     # read elements
     #
     elements_file = File.join(model_dir, F_ELEMENTS_CSV)
-    ## create new file if missing
-    if !File.exist?(elements_file)
-      # write empty file
-      CSV.open(elements_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_CONCEPTS, H_DOMAINS, H_RANGES, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
-        csv << [V_PKG_DEFAULT, V_ELEMENT_HAS_THING, "The base hasThing.", "The base hasThing", "", V_CONCEPT_THING_FQN, V_CONCEPT_THING_FQN, V_CONCEPT_THING_FQN, "", V_STATUS_CURRENT, "", ""]
-      end
-    end
+
     model[K_ELEMENTS_CSV] = CSV.read(elements_file, headers: true)
     # save existing headers to rewrite them same way
     model[K_ELEMENTS_CSV].headers.each do |h|

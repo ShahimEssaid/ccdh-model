@@ -39,23 +39,36 @@ module CCDH
       self[K_DEPENDED_ON] = []
       self[K_DEPENDS_ON_PATH] = []
 
+      # entity name to array of matching packages base on model path
       self[K_PACKAGES] = {}
+      self[K_MODEL_PACKAGES] = {}
       self[K_PACKAGES_HEADERS] = []
       self[K_CONCEPTS_HEADERS] = []
       self[K_ELEMENTS_HEADERS] = []
       self[K_STRUCTURES_HEADERS] = []
     end
 
-    ##
-    # get package from packages map
-    #
-    def getPackage(name, create)
-      package = self[K_PACKAGES][name]
+    def getModelPackage(name, creat)
+      package = self[K_MODEL_PACKAGES][name]
       if package.nil? && create
         package = MPackage.new(name, self)
-        self[K_PACKAGES][name] = package
+        self[K_MODEL_PACKAGES][name] = package
       end
       package
+    end
+
+    ##
+    # get package from model path and updates the set of packages that
+    # have that name
+    #
+    def searchAndGetPackage(name)
+      packages = []
+      self[K_DEPENDS_ON_PATH].each do |m|
+        modelPackage = m.getModelPackage(name, false)
+        modelPackage && packages << modelPackage
+      end
+      self[K_PACKAGES][name] = packages
+      packages[0]
     end
   end
 

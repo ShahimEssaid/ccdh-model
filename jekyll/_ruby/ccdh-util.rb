@@ -58,7 +58,10 @@ module CCDH
 
   K_GENERATED_NOW = "@generated_now"
   K_PACKAGE = "@package"
+
   K_PACKAGES = "@packages"
+  K_MODEL_PACKAGES = "@model_packages"
+
   K_DEPENDS_ON = "@depends_on"
   K_DEPENDS_ON_PATH = "@depends_on_path"
   K_DEPENDED_ON = "@depended_on"

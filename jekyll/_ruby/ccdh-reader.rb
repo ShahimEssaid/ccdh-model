@@ -12,6 +12,7 @@ module CCDH
     dir = File.join(models_dir, V_MODEL_DEFAULT)
     if !Dir.exist?(dir)
       FileUtils.mkdir_p(dir)
+      createDefaultModel(dir)
       File.open(File.join(dir, F_MODE_JSON), "w") do |f|
         f.write({K_MODEL_CONFIG_NAME => V_MODEL_DEFAULT, K_MODEL_CONFIG_DEPENDS_ON => []}.to_json)
       end

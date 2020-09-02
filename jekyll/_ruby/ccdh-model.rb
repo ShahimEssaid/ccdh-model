@@ -24,6 +24,10 @@ module CCDH
 
   end
 
+  class Models < ModelElement
+    def initialize()
+  end
+
   class Model < ModelElement
     def initialize(directory, directoryName)
       super(self, V_TYPE_MODEL)

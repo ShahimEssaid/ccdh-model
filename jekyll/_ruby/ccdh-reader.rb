@@ -119,7 +119,7 @@ module CCDH
       row[H_DEPENDS_ON] == depends_on_old || buildEntry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to: #{row[H_DEPENDS_ON]}.", row)
 
       # create packages
-      package = model.getPackage(row[H_NAME], true)
+      package = model.getModelPackage(row[H_NAME], true)
       package[K_GENERATED_NOW] = false
 
       copyRowVals(package, row)
@@ -158,16 +158,16 @@ module CCDH
       # check parents syntax
       # package name by default is the same package as the concept
       parents = row[H_PARENTS]
-      row[H_PARENTS] = checkEntityFqnNameBarCommaList(row[H_PARENTS], "C", row[H_PACKAGE], V_TYPE_CONCEPT)
+      row[H_PARENTS] = checkEntityNameBarCommaList(row[H_PARENTS], "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_PARENTS] == parents || buildEntry("#{H_PARENTS}: was changed from #{parents} to: #{row[H_PARENTS]}", row)
 
       # check related syntax
       related = row[H_RELATED]
-      relatedNew = checkEntityFqnNameBarCommaList(row[H_RELATED], "C", row[H_PACKAGE], V_TYPE_CONCEPT)
+      relatedNew = checkEntityNameBarCommaList(row[H_RELATED], "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_RELATED] == related || buildEntry("#{H_RELATED}: was changed from #{related} to: #{row[H_RELATED]}", row)
 
       # we need a package for creating the concept
-      package = getPackageGenerated(row[H_PACKAGE], "concept #{row[H_NAME]}", model, row)
+      package = getModelPackageGenerated(row[H_PACKAGE], "concept #{row[H_NAME]}", model, row)
 
       concept = package.getConcept(row[H_NAME], false)
       if !concept.nil?
@@ -178,7 +178,6 @@ module CCDH
       concept[K_GENERATED_NOW] = false
 
       copyRowVals(concept, row)
-
     }
 
   end
@@ -215,7 +214,7 @@ module CCDH
 
       # check parent element name
       parent = row[H_PARENT]
-      parentNew = checkEntityFqnNameBarCommaList(parent, "E", row[H_PACKAGE], V_TYPE_ELEMENT)
+      parentNew = checkEntityNameBarCommaList(parent, "E", row[H_PACKAGE], V_TYPE_ELEMENT)
       # only one is allowed
       parentNew = parentNew.split(SEP_BAR)[0]
       parentNew.nil? && parentNew = ""
@@ -226,27 +225,27 @@ module CCDH
 
       # check concepts
       concepts = row[H_CONCEPTS]
-      row[H_CONCEPTS] = checkEntityFqnNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
+      row[H_CONCEPTS] = checkEntityNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_CONCEPTS] == concepts || buildEntry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
 
 
       # check domain concepts
       domains = row[H_DOMAINS]
-      row[H_DOMAINS] = checkEntityFqnNameBarCommaList(domains, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
+      row[H_DOMAINS] = checkEntityNameBarCommaList(domains, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_DOMAINS] == domains || buildEntry("#{H_DOMAINS}: #{domains} was updated to: #{row[H_DOMAINS]}", row)
 
       # check range concepts
       ranges = row[H_RANGES]
-      row[H_RANGES] = checkEntityFqnNameBarCommaList(ranges, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
+      row[H_RANGES] = checkEntityNameBarCommaList(ranges, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_RANGES] == ranges || buildEntry("#{H_RANGES}: #{ranges} was updated to: #{row[H_RANGES]}", row)
 
       # check related elements
       related = row[H_RELATED]
-      row[H_RELATED] = checkEntityFqnNameBarCommaList(related, "E", row[H_PACKAGE], V_TYPE_ELEMENT)
+      row[H_RELATED] = checkEntityNameBarCommaList(related, "E", row[H_PACKAGE], V_TYPE_ELEMENT)
       row[H_RELATED] == related || buildEntry("#{H_RELATED}: #{related} was updated to: #{row[H_RELATED]}", row)
 
       # we need a package for creating the element
-      package = getPackageGenerated(row[H_PACKAGE], "element #{row[H_NAME]}", model, row)
+      package = getModelPackageGenerated(row[H_PACKAGE], "element #{row[H_NAME]}", model, row)
 
       element = package.getElement(row[H_NAME], false)
       if !element.nil?
@@ -261,7 +260,6 @@ module CCDH
   end
 
   def self.readStructures(model_dir, model)
-
 
     structures_file = File.join(model_dir, F_STRUCTURES_CSV)
     ## create new file if missing
@@ -303,7 +301,7 @@ module CCDH
 
       #check element name
       name = row[H_ELEMENT]
-      row[H_ELEMENT] = checkEntityFqnNameBarCommaList(name, "E", "P", V_TYPE_ELEMENT)
+      row[H_ELEMENT] = checkEntityNameBarCommaList(name, "E", "P", V_TYPE_ELEMENT)
       if !row[H_ELEMENT].nil?
         # only one allowed, in case there are multiple
         row[H_ELEMENT] = row[H_ELEMENT].split(SEP_BAR)[0]
@@ -315,22 +313,22 @@ module CCDH
 
       # check concepts
       concepts = row[H_CONCEPTS]
-      row[H_CONCEPTS] = checkEntityFqnNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
+      row[H_CONCEPTS] = checkEntityNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_CONCEPTS] == concepts || buildEntry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
 
       # check range
       concepts = row[H_RANGES]
-      row[H_RANGES] = checkEntityFqnNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
+      row[H_RANGES] = checkEntityNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
       row[H_RANGES] == concepts || buildEntry("#{H_RANGES}: #{concepts} was updated to: #{row[H_RANGES]}", row)
 
       # check structures
       structures = row[H_STRUCTURES]
-      row[H_STRUCTURES] = checkEntityFqnNameBarCommaList(structures, "S", row[H_PACKAGE], V_TYPE_STRUCTURE)
+      row[H_STRUCTURES] = checkEntityNameBarCommaList(structures, "S", row[H_PACKAGE], V_TYPE_STRUCTURE)
       row[H_STRUCTURES] == structures || buildEntry("#{H_STRUCTURES}: #{structures} was updated to: #{row[H_STRUCTURES]}", row)
 
 
       # we need a package for creating the entity
-      package = getPackageGenerated(row[H_PACKAGE], "structure #{row[H_NAME]}", model, row)
+      package = getModelPackageGenerated(row[H_PACKAGE], "structure #{row[H_NAME]}", model, row)
 
       entity = nil
       if row[H_ATTRIBUTE_NAME] == V_SELF
@@ -366,8 +364,7 @@ module CCDH
       vStripped = v.strip
       vStripped == v || buildEntry("#{k}: value: #{v} was updated to #{vStripped}", row)
       if k
-
-        if k == H_BUILD && !entity[k].empty?
+        if k == H_BUILD && !entity[k].nil? && !entity[k].empty?
           # make sure we don't lose any build logging on the entity before adding any build from the headers
           vStripped.empty? || vStripped += "\n"
           vStripped = (vStripped + entity[k]).strip

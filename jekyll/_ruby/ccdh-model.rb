@@ -49,7 +49,7 @@ module CCDH
       self[K_STRUCTURES_HEADERS] = []
     end
 
-    def getModelPackage(name, creat)
+    def getModelPackage(name, create)
       package = self[K_MODEL_PACKAGES][name]
       if package.nil? && create
         package = MPackage.new(name, self)
@@ -69,7 +69,7 @@ module CCDH
         modelPackage && packages << modelPackage
       end
       self[K_PACKAGES][name] = packages
-      packages[0]
+      packages
     end
   end
 

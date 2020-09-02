@@ -34,7 +34,7 @@ module CCDH
     model[K_PACKAGES].keys.each do |pn|
       p = model[K_PACKAGES][pn]
       p[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |pdn|
-        package = getPackageGenerated(pdn, "package #{p[H_NAME]} depnds on #{pdn}", model, p)
+        package = getModelPackageGenerated(pdn, "package #{p[H_NAME]} depnds on #{pdn}", model, p)
         p[K_DEPENDS_ON][package.fqn] = package
       end
     end
@@ -48,7 +48,7 @@ module CCDH
         parents = c[H_PARENTS]
         parents.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |parentRef|
           pkgName, typeName, conceptName = parentRef.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "#{c.fqn} has parent #{parentRef}", model, c)
+          package = getModelPackageGenerated(pkgName, "#{c.fqn} has parent #{parentRef}", model, c)
           concept = getConceptGenerated(conceptName, "#{c.fqn} has parent #{parentRef}", package, c)
           c[K_PARENTS][concept.fqn] = concept
         end
@@ -64,7 +64,7 @@ module CCDH
         related = c[H_RELATED]
         related.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |relatedRef|
           pkgName, typeName, conceptName = relatedRef.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "#{c.fqn}", model, c)
+          package = getModelPackageGenerated(pkgName, "#{c.fqn}", model, c)
           concept = getConceptGenerated(conceptName, "#{c.fqn} related", package, c)
           c[K_RELATED][concept.fqn] = concept
         end
@@ -80,7 +80,7 @@ module CCDH
         parent = e[H_PARENT]
         (parent.nil? || parent.empty?) && next
         pkgName, typeName, elementName = parent.split(SEP_COLON)
-        package = getPackageGenerated(pkgName, "#{e.fqn} has parent #{parent}", model, e)
+        package = getModelPackageGenerated(pkgName, "#{e.fqn} has parent #{parent}", model, e)
         element = getElementGenerated(elementName, "#{e.fqn} has parent #{parent}", package, e)
         e[K_PARENT][element.fqn] = element
       end
@@ -107,7 +107,7 @@ module CCDH
         element = p[K_ELEMENTS][en]
         element[H_RELATED].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |e|
           pkgName, typeName, elementName = e.split(SEP_COLON)
-          package = getPackageGenerated(pkgName, "#{element.fqn} has related #{e}", model, element)
+          package = getModelPackageGenerated(pkgName, "#{element.fqn} has related #{e}", model, element)
           re = getElementGenerated(elementName, "#{element.fqn} has related #{e}", package, element)
           e[K_RELATED][re.fqn] = re
         end
@@ -125,7 +125,7 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getPackageGenerated(pkg_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", model, entity)
+            package = getModelPackageGenerated(pkg_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", model, entity)
             clist_array << getConceptGenerated(concept_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", package, entity)
           end
           entity[entityKey] << clist_array
@@ -146,7 +146,7 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getPackageGenerated(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
+            package = getModelPackageGenerated(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
             clist_array << getConceptGenerated(concept_name, "#{structure[K_FQN]} has concept #{c}", package, structure)
           end
           structure[K_CONCEPTS] << clist_array
@@ -158,7 +158,7 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getPackageGenerated(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
+            package = getModelPackageGenerated(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
             clist_array << getConceptGenerated(concept_name, "#{structure[K_FQN]} has concept #{c}", package, structure)
           end
           structure[K_RANGES] << clist_array
@@ -173,7 +173,7 @@ module CCDH
             clist_array = []
             clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
               pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = getPackageGenerated(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
+              package = getModelPackageGenerated(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
               clist_array << getConceptGenerated(concept_name, "#{attribute[K_FQN]} has concept #{c}", package, attribute)
             end
             attribute[K_CONCEPTS] << clist_array
@@ -184,7 +184,7 @@ module CCDH
             clist_array = []
             clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
               pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = getPackageGenerated(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
+              package = getModelPackageGenerated(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
               clist_array << getConceptGenerated(concept_name, "#{attribute[K_FQN]} has concept #{c}", package, attribute)
             end
             attribute[K_RANGES] << clist_array

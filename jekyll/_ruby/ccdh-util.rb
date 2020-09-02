@@ -137,7 +137,7 @@ module CCDH
     name
   end
 
-  def self.checkEntityFqnNameBarCommaList(list, defaultName, defaultPackage, defaultType)
+  def self.checkEntityNameBarCommaList(list, defaultName, defaultPackage, defaultType)
     newList = ""
     list.nil? && (return newList)
     list.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |sublist|
@@ -178,13 +178,12 @@ module CCDH
     hash[H_BUILD] += entry
   end
 
-  def self.getPackageGenerated(pkgName, generatedFor, model, sourceHash)
-    package = model.getPackage(pkgName, false)
+  def self.getModelPackageGenerated(pkgName, generatedFor, model, sourceHash)
+    package = model.getModelPackage(pkgName, false)
     if package.nil?
-      package = model.getPackage(pkgName, true)
-      package[H_NAME] = pkgName
+      package = model.getModelPackage(pkgName, true)
       package[H_STATUS] = V_GENERATED
-      buildEntry("Package not found: #{generatedFor}, generated.", sourceHash)
+      buildEntry("Package #{package[K_FQN]} not found: #{generatedFor}, generated.", sourceHash)
       buildEntry("Generated: for #{generatedFor}.", package)
     end
     package

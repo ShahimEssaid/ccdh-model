@@ -1,1 +1,1 @@
-{"name":"current","depends_on":["default"]}
+{"name":"current","depends_on":["default", "other"]}

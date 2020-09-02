@@ -2,13 +2,18 @@ module CCDH
 
 
   def self.readModels(models_dir, startModel)
+    createModelDirsIfNeeded(models_dir)
+    instantiateModelObjects(models_dir)
+    linkModels(CCDH.models[V_MODEL_CURRENT], [])
+    readModelsCsv(CCDH.models[V_MODEL_CURRENT])
+  end
 
+  def self.createModelDirsIfNeeded(models_dir)
     dir = File.join(models_dir, V_MODEL_DEFAULT)
     if !Dir.exist?(dir)
       FileUtils.mkdir_p(dir)
       File.open(File.join(dir, F_MODE_JSON), "w") do |f|
         f.write({K_MODEL_CONFIG_NAME => V_MODEL_DEFAULT, K_MODEL_CONFIG_DEPENDS_ON => []}.to_json)
-
       end
     end
     dir = File.join(models_dir, V_MODEL_CURRENT)
@@ -16,10 +21,11 @@ module CCDH
       FileUtils.mkdir_p(dir)
       File.open(File.join(dir, F_MODE_JSON), "w") do |f|
         f.write({K_MODEL_CONFIG_NAME => V_MODEL_CURRENT, K_MODEL_CONFIG_DEPENDS_ON => [V_MODEL_DEFAULT]}.to_json)
-
       end
     end
+  end
 
+  def self.instantiateModelObjects(models_dir)
     Dir.glob("*", base: models_dir).each do |f|
       dir = File.join(models_dir, f)
       next if !File.directory?(dir)
@@ -27,24 +33,66 @@ module CCDH
       CCDH.models[model[K_FQN]] = model
     end
 
+    # check that we can resolve all dependencies
     models.each do |name, model|
       model[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].each do |depName|
-        depModel = models[depName]
+        depModel = CCDH.models[depName]
         depModel.nil? && raise("Couldn't find model #{depName} as a dependency for model #{name}")
-        model[K_DEPENDS_ON][depModel[K_FQN]] = depModel
-        depModel[K_DEPENDED_ON][model[K_FQN]] = model
+
+        # the default model should be firt in the search path to not allow overrides
+        model[K_DEPENDS_ON_PATH].index(CCDH.models[V_MODEL_DEFAULT]) ||  model[K_DEPENDS_ON_PATH] << CCDH.models[V_MODEL_DEFAULT]
       end
     end
+  end
 
-    # add default as dependency if non is there
-    default = models[V_MODEL_DEFAULT]
+  def self.linkModels(model, path)
+    path << model
+    if models[V_MODEL_DEFAULT] == model
+      # at the root of a dependency path
+      # update model dependency paths
+      path.each.with_index.map do |model, i|
+        model == models[V_MODEL_DEFAULT] && next
+        path[i..].each do |depModel|
+          model[K_DEPENDS_ON_PATH].index(depModel) || model[K_DEPENDS_ON_PATH] << depModel
+        end
+      end
+      path.pop
+      return
+    end
 
+    model[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].each do |depName|
+      depModel = CCDH.models[depName]
+      if path.index(depModel) # cycle
+        pathString = ""
+        path.each do |m|
+          pathString += "#{m[K_FQN]} > "
+        end
+        buildEntry("Model cycle found with path #{pathString} for model #{model[K_FQN]} and dependency #{depName}. Not linking this dependency.", model)
+        next
+      end
+      model[K_DEPENDS_ON].index(depModel) || model[K_DEPENDS_ON] << depModel
+      depModel[K_DEPENDED_ON].index(model) || depModel[K_DEPENDED_ON] << model
+      linkModels(depModel, path)
+    end
+    if model[K_DEPENDS_ON].empty?
+      default = models[V_MODEL_DEFAULT]
+      model[K_DEPENDS_ON] << default
+      default[K_DEPENDED_ON] << model
+    end
+    path.pop
+  end
+
+  def self.readModelsCsv(currentModel)
+    currentModel[K_PACKAGES_CSV] && return # read already
+    # load all dependencies first
+    currentModel[K_DEPENDS_ON].each do |m|
+      readModelsCsv(m)
+    end
+    readModelFromCsv(currentModel)
   end
 
   def self.readModelFromCsv(model)
     model_dir = model[K_MODEL_DIR]
-    Dir.exist?(model_dir) || FileUtils.mkdir_p(model_dir)
-
     readPackages(model_dir, model)
     readConcepts(model_dir, model)
     readElements(model_dir, model)
@@ -88,7 +136,6 @@ module CCDH
       # create packages
       package = model.getPackage(row[H_NAME], true)
       package[K_GENERATED_NOW] = false
-
 
       copyRowVals(package, row)
     end

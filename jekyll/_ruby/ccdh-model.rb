@@ -8,7 +8,6 @@ module CCDH
 
   class ModelElement < Hash
     def initialize(model, type)
-      super("N/A")
       self[K_TYPE] = type
       self[K_MODEL] = model
       self[nil] = []
@@ -29,12 +28,16 @@ module CCDH
     def initialize(directory)
       super(self, V_TYPE_MODEL)
       self[K_CONFIG] = JSON.parse(File.read(File.join(directory, F_MODE_JSON)))
+      self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].empty? &&
+          self[K_CONFIG][K_MODEL_CONFIG_NAME] != V_MODEL_DEFAULT &&
+          self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON] << V_MODEL_DEFAULT
       self[K_MODEL_DIR] = directory
       self[K_NAME] = self[K_CONFIG][K_MODEL_CONFIG_NAME]
       self[K_FQN] = self[K_CONFIG][K_MODEL_CONFIG_NAME]
 
-      self[K_DEPENDS_ON] = {}
-      self[K_DEPENDED_ON] = {}
+      self[K_DEPENDS_ON] = []
+      self[K_DEPENDED_ON] = []
+      self[K_DEPENDS_ON_PATH] = []
 
       self[K_PACKAGES] = {}
       self[K_PACKAGES_HEADERS] = []
@@ -65,6 +68,7 @@ module CCDH
 
       self[K_DEPENDS_ON] = {}
       self[K_DEPENDED_ON] = {}
+
       self[K_CONCEPTS] = {}
       self[K_STRUCTURES] = {}
       self[K_ELEMENTS] = {}

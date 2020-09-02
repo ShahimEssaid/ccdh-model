@@ -125,8 +125,8 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getPackageGenerated(pkg_name, "#{entity.fqn} has #{generatedFor} #{c}", model, entity)
-            clist_array << getConceptGenerated(concept_name, "#{entity.fqn} has #{generatedFor} #{c}", package, entity)
+            package = getPackageGenerated(pkg_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", model, entity)
+            clist_array << getConceptGenerated(concept_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", package, entity)
           end
           entity[entityKey] << clist_array
         end
@@ -146,8 +146,8 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getPackageGenerated(pkg_name, "#{structure.fqn} has concept #{c}", model, structure)
-            clist_array << getConceptGenerated(concept_name, "#{structure.fqn} has concept #{c}", package, structure)
+            package = getPackageGenerated(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
+            clist_array << getConceptGenerated(concept_name, "#{structure[K_FQN]} has concept #{c}", package, structure)
           end
           structure[K_CONCEPTS] << clist_array
         end
@@ -158,8 +158,8 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getPackageGenerated(pkg_name, "#{structure.fqn} has concept #{c}", model, structure)
-            clist_array << getConceptGenerated(concept_name, "#{structure.fqn} has concept #{c}", package, structure)
+            package = getPackageGenerated(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
+            clist_array << getConceptGenerated(concept_name, "#{structure[K_FQN]} has concept #{c}", package, structure)
           end
           structure[K_RANGES] << clist_array
         end
@@ -173,8 +173,8 @@ module CCDH
             clist_array = []
             clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
               pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = getPackageGenerated(pkg_name, "#{attribute.fqn} has concept #{c}", model, attribute)
-              clist_array << getConceptGenerated(concept_name, "#{attribute.fqn} has concept #{c}", package, attribute)
+              package = getPackageGenerated(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
+              clist_array << getConceptGenerated(concept_name, "#{attribute[K_FQN]} has concept #{c}", package, attribute)
             end
             attribute[K_CONCEPTS] << clist_array
           end
@@ -184,8 +184,8 @@ module CCDH
             clist_array = []
             clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
               pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = getPackageGenerated(pkg_name, "#{attribute.fqn} has concept #{c}", model, attribute)
-              clist_array << getConceptGenerated(concept_name, "#{attribute.fqn} has concept #{c}", package, attribute)
+              package = getPackageGenerated(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
+              clist_array << getConceptGenerated(concept_name, "#{attribute[K_FQN]} has concept #{c}", package, attribute)
             end
             attribute[K_RANGES] << clist_array
           end

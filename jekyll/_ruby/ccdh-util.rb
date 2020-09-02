@@ -60,6 +60,7 @@ module CCDH
   K_PACKAGE = "@package"
   K_PACKAGES = "@packages"
   K_DEPENDS_ON = "@depends_on"
+  K_DEPENDS_ON_PATH = "@depends_on_path"
   K_DEPENDED_ON = "@depended_on"
   K_CONCEPTS = "@concepts"
   K_STRUCTURES = "@structures"

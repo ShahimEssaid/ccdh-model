@@ -13,14 +13,12 @@ while [ -h "$SOURCE" ]; do
     [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
 GIT_ROOT="$(dirname "$DIR")"
 
 cd $GIT_ROOT
 
-bundle exec jekyll b --trace -s jekyll --config jekyll/_config.yml
-
-for html_file_path in $(find ./_site -name '*.html' | sort); do
-    echo -n "${html_file_path} ..."
-    bin/prettify_html.js "${html_file_path}"
-    echo " Done"
-done
+echo "# Installing gem dependencies"
+bundle check --path vendor/bundle || bundle install --path vendor/bundle
+echo "# Installing npm dependencies"
+npm install

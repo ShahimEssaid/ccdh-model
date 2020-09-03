@@ -1,0 +1,13 @@
+{
+  "name": "YOUR_PROJECT_NAME",
+  "dependencies": {
+    "pretty": "2.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@server.com/you/yourrepo.git"
+  },
+  "author": "Your Name",
+  "license": "CUSTOM"
+}
+

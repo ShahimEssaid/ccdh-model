@@ -13,9 +13,8 @@ while [ -h "$SOURCE" ]; do
     [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-GIT_ROOT="$(dirname "$DIR")"
 
-cd $GIT_ROOT
+cd $DIR
 
 bundle exec jekyll b --trace -s jekyll --config jekyll/_config.yml
 

@@ -1,6 +1,0 @@
-"pkg","name","summary","description","status","build"
-"","Specimen","summary text","A specimen",""
-"","boolean","summary text","A boolean value","",""
-"","number","summary text","An integer or floating number","",""
-"","string","summary text","A string value","",""
-"","string","summary text","A string value duplicate","",""

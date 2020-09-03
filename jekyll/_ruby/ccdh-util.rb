@@ -36,63 +36,59 @@ module CCDH
   # H_CONCEPT = "concept"
   # H_VAL_CONCEPT = "val_concept"
 
-  K_NAME = "@name"
-  K_FQN = "@fqn"
-  K_ENTITY_NAME = "@entity_name" # this is the FQN without the model name prefix. It's a FQN within a model.
-  K_MODEL = "@model"
-  K_TYPE = "@type"
-  K_CONFIG = "@config"
+  K_NAME = "_name"
+  K_FQN = "_fqn"
+  K_ENTITY_NAME = "_entity_name" # this is the FQN without the model name prefix. It's a FQN within a model.
+  K_MODEL = "_model"
+  K_TYPE = "_type"
+  K_CONFIG = "_config"
 
-  K_MODEL_DIR = "@model_dir"
+  K_MODEL_DIR = "_model_dir"
   K_MODEL_CONFIG_NAME = "name"
   K_MODEL_CONFIG_DEPENDS_ON = "depends_on"
 
-  K_PACKAGES_CSV = "@packages_csv"
-  K_CONCEPTS_CSV = "@concepts_csv"
-  K_ELEMENTS_CSV = "@elements_csv"
-  K_STRUCTURES_CSV = "@structures_csv"
-  K_PACKAGES_HEADERS = "@packages_headers"
-  K_CONCEPTS_HEADERS = "@concepts_headers"
-  K_ELEMENTS_HEADERS = "@elements_headers"
-  K_STRUCTURES_HEADERS = "@structures_headers"
+  K_PACKAGES_CSV = "_packages_csv"
+  K_CONCEPTS_CSV = "_concepts_csv"
+  K_ELEMENTS_CSV = "_elements_csv"
+  K_STRUCTURES_CSV = "_structures_csv"
+  K_PACKAGES_HEADERS = "_packages_headers"
+  K_CONCEPTS_HEADERS = "_concepts_headers"
+  K_ELEMENTS_HEADERS = "_elements_headers"
+  K_STRUCTURES_HEADERS = "_structures_headers"
 
-  K_GENERATED_NOW = "@generated_now"
-  K_PACKAGE = "@package"
+  K_GENERATED_NOW = "_generated_now"
+  K_PACKAGE = "_package"
 
-  K_PACKAGES = "@packages"
-  K_MODEL_PACKAGES = "@model_packages"
+  K_PACKAGES = "_packages"
+  K_MODEL_PACKAGES = "_model_packages"
 
-  K_DEPENDS_ON = "@depends_on"
-  K_DEPENDS_ON_PATH = "@depends_on_path"
-  K_DEPENDED_ON = "@depended_on"
-  K_CONCEPTS = "@concepts"
-  K_STRUCTURES = "@structures"
-  K_ELEMENTS = "@elements"
-  K_PARENTS = "@parents"
-  K_CHILDREN = "@children"
-  K_ANCESTORS = "@ancestors"
-  K_DESCENDANTS = "@descendant"
-  K_PARENT = "@parent"
-  K_RELATED = "@related"
-  K_ATTRIBUTES = "@attributes"
-  K_STRUCTURE = "@structure" # used in a hash to point to the vals of a structure
-  K_DOMAINS = "@domains"
-  K_RANGES = "@ranges"
+  K_DEPENDS_ON = "_depends_on"
+  K_DEPENDS_ON_PATH = "_depends_on_path"
+  K_DEPENDED_ON = "_depended_on"
+  K_CONCEPTS = "_concepts"
+  K_STRUCTURES = "_structures"
+  K_ELEMENTS = "_elements"
+  K_PARENTS = "_parents"
+  K_CHILDREN = "_children"
+  K_ANCESTORS = "_ancestors"
+  K_DESCENDANTS = "_descendant"
+  K_PARENT = "_parent"
+  K_RELATED = "_related"
+  K_ATTRIBUTES = "_attributes"
+  K_STRUCTURE = "_structure" # used in a hash to point to the vals of a structure
+  K_DOMAINS = "_domains"
+  K_RANGES = "_ranges"
 
-  K_E_RANGES = "@e_ranges"
-  K_E_DOMAINS = "@e_domains"
-  K_E_CONCEPTS = "@e_concepts"
+  K_E_RANGES = "_e_ranges"
+  K_E_DOMAINS = "_e_domains"
+  K_E_CONCEPTS = "_e_concepts"
 
-  K_NE_RANGES = "@ne_ranges"
-  K_NE_DOMAINS = "@ne_domains"
-  K_NE_CONCEPTS = "@ne_concepts"
+  K_NE_RANGES = "_ne_ranges"
+  K_NE_DOMAINS = "_ne_domains"
+  K_NE_CONCEPTS = "_ne_concepts"
 
-  K_CONCEPT_REFS = "@concept_refs"
-  K_VAL_CONCEPT_REFS = "@val_concept_refs"
-
-  # K_PACKAGES_ROOT = "@packages_root"
-  # K_ATTRIBUTE_VALUES = "@attribute_values"
-  # K_ATTRIBUTE = "@attribute" # used in a hash to point to the vals of an attribute
+  K_CONCEPT_REFS = "_concept_refs"
+  K_VAL_CONCEPT_REFS = "_val_concept_refs"
 
   F_PACKAGES_CSV = "packages.csv"
   F_CONCEPTS_CSV = "concepts.csv"
@@ -248,7 +244,7 @@ module CCDH
     attr_accessor :structures
 
     def initialize(concept)
-      @concept = concept
+      _concept = concept
       @structures = []
 
     end

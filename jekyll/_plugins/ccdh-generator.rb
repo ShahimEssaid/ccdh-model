@@ -37,7 +37,7 @@ module CCDH
         if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
           postYamlContent = $POSTMATCH
           yaml = SafeYAML.load(Regexp.last_match(1))
-          yaml["generated"] && File.delete(file)
+          yaml.nil? || (yaml["generated"] && File.delete(file))
         end
       }
     end
@@ -47,11 +47,10 @@ module CCDH
       @site = site
       CCDH.readModels(File.expand_path(File.join(site.source, "../models")), V_MODEL_CURRENT)
 
-      #CCDH.readModelFromCsv(CCDH.models[V_MODEL_CURRENT])
       #CCDH.validate(model)
       #CCDH.resolve(CCDH.models[V_MODEL_CURRENT])
       #CCDH.resolveData(model, site)
-      #data = model.data
+      site.data["models"] = CCDH.models
       #publisher = ModelPublisher.new(model, site, "_template", "model")
       #publisher.publishModelFile.
       #CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))

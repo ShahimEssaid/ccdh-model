@@ -21,11 +21,6 @@ module CCDH
       super(model, type)
       self[K_PACKAGE] = package
     end
-
-  end
-
-  class Models < ModelElement
-    def initialize()
   end
 
   class Model < ModelElement
@@ -51,6 +46,8 @@ module CCDH
       self[K_CONCEPTS_HEADERS] = []
       self[K_ELEMENTS_HEADERS] = []
       self[K_STRUCTURES_HEADERS] = []
+      self["_testing"] = "testing-value"
+
     end
 
     def getModelPackage(name, create)

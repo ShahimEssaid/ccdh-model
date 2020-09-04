@@ -89,15 +89,15 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="debase-ruby_core_source (vbundled(0.10.9)) [path][gem]" type="rubylib">
+      <library name="debase-ruby_core_source (vbundled(0.10.10)) [path][gem]" type="rubylib">
         <properties>
           <option name="version" value="4" />
         </properties>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/debase-ruby_core_source-0.10.9/lib" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/debase-ruby_core_source-0.10.10/lib" />
         </CLASSES>
         <SOURCES>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/debase-ruby_core_source-0.10.9/lib" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/debase-ruby_core_source-0.10.10/lib" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -487,29 +487,29 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="public_suffix (vbundled(4.0.5)) [path][gem]" type="rubylib">
+      <library name="public_suffix (vbundled(4.0.6)) [path][gem]" type="rubylib">
         <properties>
           <option name="version" value="4" />
         </properties>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/bin" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/lib" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/data" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/test" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/.github" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/bin" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/lib" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/data" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/test" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/.github" />
         </CLASSES>
         <SOURCES>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/bin" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/lib" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/data" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/test" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/.github" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/bin" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/lib" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/data" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/test" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/.github" />
         </SOURCES>
         <excluded>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/bin" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/data" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/test" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.5/.github" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/bin" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/data" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/test" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/public_suffix-4.0.6/.github" />
         </excluded>
       </library>
     </orderEntry>

@@ -40,10 +40,16 @@ module CCDH
   K_FQN = "_fqn"
   K_ENTITY_NAME = "_entity_name" # this is the FQN without the model name prefix. It's a FQN within a model.
   K_MODEL = "_model"
+  K_MODELS="_models"
+  K_MODEL_SET = "_model_set"
+  K_MODEL_SET_DIR = "_model_set_dir"
+  K_MODEL_SET_TOP = "_model_set_top"
+  K_MODEL_SET_DEFAULT = "_model_set_default"
   K_TYPE = "_type"
   K_CONFIG = "_config"
 
   K_MODEL_DIR = "_model_dir"
+  K_MODELS_DIR = "_models_dir"
   K_MODEL_CONFIG_NAME = "name"
   K_MODEL_CONFIG_DEPENDS_ON = "depends_on"
 
@@ -111,6 +117,7 @@ module CCDH
   V_ELEMENT_HAS_THING = "hasThing"
   V_EMPTY = ""
 
+  V_TYPE_MODEL_SET = "ms"
   V_TYPE_MODEL = "m"
   V_TYPE_PACKAGE = "p"
   V_TYPE_CONCEPT = "c"

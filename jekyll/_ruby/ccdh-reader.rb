@@ -1,60 +1,66 @@
 module CCDH
 
-
-  def self.readModels(models_dir, startModel)
-    createBaseModelDirsIfNeeded(models_dir)
-    instantiateModelObjects(models_dir)
-    linkModels(CCDH.models[V_MODEL_CURRENT], [])
-    readModelsCsv(CCDH.models[V_MODEL_CURRENT])
+  def self.readModels(model_set)
+    createBaseModelDirsIfNeeded(model_set)
+    instantiateModelObjects(model_set)
+    linkModels(model_set[K_MODELS][model_set[K_MODEL_SET_TOP]], [], model_set)
+    readModelsCsv(model_set[K_MODELS][model_set[K_MODEL_SET_TOP]])
   end
 
-  def self.createBaseModelDirsIfNeeded(models_dir)
-    dir = File.join(models_dir, V_MODEL_DEFAULT)
-    !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
-    createDefaultModel(dir)
-
-    dir = File.join(models_dir, V_MODEL_CURRENT)
-    !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
-    createModel(dir, V_MODEL_CURRENT)
+  def self.createBaseModelDirsIfNeeded(model_set)
+    model_set[K_MODELS].each do |name, model|
+      model && next
+      if name == V_MODEL_DEFAULT
+        createDefaultModel(model_set)
+      else
+        createNamedModel(model_set, name)
+      end
+    end
   end
 
-  def self.instantiateModelObjects(models_dir)
-    Dir.glob("*", base: models_dir).each do |f|
-      dir = File.join(models_dir, f)
+  def self.instantiateModelObjects(model_set)
+    Dir.glob("*", base: model_set[K_MODEL_SET_DIR]).each do |f|
+      dir = File.join(model_set[K_MODEL_SET_DIR], f)
       next if !File.directory?(dir)
-      model = Model.new(dir, f)
-      CCDH.models[model[K_FQN]] = model
+      model_set[K_MODELS].keys.index(dir) && model_set[K_MODELS][f] && next # this dir/name already has an object
+      model = Model.new(f, model_set)
+      model_set[K_MODELS][f] = model
     end
 
     # check that we can resolve all dependencies
-    models.each do |name, model|
+    model_set[K_MODELS].each do |name, model|
       model[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].each do |depName|
-        depModel = CCDH.models[depName]
+        depModel = model_set[K_MODELS][depName]
         depModel.nil? && raise("Couldn't find model #{depName} as a dependency for model #{name}")
-
-        # the default model should be firt in the search path to not allow overrides
-        model[K_DEPENDS_ON_PATH].index(CCDH.models[V_MODEL_DEFAULT]) || model[K_DEPENDS_ON_PATH] << CCDH.models[V_MODEL_DEFAULT]
+      end
+      # if there is a default model
+      if model_set[K_MODEL_SET_DEFAULT]
+        default_model = model_set[K_MODELS][model_set[K_MODEL_SET_DEFAULT]]
+        default_model.nil? && raise("Couldn't find default model #{model_set[K_MODEL_SET_DEFAULT]}")
+        # the default model should be first in the search path to not allow overrides
+        model[K_DEPENDS_ON_PATH].index(default_model) || model[K_DEPENDS_ON_PATH] << default_model
       end
     end
   end
 
-  def self.linkModels(model, path)
+  def self.linkModels(model, path, model_set)
     path << model
-    if models[V_MODEL_DEFAULT] == model
-      # at the root of a dependency path
-      # update model dependency paths
-      path.each.with_index.map do |model, i|
-        model == models[V_MODEL_DEFAULT] && next
-        path[i..].each do |depModel|
-          model[K_DEPENDS_ON_PATH].index(depModel) || model[K_DEPENDS_ON_PATH] << depModel
+    if model == model_set[K_MODELS][model_set[K_MODEL_SET_DEFAULT]]
+        # at the root of a dependency path (because default is the effective end. see later comment)
+        # update model dependency paths
+        path.each.with_index.map do |m, i|
+          m == model_set[K_MODELS][model_set[K_MODEL_SET_DEFAULT]] && next # to avoid adding the already added "default" model, which should already be the first
+          path[i..].each do |depModel|
+            model[K_DEPENDS_ON_PATH].index(depModel) || model[K_DEPENDS_ON_PATH] << depModel
+          end
         end
-      end
       path.pop
       return
     end
 
+    # here is where we start to iterate over the dependencies and recurse
     model[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].each do |depName|
-      depModel = CCDH.models[depName]
+      depModel = model_set[K_MODELS][depName]
       if path.index(depModel) # cycle
         pathString = ""
         path.each do |m|
@@ -65,10 +71,10 @@ module CCDH
       end
       model[K_DEPENDS_ON].index(depModel) || model[K_DEPENDS_ON] << depModel
       depModel[K_DEPENDED_ON].index(model) || depModel[K_DEPENDED_ON] << model
-      linkModels(depModel, path)
+      linkModels(depModel, path, model_set)
     end
     if model[K_DEPENDS_ON].empty?
-      default = models[V_MODEL_DEFAULT]
+      default = model_set[K_MODELS][model_set[K_MODEL_SET_DEFAULT]]
       model[K_DEPENDS_ON] << default
       default[K_DEPENDED_ON] << model
     end

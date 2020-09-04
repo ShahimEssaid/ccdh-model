@@ -1,8 +1,8 @@
 module CCDH
-  @models = {}
+  @model_sets = {}
 
-  def self.models
-    @models
+  def self.model_sets
+    @model_sets
   end
 
 
@@ -23,10 +23,22 @@ module CCDH
     end
   end
 
+  class ModelSet < ModelElement
+    def initialize(model_set_dir, top_model_name, default_model_name)
+      super(nil, V_TYPE_MODEL_SET)
+      self[K_MODEL_SET_DIR] = model_set_dir
+
+      self[K_MODEL_SET_TOP] = top_model_name
+      self[K_MODEL_SET_DEFAULT] = default_model_name
+      self[K_MODELS] = {}
+    end
+  end
+
   class Model < ModelElement
-    def initialize(directory, directoryName)
+    def initialize(name, model_set)
       super(self, V_TYPE_MODEL)
-      CCDH.createModel(directory, directoryName) # create any missing files based on the directory name
+      self[K_MODEL_SET] = model_set
+      directory = File.join(model_set[K_MODEL_SET_DIR], name)
       self[K_CONFIG] = JSON.parse(File.read(File.join(directory, F_MODE_JSON)))
       self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].empty? &&
           self[K_CONFIG][K_MODEL_CONFIG_NAME] != V_MODEL_DEFAULT &&

@@ -89,7 +89,9 @@ module CCDH
     end
   end
 
-  def self.createDefaultModel(dir)
+  def self.createDefaultModel(model_set)
+    dir = File.join(model_set[K_MODEL_SET_DIR], V_MODEL_DEFAULT)
+    !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
     config = File.join(dir, F_MODE_JSON)
     if !File.exist?(config)
       File.open(File.join(dir, F_MODE_JSON), "w") do |f|
@@ -140,7 +142,10 @@ module CCDH
   end
 
 
-  def self.createModel(dir, modelName)
+  def self.createNamedModel(model_set, modelName)
+
+    dir = File.join(model_set[K_MODEL_SET_DIR], modelName)
+    !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
     config = File.join(dir, F_MODE_JSON)
     if !File.exist?(config)
       File.open(File.join(dir, F_MODE_JSON), "w") do |f|
@@ -186,6 +191,5 @@ module CCDH
     end
 
   end
-
 
 end

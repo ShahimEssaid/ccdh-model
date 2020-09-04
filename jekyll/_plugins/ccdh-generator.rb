@@ -45,12 +45,18 @@ module CCDH
     def generate(site)
       #CCDH.generator = self
       @site = site
-      CCDH.readModels(File.expand_path(File.join(site.source, "../models")), V_MODEL_CURRENT)
+      model_set = ModelSet.new(File.expand_path(File.join(site.source, "../model_sets/src")), V_MODEL_CURRENT, V_MODEL_DEFAULT)
+      model_set[K_MODELS][V_MODEL_CURRENT] = nil
+      model_set[K_MODELS][V_MODEL_DEFAULT] = nil
+
+      CCDH.model_sets[V_MODEL_CURRENT] = model_set
+      CCDH.readModels(model_set)
 
       #CCDH.validate(model)
       #CCDH.resolve(CCDH.models[V_MODEL_CURRENT])
       #CCDH.resolveData(model, site)
-      site.data["models"] = CCDH.models
+      site.data["_model_sets"] = CCDH.model_sets
+      site.data["_ms"] = CCDH.model_sets[V_MODEL_CURRENT]
       #publisher = ModelPublisher.new(model, site, "_template", "model")
       #publisher.publishModelFile.
       #CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))

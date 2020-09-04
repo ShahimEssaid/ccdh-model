@@ -2,35 +2,35 @@ require_relative 'ccdh-util'
 require_relative 'ccdh-model'
 module CCDH
 
-  def self.resolve(model)
-    resolvePackageDependsOn(model)
+  def self.resolve(model_set)
+    #resolvePackageDependsOn(model_set)
 
-    resolveConceptParents(model)
-    resolveConceptRelated(model)
-
-    resolveElementParent(model)
-    resolveElementConcepts(model)
-    resolveElementDomains(model)
-    resolveElementRanges(model)
-    resolveElementRelated(model)
-
-    resolveStructAndAttribConcepts(model)
-
-    # only after all possible entities are generated
-
-    resolvePackageGraph(model)
-    resolveConceptGraph(model)
-
-    parentlessConceptsToThing(model)
-    parentlessElementsToHasSomething(model)
-    conceptCheckDAGAndClosure(model)
-    effectiveElementConcepts(model)
-    # this filters our effective concepts that are not a subset of the parent's concepts
-    notEffectiveElementConcepts(model)
+    # resolveConceptParents(model_set)
+    # resolveConceptRelated(model_set)
+    #
+    # resolveElementParent(model_set)
+    # resolveElementConcepts(model_set)
+    # resolveElementDomains(model_set)
+    # resolveElementRanges(model_set)
+    # resolveElementRelated(model_set)
+    #
+    # resolveStructAndAttribConcepts(model_set)
+    #
+    # # only after all possible entities are generated
+    #
+    # resolvePackageGraph(model_set)
+    # resolveConceptGraph(model_set)
+    #
+    # parentlessConceptsToThing(model_set)
+    # parentlessElementsToHasSomething(model_set)
+    # conceptCheckDAGAndClosure(model_set)
+    # effectiveElementConcepts(model_set)
+    # # this filters our effective concepts that are not a subset of the parent's concepts
+    # notEffectiveElementConcepts(model_set)
 
   end
 
-  def self.resolvePackageDependsOn(model)
+  def self.resolvePackageDependsOn(model_set)
     model[K_PACKAGES].keys.each do |pn|
       p = model[K_PACKAGES][pn]
       p[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |pdn|

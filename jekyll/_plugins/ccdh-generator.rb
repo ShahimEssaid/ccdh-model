@@ -53,10 +53,12 @@ module CCDH
       CCDH.readModels(model_set)
 
       #CCDH.validate(model)
-      #CCDH.resolve(CCDH.models[V_MODEL_CURRENT])
+      CCDH.resolve(CCDH.model_sets[V_MODEL_CURRENT])
       #CCDH.resolveData(model, site)
       site.data["_model_sets"] = CCDH.model_sets
       site.data["_ms"] = CCDH.model_sets[V_MODEL_CURRENT]
+      site.data["_ms"]["testing"] = {"b" => "Something", "a" => "else", "c" => {}}
+      site.data["_ms"]["testing2"] = {}
       #publisher = ModelPublisher.new(model, site, "_template", "model")
       #publisher.publishModelFile.
       #CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))

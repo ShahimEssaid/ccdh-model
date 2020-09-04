@@ -1,0 +1,12 @@
+{{ "John, Paul, George, Ringo" | split: ", " | size }}
+
+{% assign sorted = include.hash | sort %}
+{% for entry in sorted %}
+======================
+value size:{{entry[1] | size}}
+{% if entry[1].first %} {% comment %} this checks if the value is an array/hash, and skips it for custom handling {% endcomment %}
+<li>{{ entry[0] }}: [{{ entry[1] | size}}]</li>
+{% else %}
+<li>{{ entry[0] }}: {{ entry[1] | default: "nil"}}</li>
+{% endif %}
+{% endfor %}

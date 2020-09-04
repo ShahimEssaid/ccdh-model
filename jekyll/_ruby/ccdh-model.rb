@@ -10,7 +10,7 @@ module CCDH
     def initialize(model, type)
       self[K_TYPE] = type
       self[K_MODEL] = model
-      self[nil] = []
+      self[K_NIL] = []
       self[K_GENERATED_NOW] = true
     end
 
@@ -31,6 +31,9 @@ module CCDH
       self[K_MODEL_SET_TOP] = top_model_name
       self[K_MODEL_SET_DEFAULT] = default_model_name
       self[K_MODELS] = {}
+
+      # aggregated view over the models
+      self[K_PACKAGES] = {}
     end
   end
 
@@ -40,9 +43,9 @@ module CCDH
       self[K_MODEL_SET] = model_set
       directory = File.join(model_set[K_MODEL_SET_DIR], name)
       self[K_CONFIG] = JSON.parse(File.read(File.join(directory, F_MODE_JSON)))
-      self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].empty? &&
-          self[K_CONFIG][K_MODEL_CONFIG_NAME] != V_MODEL_DEFAULT &&
-          self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON] << V_MODEL_DEFAULT
+      # self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].empty? &&
+      #     self[K_CONFIG][K_MODEL_CONFIG_NAME] != V_MODEL_DEFAULT &&
+      #     self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON] << V_MODEL_DEFAULT
       self[K_MODEL_DIR] = directory
       self[K_NAME] = self[K_CONFIG][K_MODEL_CONFIG_NAME]
       self[K_FQN] = self[K_CONFIG][K_MODEL_CONFIG_NAME]
@@ -67,6 +70,9 @@ module CCDH
       if package.nil? && create
         package = MPackage.new(name, self)
         self[K_MODEL_PACKAGES][name] = package
+        self[K_MODEL_SET][K_PACKAGES][name] ||= []
+        ms_packages = self[K_MODEL_SET][K_PACKAGES][name]
+        ms_packages.index(package) || ms_packages << package
       end
       package
     end

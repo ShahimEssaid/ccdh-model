@@ -36,20 +36,21 @@ module CCDH
   # H_CONCEPT = "concept"
   # H_VAL_CONCEPT = "val_concept"
 
+  K_NIL = "_NIL"
   K_NAME = "_name"
   K_FQN = "_fqn"
   K_ENTITY_NAME = "_entity_name" # this is the FQN without the model name prefix. It's a FQN within a model.
   K_MODEL = "_model"
   K_MODELS="_models"
-  K_MODEL_SET = "_model_set"
-  K_MODEL_SET_DIR = "_model_set_dir"
-  K_MODEL_SET_TOP = "_model_set_top"
-  K_MODEL_SET_DEFAULT = "_model_set_default"
+  K_MODEL_SET = "_ms"
+  K_MODEL_SET_DIR = "_ms_dir"
+  K_MODEL_SET_TOP = "_ms_top"
+  K_MODEL_SET_DEFAULT = "_ms_default"
   K_TYPE = "_type"
   K_CONFIG = "_config"
 
-  K_MODEL_DIR = "_model_dir"
-  K_MODELS_DIR = "_models_dir"
+  K_MODEL_DIR = "_m_dir"
+
   K_MODEL_CONFIG_NAME = "name"
   K_MODEL_CONFIG_DEPENDS_ON = "depends_on"
 
@@ -89,7 +90,7 @@ module CCDH
   K_E_DOMAINS = "_e_domains"
   K_E_CONCEPTS = "_e_concepts"
 
-  K_NE_RANGES = "_ne_ranges"
+  K_NE_RANGES = "_ne_ranges" # not effective
   K_NE_DOMAINS = "_ne_domains"
   K_NE_CONCEPTS = "_ne_concepts"
 

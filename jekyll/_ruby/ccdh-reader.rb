@@ -378,7 +378,7 @@ module CCDH
         entity[k] = vStripped
       else
         # values with nil header
-        entity[k] << vStripped
+        entity[K_NIL] << vStripped
       end
     end
     # make sure the latest build entries are copied

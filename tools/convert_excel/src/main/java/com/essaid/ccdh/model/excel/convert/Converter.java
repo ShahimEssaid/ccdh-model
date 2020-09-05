@@ -5,8 +5,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,12 +14,12 @@ public abstract class Converter {
 
     static final String[] SHEET_NAMES = {"packages", "concepts", "elements", "structures"};
     static final String MODEL_FILE = "model.xlsx";
-    final Path modelFile;
+    final Path file;
     Options options;
 
     Converter(Options options) {
         this.options = options;
-        modelFile = Paths.get(options.modelDir, MODEL_FILE);
+        file = Paths.get(options.file);
     }
 
     abstract void convert() throws IOException, InvalidFormatException;

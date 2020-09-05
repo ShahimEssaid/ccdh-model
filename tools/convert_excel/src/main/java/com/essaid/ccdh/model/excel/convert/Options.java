@@ -4,8 +4,8 @@ import com.beust.jcommander.Parameter;
 
 public class Options {
 
-    @Parameter(names = "--model-path")
-    String modelDir;
+    @Parameter(names = "--file")
+    String file;
 
     @Parameter(names = "--direction" )
     String direction;

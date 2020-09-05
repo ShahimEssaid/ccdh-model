@@ -8,16 +8,12 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 
 public class ToCsv extends Converter {
 
@@ -27,7 +23,7 @@ public class ToCsv extends Converter {
 
     @Override
     void convert() throws IOException, InvalidFormatException {
-        XSSFWorkbook wb = new XSSFWorkbook(modelFile.toFile());
+        XSSFWorkbook wb = new XSSFWorkbook(file.toFile());
 
         for (String name : SHEET_NAMES) {
             Sheet sheet = wb.getSheet(name);
@@ -38,15 +34,11 @@ public class ToCsv extends Converter {
 
         XSSFSheet sheet = wb.getSheet("concepts");
         int[] size = getSheetSize(sheet);
-        System.out.println("Last row:" + sheet.getLastRowNum());
-
-        System.out.println("Size x:" + size[0]);
-        System.out.println("Size y:" + size[1]);
     }
 
     void writeCsv(Sheet sheet, int[] size) throws IOException {
         String name = sheet.getSheetName();
-        FileWriter writer = new FileWriter(Paths.get(options.modelDir, name + ".csv").toFile());
+        FileWriter writer = new FileWriter(Paths.get(file.getParent().toString(), name + ".csv").toFile());
         CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT.withQuoteMode(QuoteMode.ALL));
 
         for (int x = 0; x <= size[0]; ++x) {
@@ -59,8 +51,6 @@ public class ToCsv extends Converter {
                         continue;
                     }
                     CellType type = cell.getCellType();
-                    System.out.println("X:" + x + "  Y:" + y);
-                    System.out.println(type);
                     switch (type) {
                         case BLANK:
                             printer.print("");

@@ -1,12 +1,17 @@
-{{ "John, Paul, George, Ringo" | split: ", " | size }}
-
-{% assign sorted = include.hash | sort %}
-{% for entry in sorted %}
-======================
-value size:{{entry[1] | size}}
-{% if entry[1].first %} {% comment %} this checks if the value is an array/hash, and skips it for custom handling {% endcomment %}
-<li>{{ entry[0] }}: [{{ entry[1] | size}}]</li>
+{%- assign sorted = include.hash | sort -%}
+{%- for entry in sorted -%}
+{%- if forloop.first == true -%}
+<table>
+   <tr> <th>Name</th><th>Value</th></tr>
+{%- endif -%}
+    <tr>
+    {% if entry[1].first %} {% comment %} this checks if the value is an array/hash, and skips it for custom handling {% endcomment %}
+        <td>{{ entry[0] }}</td> <td>{{ entry[1] | size}}</td>
 {% else %}
-<li>{{ entry[0] }}: {{ entry[1] | default: "nil"}}</li>
+        <td>{{ entry[0] }}</td> <td>{{ entry[1] | default: "nil"}}</td>
 {% endif %}
+{%- if forloop.last == true -%}
+    </tr>
+</table>
+{%- endif -%}
 {% endfor %}

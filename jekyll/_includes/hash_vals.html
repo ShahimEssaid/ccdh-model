@@ -1,7 +1,7 @@
 {%- assign sorted = include.hash | sort -%}
 {%- for entry in sorted -%}
 {%- if forloop.first == true -%}
-<table>
+<table >
    <tr> <th>Name</th><th>Value</th></tr>
 {%- endif -%}
     <tr>

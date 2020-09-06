@@ -1,22 +1,24 @@
 module CCDH
 
   def self.readModels(model_set)
-    createBaseModelDirsIfNeeded(model_set)
+    #createBaseModelDirsIfNeeded(model_set)
     instantiateModelObjects(model_set)
+    readModelObjects(model_set)
+    resolveModelObjects(model_set)
     linkModels(model_set[K_MODELS][model_set[K_MODEL_SET_TOP]], [], model_set)
-    readModelsCsv(model_set[K_MODELS][model_set[K_MODEL_SET_TOP]])
+    #readModelsCsv(model_set[K_MODELS][model_set[K_MODEL_SET_TOP]])
   end
 
-  def self.createBaseModelDirsIfNeeded(model_set)
-    model_set[K_MODELS].each do |name, model|
-      model && next
-      if name == V_MODEL_DEFAULT
-        createDefaultModel(model_set)
-      else
-        createNamedModel(model_set, name)
-      end
-    end
-  end
+  # def self.createBaseModelDirsIfNeeded(model_set)
+  #   model_set[K_MODELS].each do |name, model|
+  #     model && next
+  #     if name == V_MODEL_DEFAULT
+  #       createDefaultModel(model_set)
+  #     else
+  #       createNamedModel(model_set, name)
+  #     end
+  #   end
+  # end
 
   def self.instantiateModelObjects(model_set)
     Dir.glob("*", base: model_set[K_MODEL_SET_DIR]).each do |f|
@@ -27,9 +29,45 @@ module CCDH
       model_set[K_MODELS][f] = model
     end
 
+
+  end
+
+  def self.readModelObjects(model_set)
+    model_set[K_MODELS].each do |name, model|
+
+      model_file = File.join(model[K_MODEL_DIR], F_MODEL_CSV)
+      model[K_MODEL_CSV] = CSV.read(model_file, headers: true)
+      # save existing headers to rewrite them same way
+      model[K_MODEL_CSV].headers.each do |h|
+        unless h.nil?
+          model[K_MODEL_HEADERS] << h.strip
+        end
+      end
+      model[K_MODEL_CSV].each do |row|
+        row[H_BUILD].nil? && row[H_BUILD] = ""
+
+        name = row[H_NAME]
+        row[H_NAME] = checkSimpleEntityName(name, "M")
+        row[H_NAME] == name || buildEntry("#{H_NAME}: was updated from #{name} to: #{row[H_NAME]}", row)
+
+        # check H_DEPENDS_ON
+        depends_on_old = row[H_DEPENDS_ON]
+        row[H_DEPENDS_ON] = ""
+        depends_on_old.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |modelRef|
+          modelRef = checkSimpleEntityName(modelRef, "P")
+          row[H_DEPENDS_ON].empty? || row[H_DEPENDS_ON] += " #{SEP_BAR} "
+          row[H_DEPENDS_ON] += modelRef
+        end
+        row[H_DEPENDS_ON] == depends_on_old || buildEntry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to: #{row[H_DEPENDS_ON]}.", row)
+        copyRowVals(model, row)
+      end
+    end
+  end
+
+  def self.resolveModelObjects(model_set)
     # check that we can resolve all dependencies
     model_set[K_MODELS].each do |name, model|
-      model[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].each do |depName|
+      model[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |depName|
         depModel = model_set[K_MODELS][depName]
         depModel.nil? && raise("Couldn't find model #{depName} as a dependency for model #{name}")
       end
@@ -46,20 +84,20 @@ module CCDH
   def self.linkModels(model, path, model_set)
     path << model
     if model == model_set[K_MODELS][model_set[K_MODEL_SET_DEFAULT]]
-        # at the root of a dependency path (because default is the effective end. see later comment)
-        # update model dependency paths
-        path.each.with_index.map do |m, i|
-          m == model_set[K_MODELS][model_set[K_MODEL_SET_DEFAULT]] && next # to avoid adding the already added "default" model, which should already be the first
-          path[i..].each do |depModel|
-            model[K_DEPENDS_ON_PATH].index(depModel) || model[K_DEPENDS_ON_PATH] << depModel
-          end
+      # at the root of a dependency path (because default is the effective end. see later comment)
+      # update model dependency paths
+      path.each.with_index.map do |m, i|
+        m == model_set[K_MODELS][model_set[K_MODEL_SET_DEFAULT]] && next # to avoid adding the already added "default" model, which should already be the first
+        path[i..].each do |depModel|
+          model[K_DEPENDS_ON_PATH].index(depModel) || model[K_DEPENDS_ON_PATH] << depModel
         end
+      end
       path.pop
       return
     end
 
     # here is where we start to iterate over the dependencies and recurse
-    model[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].each do |depName|
+    model[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |depName|
       depModel = model_set[K_MODELS][depName]
       if path.index(depModel) # cycle
         pathString = ""

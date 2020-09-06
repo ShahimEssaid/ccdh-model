@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 
 public abstract class Converter {
 
-    static final String[] SHEET_NAMES = {"packages", "concepts", "elements", "structures"};
+    static final String[] SHEET_NAMES = {"model", "packages", "concepts", "elements", "structures"};
     static final String MODEL_FILE = "model.xlsx";
     final Path file;
     Options options;

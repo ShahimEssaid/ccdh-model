@@ -23,7 +23,7 @@ module CCDH
   H_DOMAINS = "domains"
   H_RANGES = "ranges"
   H_CONCEPTS = "concepts"
-  H_ATTRIBUTE_NAME = "attribute_name"
+  H_ATTRIBUTE_NAME = "attribute"
   H_ELEMENT = "element"
   H_STRUCTURES = "structures"
 
@@ -36,6 +36,7 @@ module CCDH
   # H_CONCEPT = "concept"
   # H_VAL_CONCEPT = "val_concept"
 
+  K_SITE = "_site"
   K_NIL = "_NIL"
   K_NAME = "_name"
   K_FQN = "_fqn"
@@ -51,13 +52,16 @@ module CCDH
 
   K_MODEL_DIR = "_m_dir"
 
-  K_MODEL_CONFIG_NAME = "name"
-  K_MODEL_CONFIG_DEPENDS_ON = "depends_on"
+  #K_MODEL_CONFIG_NAME = "name"
+  #K_MODEL_CONFIG_DEPENDS_ON = "depends_on"
 
+  K_MODEL_CSV = "_model_csv"
   K_PACKAGES_CSV = "_packages_csv"
   K_CONCEPTS_CSV = "_concepts_csv"
   K_ELEMENTS_CSV = "_elements_csv"
   K_STRUCTURES_CSV = "_structures_csv"
+
+  K_MODEL_HEADERS = "_model_headers"
   K_PACKAGES_HEADERS = "_packages_headers"
   K_CONCEPTS_HEADERS = "_concepts_headers"
   K_ELEMENTS_HEADERS = "_elements_headers"
@@ -97,12 +101,12 @@ module CCDH
   K_CONCEPT_REFS = "_concept_refs"
   K_VAL_CONCEPT_REFS = "_val_concept_refs"
 
+  F_MODEL_XLSX = "model.xlsx"
+  F_MODEL_CSV = "model.csv"
   F_PACKAGES_CSV = "packages.csv"
   F_CONCEPTS_CSV = "concepts.csv"
   F_ELEMENTS_CSV = "elements.csv"
-  F_GROUPS_CSV = "groups.csv"
   F_STRUCTURES_CSV = "structures.csv"
-  F_MODE_JSON = "model.json"
 
   # P_CONCEPTS = "c:"
   # P_STRUCTURES = "s:"

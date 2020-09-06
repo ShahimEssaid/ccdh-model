@@ -16,9 +16,9 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $DIR
 
-for m in $(find  model_sets/src/ -maxdepth 1 -mindepth 1 -type d)
+for m in $(find  model_sets/src -maxdepth 1 -mindepth 1 -type f -iname '*.xlsx')
 do
-  java -jar "${DIR}/bin/converter.jar" --file "${DIR}/${m}/model.xlsx"
+  java -jar "${DIR}/bin/converter.jar" --file "${DIR}/${m}"
 done
 
 ${DIR}/run.sh

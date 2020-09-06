@@ -24,6 +24,17 @@ module CCDH
   end
 
   class ModelSet < ModelElement
+    # model_set_dir is the parent directory for the models' directories.
+    #
+    # top_model_name is the current model, the one that will be loaded for sure
+    #
+    # default_model_name is the default one if it is set. if not, no default model
+    # will be looked for
+    #
+    # for these models to be created (vs. already existing) they have to also be
+    # added to the K_MODELS map. Any key in that map that is set to nil, will cause
+    # that model be be created (directory and empty files) if it doesn't exist
+
     def initialize(model_set_dir, top_model_name, default_model_name)
       super(nil, V_TYPE_MODEL_SET)
       self[K_MODEL_SET_DIR] = model_set_dir
@@ -40,15 +51,13 @@ module CCDH
   class Model < ModelElement
     def initialize(name, model_set)
       super(self, V_TYPE_MODEL)
+      # we need this to avoid errors on new model.xlsx/csv files
+      self[H_DEPENDS_ON] = ""
+      
       self[K_MODEL_SET] = model_set
-      directory = File.join(model_set[K_MODEL_SET_DIR], name)
-      self[K_CONFIG] = JSON.parse(File.read(File.join(directory, F_MODE_JSON)))
-      # self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON].empty? &&
-      #     self[K_CONFIG][K_MODEL_CONFIG_NAME] != V_MODEL_DEFAULT &&
-      #     self[K_CONFIG][K_MODEL_CONFIG_DEPENDS_ON] << V_MODEL_DEFAULT
-      self[K_MODEL_DIR] = directory
-      self[K_NAME] = self[K_CONFIG][K_MODEL_CONFIG_NAME]
-      self[K_FQN] = self[K_CONFIG][K_MODEL_CONFIG_NAME]
+      self[K_MODEL_DIR] = File.join(model_set[K_MODEL_SET_DIR], name)
+      self[K_NAME] = self[name]
+      self[K_FQN] = self[name]
 
       self[K_DEPENDS_ON] = []
       self[K_DEPENDED_ON] = []
@@ -57,11 +66,12 @@ module CCDH
       # entity name to array of matching packages base on model path
       self[K_PACKAGES] = {}
       self[K_MODEL_PACKAGES] = {}
+
+      self[K_MODEL_HEADERS] = []
       self[K_PACKAGES_HEADERS] = []
       self[K_CONCEPTS_HEADERS] = []
       self[K_ELEMENTS_HEADERS] = []
       self[K_STRUCTURES_HEADERS] = []
-      self["_testing"] = "testing-value"
 
     end
 

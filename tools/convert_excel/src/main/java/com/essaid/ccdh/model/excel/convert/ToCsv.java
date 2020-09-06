@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -37,8 +38,15 @@ public class ToCsv extends Converter {
     }
 
     void writeCsv(Sheet sheet, int[] size) throws IOException {
-        String name = sheet.getSheetName();
-        FileWriter writer = new FileWriter(Paths.get(file.getParent().toString(), name + ".csv").toFile());
+        String sheetName = sheet.getSheetName();
+        String fileName = file.toFile().getName();
+        int index = fileName.indexOf('.');
+        if (index >= 0){
+            fileName = fileName.substring(0,index);
+        }
+        File sheetFile = Paths.get(file.getParent().toString(),fileName, sheetName + ".csv").toFile();
+        sheetFile.getParentFile().mkdirs();
+        FileWriter writer = new FileWriter(sheetFile);
         CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT.withQuoteMode(QuoteMode.ALL));
 
         for (int x = 0; x <= size[0]; ++x) {

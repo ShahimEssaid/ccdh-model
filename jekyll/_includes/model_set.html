@@ -1,0 +1,11 @@
+<li><button>{{ ms.name }} model set</button></li>
+{% for m_entry in ms._models %}
+{% if forloop.first == true %}
+<ol>
+{% endif %}
+{% assign m = m_entry[1] %}
+{% include model.html m=m %}
+{% if forloop.last == true %}
+</ol>
+{% endif %}
+{% endfor %}

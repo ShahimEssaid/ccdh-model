@@ -1,0 +1,12 @@
+<li><button>{{include.p.name}} model</button>
+    {% for c_entry in p._concepts %}
+    {% if forloop.first == true %}
+    <ol>
+        {% endif %}
+        {% assign c = c_entry[1] %}
+        {% include concept.html c=c %}
+        {% if forloop.last == true %}
+    </ol>
+    {% endif %}
+    {% endfor %}
+</li>

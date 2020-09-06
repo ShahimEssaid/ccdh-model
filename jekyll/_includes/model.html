@@ -1,0 +1,13 @@
+<li><button>{{include.m.name}} model has path: {{include.m._}}</button>
+    {% include hash_vals.html hash=include.m %}
+{% for p_entry in m._packages %}
+{% if forloop.first == true %}
+<ol>
+    {% endif %}
+    {% assign p = p_entry[1] %}
+    {% include package.html p=p %}
+    {% if forloop.last == true %}
+</ol>
+{% endif %}
+{% endfor %}
+</li>

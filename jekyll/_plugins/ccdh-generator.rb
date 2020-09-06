@@ -20,6 +20,19 @@ module Jekyll
   end
 end
 
+class CSV
+  class Table
+    def to_liquid
+      self
+    end
+  end
+  class Row
+    def to_liquid
+      self
+    end
+  end
+end
+
 module CCDH
   class JGenerator < Jekyll::Generator
     def initialize(config)
@@ -46,7 +59,8 @@ module CCDH
     def generate(site)
       #CCDH.generator = self
       @site = site
-      model_set = ModelSet.new(File.expand_path(File.join(site.source, "../model_sets/src")), V_MODEL_CURRENT, V_MODEL_DEFAULT)
+      model_set_root_dir = File.expand_path(File.join(site.source, "../model_sets/src"))
+      model_set = ModelSet.new("src", model_set_root_dir, V_MODEL_CURRENT, V_MODEL_DEFAULT)
       model_set[K_MODELS][V_MODEL_CURRENT] = nil
       model_set[K_MODELS][V_MODEL_DEFAULT] = nil
       model_set[K_SITE] = site
@@ -59,10 +73,11 @@ module CCDH
       #CCDH.validate(model)
       #CCDH.resolve(CCDH.model_sets[V_MODEL_CURRENT])
       #CCDH.resolveData(model, site)
-      site.data["_model_sets"] = CCDH.model_sets
-      site.data["_ms"] = CCDH.model_sets[V_MODEL_CURRENT]
-      site.data["_ms"]["testing"] = {"b" => "Something", "a" => "else", "c" => {}}
-      site.data["_ms"]["testing4"] = {}
+      model_sets = CCDH.model_sets
+
+      site.data["_mss"] = model_sets
+      site.data["_mss"]["testing"] = {"name" =>"test1", "b" => "Something", "a" => "else", "c" => {}}
+      site.data["_mss"]["testing4"] = {"name" =>"test2"}
       #publisher = ModelPublisher.new(model, site, "_template", "model")
       #publisher.publishModelFile.
       #CCDH.writeModelToCSV(model, File.expand_path(File.join(site.source, "../model-write")))

@@ -35,8 +35,10 @@ module CCDH
     # added to the K_MODELS map. Any key in that map that is set to nil, will cause
     # that model be be created (directory and empty files) if it doesn't exist
 
-    def initialize(model_set_dir, top_model_name, default_model_name)
+    def initialize(name, model_set_dir, top_model_name, default_model_name)
       super(nil, V_TYPE_MODEL_SET)
+      self[K_NAME] = name
+      self[H_NAME] = name
       self[K_MODEL_SET_DIR] = model_set_dir
 
       self[K_MODEL_SET_TOP] = top_model_name
@@ -53,11 +55,11 @@ module CCDH
       super(self, V_TYPE_MODEL)
       # we need this to avoid errors on new model.xlsx/csv files
       self[H_DEPENDS_ON] = ""
-      
+
       self[K_MODEL_SET] = model_set
       self[K_MODEL_DIR] = File.join(model_set[K_MODEL_SET_DIR], name)
-      self[K_NAME] = self[name]
-      self[K_FQN] = self[name]
+      self[K_NAME] = name
+      self[K_FQN] = name
 
       self[K_DEPENDS_ON] = []
       self[K_DEPENDED_ON] = []

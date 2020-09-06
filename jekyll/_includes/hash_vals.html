@@ -1,16 +1,22 @@
 {%- assign sorted = include.hash | sort -%}
 {%- for entry in sorted -%}
 {%- if forloop.first == true -%}
-<table >
-   <tr> <th>Name</th><th>Value</th></tr>
-{%- endif -%}
+<table>
     <tr>
-    {% if entry[1].first %} {% comment %} this checks if the value is an array/hash, and skips it for custom handling {% endcomment %}
-        <td>{{ entry[0] }}</td> <td>{{ entry[1] | size}}</td>
-{% else %}
-        <td>{{ entry[0] }}</td> <td>{{ entry[1] | default: "nil"}}</td>
-{% endif %}
-{%- if forloop.last == true -%}
+        <th>Name</th>
+        <th>Value</th>
+    </tr>
+    {%- endif -%}
+    <tr>
+        {% if entry[1].first %} {% comment %} this checks if the value is an array/hash, and skips it for custom
+        handling {% endcomment %}
+        <td>{{ entry[0] }}</td>
+        <td>{{ entry[1] | size}}</td>
+        {% else %}
+        <td>{{ entry[0] }}</td>
+        <td>{{ entry[1] | default: "nil"}}</td>
+        {% endif %}
+        {%- if forloop.last == true -%}
     </tr>
 </table>
 {%- endif -%}

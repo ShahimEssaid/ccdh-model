@@ -76,7 +76,9 @@ module CCDH
         default_model = model_set[K_MODELS][model_set[K_MODEL_SET_DEFAULT]]
         default_model.nil? && raise("Couldn't find default model #{model_set[K_MODEL_SET_DEFAULT]}")
         # the default model should be first in the search path to not allow overrides
-        model[K_DEPENDS_ON_PATH].index(default_model) || model[K_DEPENDS_ON_PATH] << default_model
+        if model != default_model
+          model[K_DEPENDS_ON_PATH].index(default_model) || model[K_DEPENDS_ON_PATH] << default_model
+        end
       end
     end
   end

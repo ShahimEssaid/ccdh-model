@@ -1,13 +1,13 @@
 module CCDH
 
-  def self.read_model_sets(model_sets)
+  def self.r_read_model_sets(model_sets)
     model_sets.each do |name, model_set|
       r_create_model_set_files(model_set)
-      read_model_set(model_set)
+      r_read_model_set(model_set)
     end
   end
 
-  def self.read_model_set(model_set)
+  def self.r_read_model_set(model_set)
     r_create_model_objects(model_set)
     r_read_model_file(model_set)
     r_resolve_models(model_set)
@@ -131,27 +131,27 @@ module CCDH
 
   def self.r_read_model_set_csvs(model_set)
     model_set[K_MODELS].each do |n, model|
-      r_read_model_csvs_recursive(model)
+      r_read_entity_csvs(model)
     end
   end
 
-  def self.r_read_model_csvs_recursive(model)
+  def self.r_read_entity_csvs(model)
     model[K_PACKAGES_CSV] && return # read already
     # load all dependencies first
     model[K_DEPENDS_ON].each do |m|
-      r_read_model_csvs_recursive(m)
+      r_read_entity_csvs(m)
     end
     r_read_model_csvs(model)
   end
 
   def self.r_read_model_csvs(model)
-    readPackages(model)
-    readConcepts(model)
-    readElements(model)
-    readStructures(model)
+    r_read_packages(model)
+    r_read_concepts(model)
+    r_read_elements(model)
+    r_read_structures(model)
   end
 
-  def self.readPackages(model)
+  def self.r_read_packages(model)
     model_dir = model[K_MODEL_DIR]
     packages_file = File.join(model_dir, F_PACKAGES_CSV)
     model[K_PACKAGES_CSV] = CSV.read(packages_file, headers: true)
@@ -187,7 +187,7 @@ module CCDH
 
   end
 
-  def self.readConcepts(model)
+  def self.r_read_concepts(model)
     model_dir = model[K_MODEL_DIR]
     concepts_file = File.join(model_dir, F_CONCEPTS_CSV)
     model[K_CONCEPTS_CSV] = CSV.read(concepts_file, headers: true)
@@ -242,7 +242,7 @@ module CCDH
 
   end
 
-  def self.readElements(model)
+  def self.r_read_elements(model)
     model_dir = model[K_MODEL_DIR]
     # read elements
     #
@@ -320,7 +320,7 @@ module CCDH
     }
   end
 
-  def self.readStructures(model)
+  def self.r_read_structures(model)
 
     model_dir = model[K_MODEL_DIR]
     structures_file = File.join(model_dir, F_STRUCTURES_CSV)
@@ -424,7 +424,7 @@ module CCDH
       # puts "K:#{k} V:#{v}"
       k.nil? || k = k.strip
       vStripped = v.strip
-      vStripped == v || buildEntry("#{k}: value: #{v} was updated to #{vStripped}", row)
+      vStripped == v || buildEntry("#{k}: value: #{v} was updated to #{vStripped}", entity)
       if k
         if k == H_BUILD && !entity[k].nil? && !entity[k].empty?
           # make sure we don't lose any build logging on the entity before adding any build from the headers
@@ -437,8 +437,6 @@ module CCDH
         entity[K_NIL] << vStripped
       end
     end
-    # make sure the latest build entries are copied
-    entity[H_BUILD] = row[H_BUILD]
   end
 
 end

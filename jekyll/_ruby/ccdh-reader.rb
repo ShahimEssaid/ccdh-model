@@ -66,7 +66,7 @@ module CCDH
           row[H_DEPENDS_ON] += modelRef
         end
         row[H_DEPENDS_ON] == depends_on_old || buildEntry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to: #{row[H_DEPENDS_ON]}.", row)
-        copyRowVals(model, row)
+        r_copy_row_vals(model, row)
       end
     end
   end
@@ -182,7 +182,7 @@ module CCDH
       package = model.getModelPackage(row[H_NAME], true)
       package[K_GENERATED_NOW] = false
 
-      copyRowVals(package, row)
+      r_copy_row_vals(package, row)
     end
 
   end
@@ -237,7 +237,7 @@ module CCDH
       concept = package.getConcept(row[H_NAME], true)
       concept[K_GENERATED_NOW] = false
 
-      copyRowVals(concept, row)
+      r_copy_row_vals(concept, row)
     }
 
   end
@@ -316,7 +316,7 @@ module CCDH
       element = package.getElement(row[H_NAME], true)
       element[K_GENERATED_NOW] = false
 
-      copyRowVals(element, row)
+      r_copy_row_vals(element, row)
     }
   end
 
@@ -415,11 +415,11 @@ module CCDH
 
       end
       entity[K_GENERATED_NOW] = false
-      copyRowVals(entity, row)
+      r_copy_row_vals(entity, row)
     }
   end
 
-  def self.copyRowVals(entity, row)
+  def self.r_copy_row_vals(entity, row)
     row.each do |k, v|
       # puts "K:#{k} V:#{v}"
       k.nil? || k = k.strip

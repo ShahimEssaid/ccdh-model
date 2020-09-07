@@ -1,19 +1,21 @@
 module CCDH
 
 
-  def self.create_models(model_set)
-    model_set[K_MODELS].each do |name, model|
-      model && next
-      create_model_files_if_needed(model_set, name)
+  def self.r_create_model_set_files(model_set)
+    model_set[K_MODELS].each do |model_name, model|
+      model && next # skip if there is already a model object
+      r_create_model_files_if_needed(model_set, model_name)
     end
   end
 
-  def self.create_model_files_if_needed(model_set, name)
+  def self.r_create_model_files_if_needed(model_set, model_name)
 
-    dir = File.join(model_set[K_MODEL_SET_DIR], name)
+    # crate model diretory if needed
+    dir = File.join(model_set[K_MODEL_SET_DIR], model_name)
     !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
 
-    excel_file = File.join(model_set[K_MODEL_SET_DIR], "#{name}.xlsx")
+    # copy excel file template if needed
+    excel_file = File.join(model_set[K_MODEL_SET_DIR], "#{model_name}.xlsx")
     if !File.exist?excel_file
       FileUtils.copy_file(File.join(model_set[K_SITE].source, "_template", F_MODEL_XLSX), excel_file)
     end
@@ -24,7 +26,7 @@ module CCDH
       # write empty file
       CSV.open(model_file, mode = "wb", {force_quotes: true}) do |csv|
         csv << [H_NAME, H_SUMMARY, H_DESC, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD]
-        csv << [name, "#{name} model", "", "", V_GENERATED, "", ""]
+        csv << [model_name, "#{model_name} summary", "#{model_name} description", "", V_GENERATED, "", ""]
       end
     end
 
@@ -64,12 +66,6 @@ module CCDH
         csv << [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESC, H_CONCEPTS, H_RANGES, H_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
       end
     end
-  end
-
-  # this is called after the models are loaded from files, and if the model matches the default model name.
-  # It write the default to the model instance and updates the status, and it will be saved later.
-  def self.write_default_model(model)
-
   end
 
 end

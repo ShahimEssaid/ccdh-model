@@ -125,6 +125,7 @@ module CCDH
         package = r_get_package(pkgName, true)
         package[K_GENERATED_NOW] = true
         package[H_STATUS] = V_GENERATED
+        package[H_SUMMARY] = V_GENERATED
       end
       package
     end
@@ -146,20 +147,6 @@ module CCDH
         end
       end
       entities
-    end
-
-    ##
-    # get package from model path and updates the set of packages that
-    # have that name
-    #
-    def searchAndGetPackage(name)
-      packages = []
-      self[K_DEPENDS_ON_PATH].each do |m|
-        modelPackage = m.r_get_package(name, false)
-        modelPackage && packages << modelPackage
-      end
-      self[K_PACKAGES][name] = packages
-      packages
     end
   end
 
@@ -215,6 +202,7 @@ module CCDH
         structure = r_get_structure(structureName, true)
         structure[H_STATUS] = V_GENERATED
         structure[K_GENERATED_NOW] = true
+        structure[H_SUMMARY] = V_GENERATED
       end
       structure
     end

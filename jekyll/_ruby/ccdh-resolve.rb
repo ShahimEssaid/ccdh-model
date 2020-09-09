@@ -98,7 +98,6 @@ module CCDH
 
   def self.r_resolve(model)
 
-
     r_resolve_concept_parents(model)
     r_resolve_concept_related(model)
     r_parentless_concepts_to_thing(model)

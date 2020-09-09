@@ -1,5 +1,11 @@
 module CCDH
 
+  def self.r_write_modelset(model_set, dir)
+    model_set[K_MODELS].each do |name, model|
+      writeModelToCSV(model, File.join(dir, model[H_NAME]))
+    end
+  end
+
   def self.writeModelToCSV(model, dir)
     FileUtils.mkdir_p(dir)
 
@@ -7,12 +13,11 @@ module CCDH
       csv << model[K_PACKAGES_HEADERS]
       model[K_PACKAGES].keys.sort.each do |pk|
         package = model[K_PACKAGES][pk]
-        package[K_GENERATED_NOW] && package[H_SUMMARY] = V_GENERATED
         row = []
         model[K_PACKAGES_HEADERS].each do |h|
           row << package[h]
         end
-        package[nil].each do |v|
+        package[K_NIL].each do |v|
           row << v
         end
         csv << row
@@ -26,11 +31,10 @@ module CCDH
         package[K_CONCEPTS].keys.sort.each do |ck|
           row = []
           concept = package[K_CONCEPTS][ck]
-          concept[K_GENERATED_NOW] && concept[H_STATUS] = V_GENERATED
           model[K_CONCEPTS_HEADERS].each do |h|
             row << concept[h]
           end
-          concept[nil].each do |v|
+          concept[K_NIL].each do |v|
             row << v
           end
           csv << row
@@ -49,7 +53,7 @@ module CCDH
           model[K_ELEMENTS_HEADERS].each do |h|
             row << element[h]
           end
-          element[nil].each do |v|
+          element[K_NIL].each do |v|
             row << v
           end
           csv << row
@@ -69,7 +73,7 @@ module CCDH
           model[K_STRUCTURES_HEADERS].each do |h|
             row << structure[h]
           end
-          structure[nil].each do |v|
+          structure[K_NIL].each do |v|
             row << v
           end
           csv << row

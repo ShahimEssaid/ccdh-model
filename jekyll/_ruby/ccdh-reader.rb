@@ -100,9 +100,9 @@ module CCDH
       if path.index(depModel) # cycle
         pathString = ""
         path.each do |m|
-          pathString += "#{m[K_FQN]} > "
+          pathString += "#{m[VK_FQN]} > "
         end
-        r_build_entry("Model cycle found with path #{pathString} for model #{model[K_FQN]} and dependency #{depName}. Not linking this dependency.", model)
+        r_build_entry("Model cycle found with path #{pathString} for model #{model[VK_FQN]} and dependency #{depName}. Not linking this dependency.", model)
         next
       end
       model[K_DEPENDS_ON].index(depModel) || model[K_DEPENDS_ON] << depModel

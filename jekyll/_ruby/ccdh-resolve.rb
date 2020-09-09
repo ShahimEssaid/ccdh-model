@@ -15,6 +15,9 @@ module CCDH
     model_set[K_MODELS].each do |n, model|
       r_resolve(model)
     end
+
+    # TODO: add check for elements
+    r_check_DAG_and_closure(model_set)
   end
 
   # find all possible entity names in the model set and resolve them to build two maps
@@ -52,26 +55,39 @@ module CCDH
       end
       model_set[K_MODELS].each do |n, m|
         entity = m[K_MODEL_ENTITIES][entity_name]
-        entity.nil? || all_models << entity
+        entity.nil? || all_models.index(entity) || all_models << entity
       end
 
     end
   end
 
+  # TODO: this means Thing and hasThing aree required in the set
   def self.r_thing_something_check(model_set)
+
+    things = model_set[K_ENTITIES][V_DEFAULT_C_THING]
+    if things.size > 1
+      things.each do |thing|
+        raise("There are multiple #{V_DEFAULT_C_THING} instances in the model set #{model_set[H_NAME]}: ")
+      end
+    end
+
+    if things.empty?
+      raise("model set #{model_set[H_NAME]} does not have a #{V_DEFAULT_C_THING}")
+    end
+
     # default:C:Thing and default:E:someThing have to be on all model paths
     error = ""
     model_set[K_MODELS].each do |name, model|
-      resolution =  model_set.dig(K_ENTITIES_VISIBLE, V_DEFAULT_C_THING, model)
+      resolution = model_set.dig(K_ENTITIES_VISIBLE, V_DEFAULT_C_THING, model)
       resolution.nil? || thing = resolution[0]
       unless thing
-        error +="#{V_DEFAULT_C_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
+        error += "#{V_DEFAULT_C_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
       end
 
-      resolution =  model_set.dig(K_ENTITIES_VISIBLE, V_DEFAULT_E_HAS_THING, model)
+      resolution = model_set.dig(K_ENTITIES_VISIBLE, V_DEFAULT_E_HAS_THING, model)
       resolution.nil? || has_thing = resolution[0]
       unless has_thing
-        error +="#{V_DEFAULT_E_HAS_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
+        error += "#{V_DEFAULT_E_HAS_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
       end
 
     end
@@ -85,7 +101,7 @@ module CCDH
 
     r_resolve_concept_parents(model)
     r_resolve_concept_related(model)
-    parentlessConceptsToThing(model)
+    r_parentless_concepts_to_thing(model)
     puts "debug"
     #
     # resolveElementParent(model_set)
@@ -145,9 +161,8 @@ module CCDH
     end
   end
 
+  def self.r_parentless_concepts_to_thing(model)
 
-  # TODO: here
-  def self.parentlessConceptsToThing(model)
     thing = model.dig(K_MODEL_SET, K_ENTITIES_VISIBLE, V_DEFAULT_C_THING, model)[0]
     model[K_PACKAGES].each do |pk, p|
       p[K_CONCEPTS].each do |ck, c|
@@ -160,7 +175,9 @@ module CCDH
     model[K_PACKAGES].each do |pk, p|
       p[K_CONCEPTS].each do |ck, c|
         c[K_PARENTS].each do |name, parent|
-          entity_name = c[K_FQN]
+          # children could have same entity name so we need the FQN since the same entity name might resolve
+          # differently in each model.
+          entity_name = c[VK_FQN]
           if !parent[K_CHILDREN].has_key?(entity_name)
             parent[K_CHILDREN][entity_name] = c
           end
@@ -169,7 +186,49 @@ module CCDH
     end
   end
 
+  # TODO: add check for elements
+  def self.r_check_DAG_and_closure(model_set)
+    thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
 
+    path = []
+    r_check_DAG_and_closure_recursive(path, thing)
+  end
+
+  def self.r_check_DAG_and_closure_recursive(path, entity)
+
+    if path.index(entity)
+      # a circle is found
+      pathString = ""
+      path.each do |c|
+        pathString += "#{c[VK_FQN]} > "
+      end
+      r_build_entry("DAG: #{entity[VK_FQN]} is circular with path: #{pathString}. Not adding #{entity[VK_FQN]} as a descendant again.", entity)
+      entity[K_ANCESTORS].merge(path)
+      r_populate_concept_descendants(path)
+    else
+      path << entity
+      entity[K_CHILDREN].each do |name, child|
+        r_check_DAG_and_closure_recursive(path, child)
+      end
+      entity[K_ANCESTORS].merge(path)
+      r_populate_concept_descendants(path)
+      path.pop
+    end
+
+  end
+
+  def self.r_populate_concept_descendants(path)
+    path.each.with_index.map do |entity, i|
+      entity[K_DESCENDANTS].merge(path[i..])
+    end
+  end
+
+  #
+  #
+  #
+  #
+  #
+  #
 
   def self.resolveElementParent(model)
     model[K_PACKAGES].keys.each do |pn|
@@ -224,8 +283,8 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = r_get_package_generate(pkg_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", model, entity)
-            clist_array << getConceptGenerated(concept_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", package, entity)
+            package = r_get_package_generate(pkg_name, "#{entity[VK_FQN]} has #{generatedFor} #{c}", model, entity)
+            clist_array << getConceptGenerated(concept_name, "#{entity[VK_FQN]} has #{generatedFor} #{c}", package, entity)
           end
           entity[entityKey] << clist_array
         end
@@ -245,8 +304,8 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = r_get_package_generate(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
-            clist_array << getConceptGenerated(concept_name, "#{structure[K_FQN]} has concept #{c}", package, structure)
+            package = r_get_package_generate(pkg_name, "#{structure[VK_FQN]} has concept #{c}", model, structure)
+            clist_array << getConceptGenerated(concept_name, "#{structure[VK_FQN]} has concept #{c}", package, structure)
           end
           structure[K_CONCEPTS] << clist_array
         end
@@ -257,8 +316,8 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = r_get_package_generate(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
-            clist_array << getConceptGenerated(concept_name, "#{structure[K_FQN]} has concept #{c}", package, structure)
+            package = r_get_package_generate(pkg_name, "#{structure[VK_FQN]} has concept #{c}", model, structure)
+            clist_array << getConceptGenerated(concept_name, "#{structure[VK_FQN]} has concept #{c}", package, structure)
           end
           structure[K_RANGES] << clist_array
         end
@@ -272,8 +331,8 @@ module CCDH
             clist_array = []
             clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
               pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = r_get_package_generate(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
-              clist_array << getConceptGenerated(concept_name, "#{attribute[K_FQN]} has concept #{c}", package, attribute)
+              package = r_get_package_generate(pkg_name, "#{attribute[VK_FQN]} has concept #{c}", model, attribute)
+              clist_array << getConceptGenerated(concept_name, "#{attribute[VK_FQN]} has concept #{c}", package, attribute)
             end
             attribute[K_CONCEPTS] << clist_array
           end
@@ -283,8 +342,8 @@ module CCDH
             clist_array = []
             clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
               pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = r_get_package_generate(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
-              clist_array << getConceptGenerated(concept_name, "#{attribute[K_FQN]} has concept #{c}", package, attribute)
+              package = r_get_package_generate(pkg_name, "#{attribute[VK_FQN]} has concept #{c}", model, attribute)
+              clist_array << getConceptGenerated(concept_name, "#{attribute[VK_FQN]} has concept #{c}", package, attribute)
             end
             attribute[K_RANGES] << clist_array
           end
@@ -305,49 +364,49 @@ module CCDH
   #  packages stuff
   #
   #
-  def self.resolvePackageGraph(model)
-    defaultPkg = model[K_PACKAGES][V_PKG_DEFAULT]
+  # def self.resolvePackageGraph(model)
+  #   defaultPkg = model[K_PACKAGES][V_PKG_DEFAULT]
+  #
+  #   # at least depend on default package
+  #   # and add inverse dependency
+  #   model[K_PACKAGES].each do |pn, p|
+  #     p == defaultPkg && next
+  #     p[K_DEPENDS_ON].empty? && p[K_DEPENDS_ON][defaultPkg.fqn] = defaultPkg
+  #     p[K_DEPENDS_ON].each do |dpn, dp|
+  #       dp[K_DEPENDED_ON][p.fqn] = p
+  #     end
+  #   end
+  #   # now need a closure and DAG check
+  #   path = []
+  #   resolvePackageGraphRecursive(defaultPkg, path)
+  # end
 
-    # at least depend on default package
-    # and add inverse dependency
-    model[K_PACKAGES].each do |pn, p|
-      p == defaultPkg && next
-      p[K_DEPENDS_ON].empty? && p[K_DEPENDS_ON][defaultPkg.fqn] = defaultPkg
-      p[K_DEPENDS_ON].each do |dpn, dp|
-        dp[K_DEPENDED_ON][p.fqn] = p
-      end
-    end
-    # now need a closure and DAG check
-    path = []
-    resolvePackageGraphRecursive(defaultPkg, path)
-  end
+  # def self.resolvePackageGraphRecursive(package, path)
+  #   # cycle detection
+  #   if path.index(package)
+  #     pathString = ""
+  #     path.each do |p|
+  #       pathString += "#{p.fqn} > "
+  #     end
+  #     r_build_entry("DAG: #{package.fqn} is circular with path: #{pathString}", package)
+  #     package[K_ANCESTORS].merge(path)
+  #     populatePackageDescendants(path)
+  #   else
+  #     path << package
+  #     package[K_DEPENDED_ON].each do |pn, p|
+  #       resolvePackageGraphRecursive(p, path)
+  #     end
+  #     package[K_ANCESTORS].merge(path)
+  #     populatePackageDescendants(path)
+  #     path.pop
+  #   end
+  # end
 
-  def self.resolvePackageGraphRecursive(package, path)
-    # cycle detection
-    if path.index(package)
-      pathString = ""
-      path.each do |p|
-        pathString += "#{p.fqn} > "
-      end
-      r_build_entry("DAG: #{package.fqn} is circular with path: #{pathString}", package)
-      package[K_ANCESTORS].merge(path)
-      populatePackageDescendants(path)
-    else
-      path << package
-      package[K_DEPENDED_ON].each do |pn, p|
-        resolvePackageGraphRecursive(p, path)
-      end
-      package[K_ANCESTORS].merge(path)
-      populatePackageDescendants(path)
-      path.pop
-    end
-  end
-
-  def self.populatePackageDescendants(path)
-    path.each.with_index.map do |v, i|
-      v[K_DESCENDANTS].merge(path[i..])
-    end
-  end
+  # def self.populatePackageDescendants(path)
+  #   path.each.with_index.map do |v, i|
+  #     v[K_DESCENDANTS].merge(path[i..])
+  #   end
+  # end
 
 
   ##
@@ -355,8 +414,6 @@ module CCDH
   #  concept stuff
   #
   #
-
-  def self.resolveConceptGraph(model) end
 
 
   def self.parentlessElementsToHasSomething(model)
@@ -380,40 +437,6 @@ module CCDH
     end
   end
 
-  def self.conceptCheckDAGAndClosure(model)
-    thing = model[K_PACKAGES][V_PKG_DEFAULT][K_CONCEPTS][V_CONCEPT_THING]
-    path = []
-    conceptCheckDAGAndClosureRecursive(path, thing)
-  end
-
-  def self.conceptCheckDAGAndClosureRecursive(path, concept)
-
-    if path.index(concept)
-      # a circle is found
-      pathString = ""
-      path.each do |c|
-        pathString += "#{c.fqn} > "
-      end
-      r_build_entry("DAG: #{concept.fqn} is circular with path: #{pathString}", concept)
-      concept[K_ANCESTORS].merge(path)
-      populateConceptDescendants(path)
-    else
-      path << concept
-      concept[K_CHILDREN].each do |c|
-        conceptCheckDAGAndClosureRecursive(path, c)
-      end
-      concept[K_ANCESTORS].merge(path)
-      populateConceptDescendants(path)
-      path.pop
-    end
-
-  end
-
-  def self.populateConceptDescendants(path)
-    path.each.with_index.map do |v, i|
-      v[K_DESCENDANTS].merge(path[i..])
-    end
-  end
 
   def self.effectiveElementConcepts(model)
     model[K_PACKAGES].each do |pn, p|

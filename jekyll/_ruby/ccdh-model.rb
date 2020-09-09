@@ -28,7 +28,7 @@ module CCDH
 
     def r_get_missing_key(key)
       case key
-      when K_FQN
+      when VK_FQN
         "#{self[K_MODEL][H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
       when VK_ENTITY_NAME
         "#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
@@ -63,7 +63,17 @@ module CCDH
       self[K_MODEL_SET_DEFAULT] = default_model_name
       self[K_MODELS] = {}
 
+      # this is a model set wide resolution of entity name to instance, per model
+      # it's a hash of entity name to a hash. the hash has a model as a key and and array as the
+      # resovled entity instances for that model's path as the values. This means that that model will
+      # resolve that entity name as shown my the array. The first entry in the array should be the chosen
+      # instance. Later ones are shadowed but this will be reported in a debug/warn report to be addressed later
+      # A name should not resolve to multiple instances but this property accomodates this if it happens.
       self[K_ENTITIES_VISIBLE] = {}
+
+      # this is similar to the above but it's not indexed by model and it's resolution path. It's an entity name
+      # to array of entity instances with that name model set wide. The names are not the FQN, they are the
+      # entity name (pakcage:type:name)
       self[K_ENTITIES] = {}
 
       # aggregated view over the models
@@ -85,10 +95,11 @@ module CCDH
       self[K_DEPENDED_ON] = []
       self[K_DEPENDS_ON_PATH] = []
 
-
       self[K_PACKAGES] = {}
-      # this is a model wide map of entities for reference lookup
-      # by entity name
+
+      # this is a model wide map of entity instances for this model for reference lookup
+      # by entity name. See the model set maps for "resolution" of entity names per model, and
+      # model set wide.
       self[K_MODEL_ENTITIES] = {}
 
       self[K_MODEL_HEADERS] = []

@@ -38,7 +38,7 @@ module CCDH
 
   K_SITE = "_site"
   K_NIL = "_NIL"
-  K_FQN = "_fqn"
+  VK_FQN = "_fqn"
   VK_ENTITY_NAME = "_entity_name" # this is the FQN without the model name prefix. It's a FQN within a model.
   K_MODEL = "_model"
   K_MODELS = "_models"

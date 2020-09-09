@@ -64,18 +64,15 @@ module CCDH
       model_set[K_MODELS][V_MODEL_CURRENT] = nil
       model_set[K_MODELS][V_MODEL_DEFAULT] = nil
       model_set[K_SITE] = site
-
       CCDH.model_sets[V_MODEL_CURRENT] = model_set
-
-      CCDH.r_create_model_set_files(model_set)
-
-      CCDH.r_read_model_set(model_set)
 
       #CCDH.validate(model)
       #CCDH.resolve(CCDH.model_sets[V_MODEL_CURRENT])
       #CCDH.resolveData(model, site)
+
       model_sets = CCDH.model_sets
       CCDH.r_read_model_sets(model_sets)
+      CCDH.r_resolve_model_sets(model_sets)
 
       site.data["_mss"] = model_sets
       site.data["_mss"]["testing"] = {"name" =>"test1", "b" => "Something", "a" => "else", "c" => {}}

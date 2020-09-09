@@ -2,11 +2,91 @@ require_relative 'ccdh-util'
 require_relative 'ccdh-model'
 module CCDH
 
-  def self.resolve(model_set)
-    #resolvePackageDependsOn(model_set)
+  def self.r_resolve_model_sets(model_sets)
+    model_sets.each do |n, model_set|
+      r_resolve_model_set(model_set)
+    end
+  end
 
-    # resolveConceptParents(model_set)
-    # resolveConceptRelated(model_set)
+  def self.r_resolve_model_set(model_set)
+    r_resolve_entity_names(model_set)
+    r_thing_something_check(model_set)
+
+    model_set[K_MODELS].each do |n, model|
+      r_resolve(model)
+    end
+  end
+
+  # find all possible entity names in the model set and resolve them to build two maps
+  # One for resolving the entity name per model based on the model dependency path
+  # Second for resolving the entity name for the whole model set.
+  def self.r_resolve_entity_names(model_set)
+    model_set[K_MODELS].each do |model_name, model|
+      model[K_MODEL_ENTITIES].each do |entity_name, entity|
+        r_resolve_entity_name(entity_name, model_set)
+      end
+    end
+  end
+
+  def self.r_resolve_entity_name(entity_name, model_set)
+    model_set[K_MODELS].each do |model_name, model|
+
+      # the map of entity name to entities with that name on the model path
+      resolution_models = model_set[K_ENTITIES_VISIBLE][entity_name]
+      if resolution_models.nil?
+        resolution_models = {}
+        model_set[K_ENTITIES_VISIBLE][entity_name] = resolution_models
+      end
+      resolution = []
+      model[K_DEPENDS_ON_PATH].each do |dependency_model|
+        entity = dependency_model[K_MODEL_ENTITIES][entity_name]
+        entity.nil? || resolution << entity
+      end
+      resolution.empty? || model_set[K_ENTITIES_VISIBLE][entity_name][model] = resolution
+
+      # the map of entity name to all entities with that name
+      all_models = model_set[K_ENTITIES][entity_name]
+      if all_models.nil?
+        all_models = []
+        model_set[K_ENTITIES][entity_name] = all_models
+      end
+      model_set[K_MODELS].each do |n, m|
+        entity = m[K_MODEL_ENTITIES][entity_name]
+        entity.nil? || all_models << entity
+      end
+
+    end
+  end
+
+  def self.r_thing_something_check(model_set)
+    # default:C:Thing and default:E:someThing have to be on all model paths
+    error = ""
+    model_set[K_MODELS].each do |name, model|
+      resolution =  model_set.dig(K_ENTITIES_VISIBLE, V_DEFAULT_C_THING, model)
+      resolution.nil? || thing = resolution[0]
+      unless thing
+        error +="#{V_DEFAULT_C_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
+      end
+
+      resolution =  model_set.dig(K_ENTITIES_VISIBLE, V_DEFAULT_E_HAS_THING, model)
+      resolution.nil? || has_thing = resolution[0]
+      unless has_thing
+        error +="#{V_DEFAULT_E_HAS_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
+      end
+
+    end
+
+    error.empty? || raise(error)
+
+  end
+
+  def self.r_resolve(model)
+
+
+    r_resolve_concept_parents(model)
+    r_resolve_concept_related(model)
+    parentlessConceptsToThing(model)
+    puts "debug"
     #
     # resolveElementParent(model_set)
     # resolveElementConcepts(model_set)
@@ -30,47 +110,66 @@ module CCDH
 
   end
 
-  def self.resolvePackageDependsOn(model_set)
-    model[K_PACKAGES].keys.each do |pn|
-      p = model[K_PACKAGES][pn]
-      p[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |pdn|
-        package = getModelPackageGenerated(pdn, "package #{p[H_NAME]} depnds on #{pdn}", model, p)
-        p[K_DEPENDS_ON][package.fqn] = package
-      end
-    end
-  end
 
-  def self.resolveConceptParents(model)
-    model[K_PACKAGES].keys.each do |pn|
-      p = model[K_PACKAGES][pn]
-      p[K_CONCEPTS].keys.each do |cn|
-        c = p[K_CONCEPTS][cn]
-        parents = c[H_PARENTS]
+  def self.r_resolve_concept_parents(model)
+    model[K_PACKAGES].each do |pkg_name, package|
+      package[K_CONCEPTS].each do |concept_name, concept|
+        parents = concept[H_PARENTS]
         parents.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |parentRef|
-          pkgName, typeName, conceptName = parentRef.split(SEP_COLON)
-          package = getModelPackageGenerated(pkgName, "#{c.fqn} has parent #{parentRef}", model, c)
-          concept = getConceptGenerated(conceptName, "#{c.fqn} has parent #{parentRef}", package, c)
-          c[K_PARENTS][concept.fqn] = concept
+          resolution = model.dig(K_MODEL_SET, K_ENTITIES_VISIBLE, parentRef, model)
+          resolution.nil? || parent = resolution[0]
+          if parent
+            concept[K_PARENTS][parentRef] = parent
+          else
+            r_build_entry("Parent ref #{parentRef} was not resolvable", concept)
+          end
         end
       end
     end
   end
 
-  def self.resolveConceptRelated(model)
-    model[K_PACKAGES].keys.each do |pn|
-      p = model[K_PACKAGES][pn]
-      p[K_CONCEPTS].keys.each do |cn|
-        c = p[K_CONCEPTS][cn]
-        related = c[H_RELATED]
-        related.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |relatedRef|
-          pkgName, typeName, conceptName = relatedRef.split(SEP_COLON)
-          package = getModelPackageGenerated(pkgName, "#{c.fqn}", model, c)
-          concept = getConceptGenerated(conceptName, "#{c.fqn} related", package, c)
-          c[K_RELATED][concept.fqn] = concept
+  def self.r_resolve_concept_related(model)
+    model[K_PACKAGES].each do |pkg_name, package|
+      package[K_CONCEPTS].each do |concept_name, concept|
+        related_value = concept[H_RELATED]
+        related_value.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |relatedRef|
+          resolution = model.dig(K_MODEL_SET, K_ENTITIES_VISIBLE, relatedRef, model)
+          resolution.nil? || related = resolution[0]
+          if related
+            concept[K_RELATED][relatedRef] = related
+          else
+            r_build_entry("Related ref #{relatedRef} was not resolvable", concept)
+          end
         end
       end
     end
   end
+
+
+  # TODO: here
+  def self.parentlessConceptsToThing(model)
+    thing = model.dig(K_MODEL_SET, K_ENTITIES_VISIBLE, V_DEFAULT_C_THING, model)[0]
+    model[K_PACKAGES].each do |pk, p|
+      p[K_CONCEPTS].each do |ck, c|
+        c == thing && next
+        c[K_PARENTS].empty? && c[K_PARENTS][VK_ENTITY_NAME] = thing
+      end
+    end
+
+    # make sure each parent has the child in it's child array
+    model[K_PACKAGES].each do |pk, p|
+      p[K_CONCEPTS].each do |ck, c|
+        c[K_PARENTS].each do |name, parent|
+          entity_name = c[K_FQN]
+          if !parent[K_CHILDREN].has_key?(entity_name)
+            parent[K_CHILDREN][entity_name] = c
+          end
+        end
+      end
+    end
+  end
+
+
 
   def self.resolveElementParent(model)
     model[K_PACKAGES].keys.each do |pn|
@@ -80,7 +179,7 @@ module CCDH
         parent = e[H_PARENT]
         (parent.nil? || parent.empty?) && next
         pkgName, typeName, elementName = parent.split(SEP_COLON)
-        package = getModelPackageGenerated(pkgName, "#{e.fqn} has parent #{parent}", model, e)
+        package = r_get_package_generate(pkgName, "#{e.fqn} has parent #{parent}", model, e)
         element = getElementGenerated(elementName, "#{e.fqn} has parent #{parent}", package, e)
         e[K_PARENT][element.fqn] = element
       end
@@ -107,7 +206,7 @@ module CCDH
         element = p[K_ELEMENTS][en]
         element[H_RELATED].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |e|
           pkgName, typeName, elementName = e.split(SEP_COLON)
-          package = getModelPackageGenerated(pkgName, "#{element.fqn} has related #{e}", model, element)
+          package = r_get_package_generate(pkgName, "#{element.fqn} has related #{e}", model, element)
           re = getElementGenerated(elementName, "#{element.fqn} has related #{e}", package, element)
           e[K_RELATED][re.fqn] = re
         end
@@ -125,7 +224,7 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getModelPackageGenerated(pkg_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", model, entity)
+            package = r_get_package_generate(pkg_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", model, entity)
             clist_array << getConceptGenerated(concept_name, "#{entity[K_FQN]} has #{generatedFor} #{c}", package, entity)
           end
           entity[entityKey] << clist_array
@@ -146,7 +245,7 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getModelPackageGenerated(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
+            package = r_get_package_generate(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
             clist_array << getConceptGenerated(concept_name, "#{structure[K_FQN]} has concept #{c}", package, structure)
           end
           structure[K_CONCEPTS] << clist_array
@@ -158,7 +257,7 @@ module CCDH
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = getModelPackageGenerated(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
+            package = r_get_package_generate(pkg_name, "#{structure[K_FQN]} has concept #{c}", model, structure)
             clist_array << getConceptGenerated(concept_name, "#{structure[K_FQN]} has concept #{c}", package, structure)
           end
           structure[K_RANGES] << clist_array
@@ -173,7 +272,7 @@ module CCDH
             clist_array = []
             clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
               pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = getModelPackageGenerated(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
+              package = r_get_package_generate(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
               clist_array << getConceptGenerated(concept_name, "#{attribute[K_FQN]} has concept #{c}", package, attribute)
             end
             attribute[K_CONCEPTS] << clist_array
@@ -184,7 +283,7 @@ module CCDH
             clist_array = []
             clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
               pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = getModelPackageGenerated(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
+              package = r_get_package_generate(pkg_name, "#{attribute[K_FQN]} has concept #{c}", model, attribute)
               clist_array << getConceptGenerated(concept_name, "#{attribute[K_FQN]} has concept #{c}", package, attribute)
             end
             attribute[K_RANGES] << clist_array
@@ -230,7 +329,7 @@ module CCDH
       path.each do |p|
         pathString += "#{p.fqn} > "
       end
-      buildEntry("DAG: #{package.fqn} is circular with path: #{pathString}", package)
+      r_build_entry("DAG: #{package.fqn} is circular with path: #{pathString}", package)
       package[K_ANCESTORS].merge(path)
       populatePackageDescendants(path)
     else
@@ -257,28 +356,8 @@ module CCDH
   #
   #
 
-  def self.resolveConceptGraph(model)
+  def self.resolveConceptGraph(model) end
 
-
-  end
-
-  def self.parentlessConceptsToThing(model)
-    thing = model[K_PACKAGES][V_PKG_DEFAULT][K_CONCEPTS][V_CONCEPT_THING]
-    model[K_PACKAGES].each do |pk, p|
-      p[K_CONCEPTS].each do |ck, c|
-        c == thing && next
-        c[K_PARENTS].empty? && c[K_PARENTS] << thing
-      end
-    end
-
-    model[K_PACKAGES].each do |pk, p|
-      p[K_CONCEPTS].each do |ck, c|
-        c[K_PARENTS].each do |parent|
-          parent[K_CHILDREN].index(c) || parent[K_CHILDREN] << c
-        end
-      end
-    end
-  end
 
   def self.parentlessElementsToHasSomething(model)
     hasThing = model[K_PACKAGES][V_PKG_DEFAULT][K_ELEMENTS][V_ELEMENT_HAS_THING]
@@ -315,7 +394,7 @@ module CCDH
       path.each do |c|
         pathString += "#{c.fqn} > "
       end
-      buildEntry("DAG: #{concept.fqn} is circular with path: #{pathString}", concept)
+      r_build_entry("DAG: #{concept.fqn} is circular with path: #{pathString}", concept)
       concept[K_ANCESTORS].merge(path)
       populateConceptDescendants(path)
     else

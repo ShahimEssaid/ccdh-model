@@ -8,8 +8,8 @@ module CCDH
 
   puts "2. " + checkPackageReference("----...44abc----", "c::")
 
-  puts "3. Checking entity name Abc*.Efg55: #{checkSimpleEntityName("Abc*.Efg55", "Concept")}"
-  puts "4. Checking entity name nil: #{checkSimpleEntityName(nil, "Concept")}"
+  puts "3. Checking entity name Abc*.Efg55: #{r_check_simple_name("Abc*.Efg55", "Concept")}"
+  puts "4. Checking entity name nil: #{r_check_simple_name(nil, "Concept")}"
 
   puts "5. testing structure concept reference groups"
   puts "6. Checking ref: a$#,b:B,|d, e  f ,g_,**t  to: #{checkStructureConceptRef("a$#,b:B,|d, e  f ,g_,**t,^")}"

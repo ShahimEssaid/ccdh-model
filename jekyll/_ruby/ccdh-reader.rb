@@ -54,18 +54,18 @@ module CCDH
         row[H_BUILD].nil? && row[H_BUILD] = ""
 
         name = row[H_NAME]
-        row[H_NAME] = checkSimpleEntityName(name, "M")
-        row[H_NAME] == name || buildEntry("#{H_NAME}: was updated from #{name} to: #{row[H_NAME]}", row)
+        row[H_NAME] = r_check_simple_name(name, "M")
+        row[H_NAME] == name || r_build_entry("#{H_NAME}: was updated from #{name} to: #{row[H_NAME]}", row)
 
         # check H_DEPENDS_ON
         depends_on_old = row[H_DEPENDS_ON]
         row[H_DEPENDS_ON] = ""
         depends_on_old.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |modelRef|
-          modelRef = checkSimpleEntityName(modelRef, "P")
+          modelRef = r_check_simple_name(modelRef, "P")
           row[H_DEPENDS_ON].empty? || row[H_DEPENDS_ON] += " #{SEP_BAR} "
           row[H_DEPENDS_ON] += modelRef
         end
-        row[H_DEPENDS_ON] == depends_on_old || buildEntry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to: #{row[H_DEPENDS_ON]}.", row)
+        row[H_DEPENDS_ON] == depends_on_old || r_build_entry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to: #{row[H_DEPENDS_ON]}.", row)
         r_copy_row_vals(model, row)
       end
     end
@@ -83,9 +83,9 @@ module CCDH
         default_model = model_set[K_MODELS][model_set[K_MODEL_SET_DEFAULT]]
         default_model.nil? && raise("Couldn't find default model #{model_set[K_MODEL_SET_DEFAULT]}")
         # the default model should be first in the search path to not allow overrides
-        if model != default_model
-          model[K_DEPENDS_ON_PATH].index(default_model) || model[K_DEPENDS_ON_PATH] << default_model
-        end
+        #if model != default_model
+        model[K_DEPENDS_ON_PATH].index(default_model) || model[K_DEPENDS_ON_PATH] << default_model
+        #end
       end
     end
   end
@@ -102,7 +102,7 @@ module CCDH
         path.each do |m|
           pathString += "#{m[K_FQN]} > "
         end
-        buildEntry("Model cycle found with path #{pathString} for model #{model[K_FQN]} and dependency #{depName}. Not linking this dependency.", model)
+        r_build_entry("Model cycle found with path #{pathString} for model #{model[K_FQN]} and dependency #{depName}. Not linking this dependency.", model)
         next
       end
       model[K_DEPENDS_ON].index(depModel) || model[K_DEPENDS_ON] << depModel
@@ -161,30 +161,19 @@ module CCDH
         model[K_PACKAGES_HEADERS] << h.strip
       end
     end
+
     model[K_PACKAGES_CSV].each do |row|
-      row[H_BUILD].nil? && row[H_BUILD] = ""
-
       name = row[H_NAME]
-      row[H_NAME] = checkSimpleEntityName(name, "P")
-      row[H_NAME] == name || buildEntry("#{H_NAME}: was updated from #{name} to: #{row[H_NAME]}", row)
-
-      # # check H_DEPENDS_ON
-      # depends_on_old = row[H_DEPENDS_ON]
-      # row[H_DEPENDS_ON] = ""
-      # depends_on_old.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |pkgRef|
-      #   pkgRef = checkSimpleEntityName(pkgRef, "P")
-      #   row[H_DEPENDS_ON].empty? || row[H_DEPENDS_ON] += " #{SEP_BAR} "
-      #   row[H_DEPENDS_ON] += pkgRef
-      # end
-      # row[H_DEPENDS_ON] == depends_on_old || buildEntry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to: #{row[H_DEPENDS_ON]}.", row)
-
-      # create packages
-      package = model.getModelPackage(row[H_NAME], true)
-      package[K_GENERATED_NOW] = false
-
+      row[H_NAME] = r_check_simple_name(name, V_TYPE_PACKAGE)
+      row[H_NAME] == name || r_build_entry("#{H_NAME}: was updated from #{name} to: #{row[H_NAME]}", row)
+      package = model.r_get_package(row[H_NAME], false)
+      if package
+        r_build_entry("Package #{row { H_NAME }} was found again, and ignored, with row: #{row.to_s}", package)
+        next
+      end
+      package = model.r_get_package(row[H_NAME], true)
       r_copy_row_vals(package, row)
     end
-
   end
 
   def self.r_read_concepts(model)
@@ -202,40 +191,45 @@ module CCDH
     model[K_CONCEPTS_CSV].each { |row|
       # clean up the row before using it
 
-      # make sure "build" isn't nil so we can use it as we clean up
-      row[H_BUILD].nil? && row[H_BUILD] = ""
-
       #check package name
       pkg = row[H_PACKAGE]
-      row[H_PACKAGE] = checkSimpleEntityName(pkg, "P")
-      row[H_PACKAGE] == pkg || buildEntry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
+      row[H_PACKAGE] = r_check_simple_name(pkg, V_TYPE_PACKAGE)
+      row[H_PACKAGE] == pkg || r_build_entry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
 
       #check concept name
       name = row[H_NAME]
-      row[H_NAME] = checkSimpleEntityName(name, "C")
-      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
+      row[H_NAME] = r_check_simple_name(name, V_TYPE_CONCEPT)
+      row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
       # check parents syntax
       # package name by default is the same package as the concept
       parents = row[H_PARENTS]
-      row[H_PARENTS] = checkEntityNameBarCommaList(row[H_PARENTS], "C", row[H_PACKAGE], V_TYPE_CONCEPT)
-      row[H_PARENTS] == parents || buildEntry("#{H_PARENTS}: was changed from #{parents} to: #{row[H_PARENTS]}", row)
+      single_parent_list = row[H_PARENTS].split(SEP_BAR)[0]
+      single_parent_list.nil? && single_parent_list = ""
+      row[H_PARENTS] = r_check_entity_name_bar_list(single_parent_list, V_TYPE_CONCEPT)
+      row[H_PARENTS] == parents || r_build_entry("#{H_PARENTS}: was changed from #{parents} to: #{row[H_PARENTS]}", row)
 
       # check related syntax
       related = row[H_RELATED]
-      relatedNew = checkEntityNameBarCommaList(row[H_RELATED], "C", row[H_PACKAGE], V_TYPE_CONCEPT)
-      row[H_RELATED] == related || buildEntry("#{H_RELATED}: was changed from #{related} to: #{row[H_RELATED]}", row)
+      relatedNew = r_check_entity_name_bar_list(row[H_RELATED], V_TYPE_CONCEPT)
+      row[H_RELATED] == related || r_build_entry("#{H_RELATED}: was changed from #{related} to: #{row[H_RELATED]}", row)
 
       # we need a package for creating the concept
-      package = getModelPackageGenerated(row[H_PACKAGE], "concept #{row[H_NAME]}", model, row)
+      package = model.r_get_package_generate(row[H_PACKAGE])
 
-      concept = package.getConcept(row[H_NAME], false)
+      concept = package.r_get_concept(row[H_NAME], false)
+
       if !concept.nil?
-        buildEntry("This concept was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", concept)
+        r_build_entry("This concept name was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", concept)
+        r_build_entry("Had duplicate row for concept name #{row[H_NAME]} with values: #{row.to_s}", package)
         next
       end
-      concept = package.getConcept(row[H_NAME], true)
-      concept[K_GENERATED_NOW] = false
+      concept = package.r_get_concept(row[H_NAME], true)
+
+      if package[K_GENERATED_NOW]
+        r_build_entry("Generated for concept: #{row[H_NAME]}", package)
+        r_build_entry("Had it's package #{H_PACKAGE} generated.", concept)
+      end
 
       r_copy_row_vals(concept, row)
     }
@@ -260,61 +254,57 @@ module CCDH
     model[K_ELEMENTS_CSV].each { |row|
       # clean up the row before using it
 
-      # make sure "build" isn't nil so we can use it as we clean up
-      row[H_BUILD].nil? && row[H_BUILD] = ""
-
       #check package name
       pkg = row[H_PACKAGE]
-      row[H_PACKAGE] = checkSimpleEntityName(pkg, "P")
-      row[H_PACKAGE] == pkg || buildEntry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
+      row[H_PACKAGE] = r_check_simple_name(pkg, V_TYPE_PACKAGE)
+      row[H_PACKAGE] == pkg || r_build_entry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
 
       #check name
       name = row[H_NAME]
-      row[H_NAME] = checkSimpleEntityName(name, "E")
-      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
+      row[H_NAME] = r_check_simple_name(name, V_TYPE_ELEMENT)
+      row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
       # check parent element name
       parent = row[H_PARENT]
-      parentNew = checkEntityNameBarCommaList(parent, "E", row[H_PACKAGE], V_TYPE_ELEMENT)
-      # only one is allowed
-      parentNew = parentNew.split(SEP_BAR)[0]
-      parentNew.nil? && parentNew = ""
-      parentNew = parentNew.split(SEP_COMMA)[0]
-      parentNew.nil? && parentNew = ""
-      row[H_PARENT] = parentNew.strip
-      row[H_PARENT] == parent || buildEntry("#{H_PARENT}: #{parent} was updated to: #{row[H_PARENT]}", row)
+      row[H_PARENT] = r_check_entity_name(parent, V_TYPE_ELEMENT)
+      row[H_PARENT] == parent || r_build_entry("#{H_PARENT}: #{parent} was updated to: #{row[H_PARENT]}", row)
 
       # check concepts
       concepts = row[H_CONCEPTS]
-      row[H_CONCEPTS] = checkEntityNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
-      row[H_CONCEPTS] == concepts || buildEntry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
+      row[H_CONCEPTS] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
+      row[H_CONCEPTS] == concepts || r_build_entry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
 
 
       # check domain concepts
       domains = row[H_DOMAINS]
-      row[H_DOMAINS] = checkEntityNameBarCommaList(domains, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
-      row[H_DOMAINS] == domains || buildEntry("#{H_DOMAINS}: #{domains} was updated to: #{row[H_DOMAINS]}", row)
+      row[H_DOMAINS] = r_check_entity_name_bar_list(domains, V_TYPE_CONCEPT)
+      row[H_DOMAINS] == domains || r_build_entry("#{H_DOMAINS}: #{domains} was updated to: #{row[H_DOMAINS]}", row)
 
       # check range concepts
       ranges = row[H_RANGES]
-      row[H_RANGES] = checkEntityNameBarCommaList(ranges, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
-      row[H_RANGES] == ranges || buildEntry("#{H_RANGES}: #{ranges} was updated to: #{row[H_RANGES]}", row)
+      row[H_RANGES] = r_check_entity_name_bar_list(ranges, V_TYPE_CONCEPT)
+      row[H_RANGES] == ranges || r_build_entry("#{H_RANGES}: #{ranges} was updated to: #{row[H_RANGES]}", row)
 
       # check related elements
       related = row[H_RELATED]
-      row[H_RELATED] = checkEntityNameBarCommaList(related, "E", row[H_PACKAGE], V_TYPE_ELEMENT)
-      row[H_RELATED] == related || buildEntry("#{H_RELATED}: #{related} was updated to: #{row[H_RELATED]}", row)
+      row[H_RELATED] = r_check_entity_name_bar_list(related, V_TYPE_ELEMENT)
+      row[H_RELATED] == related || r_build_entry("#{H_RELATED}: #{related} was updated to: #{row[H_RELATED]}", row)
 
       # we need a package for creating the element
-      package = getModelPackageGenerated(row[H_PACKAGE], "element #{row[H_NAME]}", model, row)
+      package = model.r_get_package_generate(row[H_PACKAGE])
 
-      element = package.getElement(row[H_NAME], false)
+      element = package.r_get_element(row[H_NAME], false)
       if !element.nil?
-        buildEntry("This element was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", element)
+        r_build_entry("This element was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", element)
+        r_build_entry("Had duplicate element name: #{row[H_NAME]} in another row with row values: #{row.to_s}.", package)
         next
       end
-      element = package.getElement(row[H_NAME], true)
-      element[K_GENERATED_NOW] = false
+      element = package.r_get_element(row[H_NAME], true)
+
+      if package[K_GENERATED_NOW]
+        r_build_entry("Generated for element: #{row[H_NAME]}", package)
+        r_build_entry("Had it's package #{H_PACKAGE} generated.", element)
+      end
 
       r_copy_row_vals(element, row)
     }
@@ -343,78 +333,74 @@ module CCDH
     model[K_STRUCTURES_CSV].each { |row|
       # clean up the row before using it
 
-      # make sure "build" isn't nil so we can use it as we clean up
-      row[H_BUILD].nil? && row[H_BUILD] = ""
-
       #check package name
       pkg = row[H_PACKAGE]
-      row[H_PACKAGE] = checkSimpleEntityName(pkg, "P")
-      row[H_PACKAGE] == pkg || buildEntry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
+      row[H_PACKAGE] = r_check_simple_name(pkg, V_TYPE_PACKAGE)
+      row[H_PACKAGE] == pkg || r_build_entry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
 
       #check structure name
       name = row[H_NAME]
-      row[H_NAME] = checkSimpleEntityName(name, "S")
-      row[H_NAME] == name || buildEntry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
+      row[H_NAME] = r_check_simple_name(name, V_TYPE_STRUCTURE)
+      row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
 
       #check attribute name
       name = row[H_ATTRIBUTE_NAME]
-      row[H_ATTRIBUTE_NAME] = checkSimpleEntityName(name, "A")
-      row[H_ATTRIBUTE_NAME] == name || buildEntry("#{H_ATTRIBUTE_NAME}: #{name} was updated to: #{row[H_ATTRIBUTE_NAME]}", row)
+      row[H_ATTRIBUTE_NAME] = r_check_simple_name(name, V_TYPE_ATTRIBUTE)
+      row[H_ATTRIBUTE_NAME] == name || r_build_entry("#{H_ATTRIBUTE_NAME}: #{name} was updated to: #{row[H_ATTRIBUTE_NAME]}", row)
 
       #check element name
       name = row[H_ELEMENT]
-      row[H_ELEMENT] = checkEntityNameBarCommaList(name, "E", "P", V_TYPE_ELEMENT)
-      if !row[H_ELEMENT].nil?
-        # only one allowed, in case there are multiple
-        row[H_ELEMENT] = row[H_ELEMENT].split(SEP_BAR)[0]
-
-        row[H_ELEMENT].nil? && row[H_ELEMENT] = ""
-      end
-      row[H_ELEMENT] == name || buildEntry("#{H_ELEMENT}: #{name} was updated to: #{row[H_ELEMENT]}", row)
-
+      row[H_ELEMENT] = r_check_entity_name(name, V_TYPE_ELEMENT)
+      row[H_ELEMENT] == name || r_build_entry("#{H_ELEMENT}: #{name} was updated to: #{row[H_ELEMENT]}", row)
 
       # check concepts
       concepts = row[H_CONCEPTS]
-      row[H_CONCEPTS] = checkEntityNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
-      row[H_CONCEPTS] == concepts || buildEntry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
+      row[H_CONCEPTS] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
+      row[H_CONCEPTS] == concepts || r_build_entry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
 
       # check range
       concepts = row[H_RANGES]
-      row[H_RANGES] = checkEntityNameBarCommaList(concepts, "C", row[H_PACKAGE], V_TYPE_CONCEPT)
-      row[H_RANGES] == concepts || buildEntry("#{H_RANGES}: #{concepts} was updated to: #{row[H_RANGES]}", row)
+      row[H_RANGES] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
+      row[H_RANGES] == concepts || r_build_entry("#{H_RANGES}: #{concepts} was updated to: #{row[H_RANGES]}", row)
 
       # check structures
       structures = row[H_STRUCTURES]
-      row[H_STRUCTURES] = checkEntityNameBarCommaList(structures, "S", row[H_PACKAGE], V_TYPE_STRUCTURE)
-      row[H_STRUCTURES] == structures || buildEntry("#{H_STRUCTURES}: #{structures} was updated to: #{row[H_STRUCTURES]}", row)
+      row[H_STRUCTURES] = r_check_entity_name_bar_list(structures, V_TYPE_STRUCTURE)
+      row[H_STRUCTURES] == structures || r_build_entry("#{H_STRUCTURES}: #{structures} was updated to: #{row[H_STRUCTURES]}", row)
 
 
       # we need a package for creating the entity
-      package = getModelPackageGenerated(row[H_PACKAGE], "structure #{row[H_NAME]}", model, row)
+      package = model.r_get_package_generate(row[H_PACKAGE])
 
-      entity = nil
+      structure = nil
+      attribute = nil
       if row[H_ATTRIBUTE_NAME] == V_SELF
         # this is a structure row
         # there should only be one of these in a sheet
-        entity = package.getStructure(row[H_NAME], false)
+        structure = package.r_get_structure(row[H_NAME], false)
         if !entity.nil?
-          buildEntry("This structure was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity)
+          r_build_entry("This structure was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity)
           next
         end
-        entity = package.getStructure(row[H_NAME], true)
+        structure = package.r_get_structure(row[H_NAME], true)
       else
         # this is an attribute row
         # there should only be one row
-        structure = getStructureGenerated(row[H_NAME], "attribute #{row[H_ATTRIBUTE_NAME]}", package, row)
-        entity = structure.getAttribute(row[H_ATTRIBUTE_NAME], false)
-        if !entity.nil?
-          buildEntry("This entity was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity)
+        structure = r_get_structure_generated(row[H_NAME])
+        attribute = structure.r_get_attribute(row[H_ATTRIBUTE_NAME], false)
+        if !attribute.nil?
+          r_build_entry("This entity was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity)
           next
         end
-        entity = structure.getAttribute(row[H_ATTRIBUTE_NAME], true)
+        attribute = structure.r_get_attribute(row[H_ATTRIBUTE_NAME], true)
 
       end
-      entity[K_GENERATED_NOW] = false
+
+      if structure[K_GENERATED_NOW]
+        r_build_entry("Generated for attribute: #{row[H_ATTRIBUTE_NAME]}", structure)
+        r_build_entry("Had it's structure #{H_NAME} generated.", attribute)
+      end
+
       r_copy_row_vals(entity, row)
     }
   end
@@ -424,7 +410,7 @@ module CCDH
       # puts "K:#{k} V:#{v}"
       k.nil? || k = k.strip
       vStripped = v.strip
-      vStripped == v || buildEntry("#{k}: value: #{v} was updated to #{vStripped}", entity)
+      vStripped == v || r_build_entry("#{k}: value: #{v} was updated to #{vStripped}", entity)
       if k
         if k == H_BUILD && !entity[k].nil? && !entity[k].empty?
           # make sure we don't lose any build logging on the entity before adding any build from the headers

@@ -38,22 +38,26 @@ module CCDH
 
   K_SITE = "_site"
   K_NIL = "_NIL"
-  K_NAME = "_name"
   K_FQN = "_fqn"
-  K_ENTITY_NAME = "_entity_name" # this is the FQN without the model name prefix. It's a FQN within a model.
+  VK_ENTITY_NAME = "_entity_name" # this is the FQN without the model name prefix. It's a FQN within a model.
   K_MODEL = "_model"
-  K_MODELS="_models"
+  K_MODELS = "_models"
   K_MODEL_SET = "_ms"
   K_MODEL_SET_DIR = "_ms_dir"
   K_MODEL_SET_TOP = "_ms_top"
   K_MODEL_SET_DEFAULT = "_ms_default"
   K_TYPE = "_type"
-  K_CONFIG = "_config"
+
+  K_ENTITIES ="_entities"
+  K_ENTITIES_VISIBLE = "_entities_visible"
+
 
   K_MODEL_DIR = "_m_dir"
 
   #K_MODEL_CONFIG_NAME = "name"
   #K_MODEL_CONFIG_DEPENDS_ON = "depends_on"
+
+  K_MODEL_ENTITIES = "_model_entities"
 
   K_MODEL_CSV = "_model_csv"
   K_PACKAGES_CSV = "_packages_csv"
@@ -118,16 +122,17 @@ module CCDH
   V_STATUS_CURRENT = "current"
   V_PKG_DEFAULT = "default"
   V_CONCEPT_THING = "Thing"
-  V_CONCEPT_THING_FQN = V_PKG_DEFAULT + SEP_COLON + V_CONCEPT_THING
   V_ELEMENT_HAS_THING = "hasThing"
+  V_DEFAULT_C_THING = "default:C:Thing"
+  V_DEFAULT_E_HAS_THING = "default:E:hasThing"
   V_EMPTY = ""
 
-  V_TYPE_MODEL_SET = "ms"
-  V_TYPE_MODEL = "m"
-  V_TYPE_PACKAGE = "p"
-  V_TYPE_CONCEPT = "c"
-  V_TYPE_ELEMENT = "e"
-  V_TYPE_STRUCTURE = "s"
+  V_TYPE_MODEL_SET = "MS"
+  V_TYPE_MODEL = "M"
+  V_TYPE_PACKAGE = "P"
+  V_TYPE_CONCEPT = "C"
+  V_TYPE_ELEMENT = "E"
+  V_TYPE_STRUCTURE = "S"
   V_TYPE_ATTRIBUTE = "a"
   V_MODEL_CURRENT = "current"
   V_MODEL_DEFAULT = "default"
@@ -135,104 +140,83 @@ module CCDH
 
   # Allows a-z, A-Z, 0-9, and _
   # If empty, generate with defaultName_randomNumber
-  def self.checkSimpleEntityName(name, defaultName, randomSuffix = true)
-    defaultName.length == 1 && randomSuffix && defaultName = "#{defaultName}_#{rand(100000..999999)}"
-    name.nil? && name = defaultName
-    # remove all none alpha numeric
+  def self.r_check_simple_name(name, entity_type)
+    name.nil? && name = ""
     name = name.gsub(/[^a-zA-Z0-9_]/, "")
-    # in case name had some characters but empty now. create new name
-    name.empty? && name = defaultName
+    if name.empty?
+      name = "#{entity_type}_#{rand(1000000..9999999)}"
+    end
     name
   end
 
-  def self.checkEntityNameBarCommaList(list, defaultName, defaultPackage, defaultType)
+  def self.r_check_entity_name_bar_list(list, entity_type)
     newList = ""
     list.nil? && (return newList)
     list.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |sublist|
       newSublist = ""
-      sublist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |fqnname|
-        parts = fqnname.split(SEP_COLON).collect(&:strip).reject(&:empty?)
-        pkg = nil
-        type = nil
-        name = nil
-        if parts.length == 3
-          pkg, type, name = parts
-        elsif parts.length == 2
-          type = defaultType
-          pkg = parts[0]
-          name = parts[1]
-        elsif parts.lenght == 1
-          pkg = defaultPackage
-          type = defaultType
-          name = parts[0]
-        end
-        pkg = checkSimpleEntityName(pkg, defaultPackage)
-        type = checkSimpleEntityName(type, defaultType, false)
-        name = checkSimpleEntityName(name, defaultName)
-
+      sublist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |entity_name|
+        new_entity_name = r_check_entity_name(entity_name, entity_type)
+        new_entity_name.empty? && next
         newSublist.empty? || newSublist += "#{SEP_COMMA} "
-        newSublist += "#{pkg}#{SEP_COLON}#{type}#{SEP_COLON}#{name}"
+        newSublist += new_entity_name
       end
-      (newList.empty? || newSublist.empty?) || newList += " #{SEP_BAR} "
+      newList.empty? || newSublist.empty? || newList += " #{SEP_BAR} "
       newList += newSublist
     end
     newList
   end
 
-  def self.buildEntry(entry, hash)
-    (entry.nil? || entry.empty?) && return
+  def self.r_check_entity_name(entity_name, entity_type)
+    parts = entity_name.split(SEP_COLON).collect(&:strip).reject(&:empty?)
+    parts.size == 3 || (return "")
+    p_name = r_check_simple_name(parts[0], V_TYPE_PACKAGE)
+    t_name = entity_type
+    e_name = r_check_simple_name(parts[2], entity_type)
+    (p_name.empty? || t_name.empty? || e_name.empty?) && (return "")
+    "#{p_name}#{SEP_COLON}#{t_name}#{SEP_COLON}#{e_name}"
+  end
+
+  def self.r_build_entry(entry, hash)
+    (entry.nil? || entry.empty? || hash.nil?) && raise("build_entry had entry: #{entry} and hash.nil? #{hash.nil?}")
     hash[H_BUILD].nil? && hash[H_BUILD] = ""
-    hash[H_BUILD].empty? || (hash[H_BUILD] += "\n")
+
+    # some cleanups
+    hash[H_BUILD] = hash[H_BUILD].gsub(/[ ]+/, "\n")
+    hash[H_BUILD] = hash[H_BUILD].gsub(/[ ]+/, " ")
+    hash[H_BUILD] = hash[H_BUILD].strip
+
+    unless hash[H_BUILD].empty?
+      hash[H_BUILD].include?(entry) && return
+      (hash[H_BUILD] += "\n")
+    end
+
     hash[H_BUILD] += entry
   end
 
-  def self.getModelPackageGenerated(pkgName, generatedFor, model, sourceHash)
-    package = model.getModelPackage(pkgName, false)
-    if package.nil?
-      package = model.getModelPackage(pkgName, true)
-      package[H_STATUS] = V_GENERATED
-      buildEntry("Package #{package[K_FQN]} not found: #{generatedFor}, generated.", sourceHash)
-      buildEntry("Generated: for #{generatedFor}.", package)
-    end
-    package
-  end
-
   def self.getConceptGenerated(conceptName, generatedFor, package, sourceHash)
-    concept = package.getConcept(conceptName, false)
+    concept = package.r_get_concept(conceptName, false)
     if concept.nil?
-      concept = package.getConcept(conceptName, true)
+      concept = package.r_get_concept(conceptName, true)
       concept[H_NAME] = conceptName
       concept[H_STATUS] = V_GENERATED
-      buildEntry("Concept not found: #{generatedFor}, generated.", sourceHash)
-      buildEntry("Generated: for #{generatedFor}", concept)
+      r_build_entry("Concept not found: #{generatedFor}, generated.", sourceHash)
+      r_build_entry("Generated: for #{generatedFor}", concept)
     end
     concept
   end
 
   def self.getElementGenerated(elementName, generatedFor, package, sourceHash)
-    element = package.getElement(elementName, false)
+    element = package.r_get_element(elementName, false)
     if element.nil?
-      element = package.getElement(elementName, true)
+      element = package.r_get_element(elementName, true)
       element[H_NAME] = elementName
       element[H_STATUS] = V_GENERATED
-      buildEntry("Element not found: #{generatedFor}, generated.", sourceHash)
-      buildEntry("Generated: for #{generatedFor}", element)
+      r_build_entry("Element not found: #{generatedFor}, generated.", sourceHash)
+      r_build_entry("Generated: for #{generatedFor}", element)
     end
     element
   end
 
-
-  def self.getStructureGenerated(structureName, generatedFor, package, sourceHash)
-    structure = package.getStructure(structureName, false)
-    if structure.nil?
-      structure = package.getStructure(structureName, true)
-      structure[H_NAME] = structureName
-      structure[H_STATUS] = V_GENERATED
-      buildEntry("Structure not found: #{generatedFor}, generated.", sourceHash)
-      buildEntry("Generated: for #{generatedFor}", structure)
-    end
-    structure
-  end
 
 
   # =========================================================
@@ -281,7 +265,7 @@ module CCDH
     raise("OLD code")
     (name.nil? || name.empty?) && name = defaultName + "#{rand(100000..999999)}"
     fqnParts = name.split(SEP_COLON).collect(&:strip).reject(&:empty?)
-    conceptName = checkSimpleEntityName(fqnParts.pop, defaultName)
+    conceptName = r_check_simple_name(fqnParts.pop, defaultName)
     packageName = checkPackageReference(fqnParts.join(SEP_COLON), packagePrefix)
     packageName + conceptName
   end

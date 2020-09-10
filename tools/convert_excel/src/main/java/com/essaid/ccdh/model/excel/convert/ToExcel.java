@@ -22,17 +22,16 @@ import java.util.List;
 
 public class ToExcel extends Converter {
 
-    ToExcel(Options options) {
+    ToExcel(Options options) throws IOException {
         super(options);
     }
 
     @Override
     void convert() throws IOException, InvalidFormatException {
-        File excelFile = excelFilePath.toFile();
         XSSFWorkbook wb = null;
         if (excelFile.exists()) {
             try {
-                wb = new XSSFWorkbook(new FileInputStream(excelFilePath.toFile()));
+                wb = new XSSFWorkbook(new FileInputStream(excelFile));
             } catch (EmptyFileException e) {
                 excelFile.delete();
                 wb = new XSSFWorkbook();
@@ -56,7 +55,7 @@ public class ToExcel extends Converter {
             }
 
         }
-
+        excelFile.getParentFile().mkdirs();
         wb.write(new FileOutputStream(excelFile));
 
     }
@@ -78,6 +77,6 @@ public class ToExcel extends Converter {
             }
             row++;
         }
-
+    sheet.createFreezePane(0,1);
     }
 }

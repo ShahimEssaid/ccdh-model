@@ -6,6 +6,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,20 +14,20 @@ import java.nio.file.Paths;
 public abstract class Converter {
 
     static final String[] SHEET_NAMES = {"model", "packages", "concepts", "elements", "structures"};
-    final Path excelFilePath;
+    final File excelFile;
     final Path csvDirPath;
     String fileSimpleName;
     Options options;
 
-    Converter(Options options) {
+    Converter(Options options) throws IOException {
         this.options = options;
-        excelFilePath = Paths.get(options.file);
-        fileSimpleName = excelFilePath.toFile().getName();
+        excelFile = Paths.get(options.file).toFile().getCanonicalFile();
+        fileSimpleName = excelFile.getName();
         int index = fileSimpleName.indexOf('.');
         if (index >= 0){
             fileSimpleName = fileSimpleName.substring(0,index);
         }
-        csvDirPath = Paths.get(excelFilePath.getParent().toString(), fileSimpleName);
+        csvDirPath = Paths.get(excelFile.getParent().toString(), fileSimpleName);
         System.out.println("");
     }
 

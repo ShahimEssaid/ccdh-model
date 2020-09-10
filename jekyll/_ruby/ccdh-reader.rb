@@ -55,7 +55,7 @@ module CCDH
 
         name = row[H_NAME]
         row[H_NAME] = r_check_simple_name(name, "M")
-        row[H_NAME] == name || r_build_entry("#{H_NAME}: was updated from #{name} to: #{row[H_NAME]}", row)
+        row[H_NAME] == name || r_build_entry("#{H_NAME}: was updated from #{name} to:#{row[H_NAME]}", row)
 
         # check H_DEPENDS_ON
         depends_on_old = row[H_DEPENDS_ON]
@@ -65,7 +65,7 @@ module CCDH
           row[H_DEPENDS_ON].empty? || row[H_DEPENDS_ON] += " #{SEP_BAR} "
           row[H_DEPENDS_ON] += modelRef
         end
-        row[H_DEPENDS_ON] == depends_on_old || r_build_entry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to: #{row[H_DEPENDS_ON]}.", row)
+        row[H_DEPENDS_ON] == depends_on_old || r_build_entry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to:#{row[H_DEPENDS_ON]}.", row)
         r_copy_row_vals(model, row)
       end
     end
@@ -165,10 +165,10 @@ module CCDH
     model[K_PACKAGES_CSV].each do |row|
       name = row[H_NAME]
       row[H_NAME] = r_check_simple_name(name, V_TYPE_PACKAGE)
-      row[H_NAME] == name || r_build_entry("#{H_NAME}: was updated from #{name} to: #{row[H_NAME]}", row)
+      row[H_NAME] == name || r_build_entry("#{H_NAME}: was updated from #{name} to:#{row[H_NAME]}", row)
       package = model.r_get_package(row[H_NAME], false)
       if package
-        r_build_entry("Package #{row { H_NAME }} was found again, and ignored, with row: #{row.to_s}", package)
+        r_build_entry("Package #{row { H_NAME }} was found again, and ignored, with row:#{row.to_s}", package)
         next
       end
       package = model.r_get_package(row[H_NAME], true)
@@ -194,12 +194,12 @@ module CCDH
       #check package name
       pkg = row[H_PACKAGE]
       row[H_PACKAGE] = r_check_simple_name(pkg, V_TYPE_PACKAGE)
-      row[H_PACKAGE] == pkg || r_build_entry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
+      row[H_PACKAGE] == pkg || r_build_entry("#{H_PACKAGE}: #{pkg} was updated to:#{row[H_PACKAGE]}", row)
 
       #check concept name
       name = row[H_NAME]
       row[H_NAME] = r_check_simple_name(name, V_TYPE_CONCEPT)
-      row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
+      row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to:#{row[H_NAME]}", row)
 
       # check parents syntax
       # package name by default is the same package as the concept
@@ -207,12 +207,12 @@ module CCDH
       single_parent_list = row[H_PARENTS].split(SEP_BAR)[0]
       single_parent_list.nil? && single_parent_list = ""
       row[H_PARENTS] = r_check_entity_name_bar_list(single_parent_list, V_TYPE_CONCEPT)
-      row[H_PARENTS] == parents || r_build_entry("#{H_PARENTS}: was changed from #{parents} to: #{row[H_PARENTS]}", row)
+      row[H_PARENTS] == parents || r_build_entry("#{H_PARENTS}: was changed from #{parents} to:#{row[H_PARENTS]}", row)
 
       # check related syntax
       related = row[H_RELATED]
       relatedNew = r_check_entity_name_bar_list(row[H_RELATED], V_TYPE_CONCEPT)
-      row[H_RELATED] == related || r_build_entry("#{H_RELATED}: was changed from #{related} to: #{row[H_RELATED]}", row)
+      row[H_RELATED] == related || r_build_entry("#{H_RELATED}: was changed from #{related} to:#{row[H_RELATED]}", row)
 
       # we need a package for creating the concept
       package = model.r_get_package_generate(row[H_PACKAGE])
@@ -220,14 +220,14 @@ module CCDH
       concept = package.r_get_concept(row[H_NAME], false)
 
       if !concept.nil?
-        r_build_entry("This concept name was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", concept)
-        r_build_entry("Had duplicate row for concept name #{row[H_NAME]} with values: #{row.to_s}", package)
+        r_build_entry("This concept name was found again in later rows. The later one is skipped and not rewritten. It's values where:#{row.to_s}", concept)
+        r_build_entry("Had duplicate row for concept name #{row[H_NAME]} with values:#{row.to_s}", package)
         next
       end
       concept = package.r_get_concept(row[H_NAME], true)
 
       if package[K_GENERATED_NOW]
-        r_build_entry("Generated for concept: #{row[H_NAME]}", package)
+        r_build_entry("Generated for concept:#{row[H_NAME]}", package)
         r_build_entry("Had it's package #{H_PACKAGE} generated.", concept)
       end
 
@@ -257,52 +257,52 @@ module CCDH
       #check package name
       pkg = row[H_PACKAGE]
       row[H_PACKAGE] = r_check_simple_name(pkg, V_TYPE_PACKAGE)
-      row[H_PACKAGE] == pkg || r_build_entry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
+      row[H_PACKAGE] == pkg || r_build_entry("#{H_PACKAGE}: #{pkg} was updated to:#{row[H_PACKAGE]}", row)
 
       #check name
       name = row[H_NAME]
       row[H_NAME] = r_check_simple_name(name, V_TYPE_ELEMENT)
-      row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
+      row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to:#{row[H_NAME]}", row)
 
       # check parent element name
       parent = row[H_PARENT]
       row[H_PARENT] = r_check_entity_name(parent, V_TYPE_ELEMENT)
-      row[H_PARENT] == parent || r_build_entry("#{H_PARENT}: #{parent} was updated to: #{row[H_PARENT]}", row)
+      row[H_PARENT] == parent || r_build_entry("#{H_PARENT}: #{parent} was updated to:#{row[H_PARENT]}", row)
 
       # check concepts
       concepts = row[H_CONCEPTS]
       row[H_CONCEPTS] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
-      row[H_CONCEPTS] == concepts || r_build_entry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
+      row[H_CONCEPTS] == concepts || r_build_entry("#{H_CONCEPTS}: #{concepts} was updated to:#{row[H_CONCEPTS]}", row)
 
 
       # check domain concepts
       domains = row[H_DOMAINS]
       row[H_DOMAINS] = r_check_entity_name_bar_list(domains, V_TYPE_CONCEPT)
-      row[H_DOMAINS] == domains || r_build_entry("#{H_DOMAINS}: #{domains} was updated to: #{row[H_DOMAINS]}", row)
+      row[H_DOMAINS] == domains || r_build_entry("#{H_DOMAINS}: #{domains} was updated to:#{row[H_DOMAINS]}", row)
 
       # check range concepts
       ranges = row[H_RANGES]
       row[H_RANGES] = r_check_entity_name_bar_list(ranges, V_TYPE_CONCEPT)
-      row[H_RANGES] == ranges || r_build_entry("#{H_RANGES}: #{ranges} was updated to: #{row[H_RANGES]}", row)
+      row[H_RANGES] == ranges || r_build_entry("#{H_RANGES}: #{ranges} was updated to:#{row[H_RANGES]}", row)
 
       # check related elements
       related = row[H_RELATED]
       row[H_RELATED] = r_check_entity_name_bar_list(related, V_TYPE_ELEMENT)
-      row[H_RELATED] == related || r_build_entry("#{H_RELATED}: #{related} was updated to: #{row[H_RELATED]}", row)
+      row[H_RELATED] == related || r_build_entry("#{H_RELATED}: #{related} was updated to:#{row[H_RELATED]}", row)
 
       # we need a package for creating the element
       package = model.r_get_package_generate(row[H_PACKAGE])
 
       element = package.r_get_element(row[H_NAME], false)
       if !element.nil?
-        r_build_entry("This element was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", element)
-        r_build_entry("Had duplicate element name: #{row[H_NAME]} in another row with row values: #{row.to_s}.", package)
+        r_build_entry("This element was found again in later rows. The later one is skipped and not rewritten. It's values where:#{row.to_s}", element)
+        r_build_entry("Had duplicate element name: #{row[H_NAME]} in another row with row values:#{row.to_s}.", package)
         next
       end
       element = package.r_get_element(row[H_NAME], true)
 
       if package[K_GENERATED_NOW]
-        r_build_entry("Generated for element: #{row[H_NAME]}", package)
+        r_build_entry("Generated for element:#{row[H_NAME]}", package)
         r_build_entry("Had it's package #{H_PACKAGE} generated.", element)
       end
 
@@ -336,37 +336,37 @@ module CCDH
       #check package name
       pkg = row[H_PACKAGE]
       row[H_PACKAGE] = r_check_simple_name(pkg, V_TYPE_PACKAGE)
-      row[H_PACKAGE] == pkg || r_build_entry("#{H_PACKAGE}: #{pkg} was updated to: #{row[H_PACKAGE]}", row)
+      row[H_PACKAGE] == pkg || r_build_entry("#{H_PACKAGE}: #{pkg} was updated to:#{row[H_PACKAGE]}", row)
 
       #check structure name
       name = row[H_NAME]
       row[H_NAME] = r_check_simple_name(name, V_TYPE_STRUCTURE)
-      row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to: #{row[H_NAME]}", row)
+      row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to:#{row[H_NAME]}", row)
 
       #check attribute name
       name = row[H_ATTRIBUTE_NAME]
       row[H_ATTRIBUTE_NAME] = r_check_simple_name(name, V_TYPE_ATTRIBUTE)
-      row[H_ATTRIBUTE_NAME] == name || r_build_entry("#{H_ATTRIBUTE_NAME}: #{name} was updated to: #{row[H_ATTRIBUTE_NAME]}", row)
+      row[H_ATTRIBUTE_NAME] == name || r_build_entry("#{H_ATTRIBUTE_NAME}: #{name} was updated to:#{row[H_ATTRIBUTE_NAME]}", row)
 
       #check element name
       name = row[H_ELEMENT]
       row[H_ELEMENT] = r_check_entity_name(name, V_TYPE_ELEMENT)
-      row[H_ELEMENT] == name || r_build_entry("#{H_ELEMENT}: #{name} was updated to: #{row[H_ELEMENT]}", row)
+      row[H_ELEMENT] == name || r_build_entry("#{H_ELEMENT}: #{name} was updated to:#{row[H_ELEMENT]}", row)
 
       # check concepts
       concepts = row[H_CONCEPTS]
       row[H_CONCEPTS] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
-      row[H_CONCEPTS] == concepts || r_build_entry("#{H_CONCEPTS}: #{concepts} was updated to: #{row[H_CONCEPTS]}", row)
+      row[H_CONCEPTS] == concepts || r_build_entry("#{H_CONCEPTS}: #{concepts} was updated to:#{row[H_CONCEPTS]}", row)
 
       # check range
       concepts = row[H_RANGES]
       row[H_RANGES] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
-      row[H_RANGES] == concepts || r_build_entry("#{H_RANGES}: #{concepts} was updated to: #{row[H_RANGES]}", row)
+      row[H_RANGES] == concepts || r_build_entry("#{H_RANGES}: #{concepts} was updated to:#{row[H_RANGES]}", row)
 
       # check structures
       structures = row[H_STRUCTURES]
       row[H_STRUCTURES] = r_check_entity_name_bar_list(structures, V_TYPE_STRUCTURE)
-      row[H_STRUCTURES] == structures || r_build_entry("#{H_STRUCTURES}: #{structures} was updated to: #{row[H_STRUCTURES]}", row)
+      row[H_STRUCTURES] == structures || r_build_entry("#{H_STRUCTURES}: #{structures} was updated to:#{row[H_STRUCTURES]}", row)
 
 
       # we need a package for creating the entity
@@ -379,7 +379,7 @@ module CCDH
         # there should only be one of these in a sheet
         structure = package.r_get_structure(row[H_NAME], false)
         if !entity.nil?
-          r_build_entry("This structure was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity)
+          r_build_entry("This structure was found again in later rows. The later one is skipped and not rewritten. It's values where:#{row.to_s}", entity)
           next
         end
         structure = package.r_get_structure(row[H_NAME], true)
@@ -389,7 +389,7 @@ module CCDH
         structure = r_get_structure_generated(row[H_NAME])
         attribute = structure.r_get_attribute(row[H_ATTRIBUTE_NAME], false)
         if !attribute.nil?
-          r_build_entry("This entity was found again in later rows. The later one is skipped and not rewritten. It's values where: #{row.to_s}", entity)
+          r_build_entry("This entity was found again in later rows. The later one is skipped and not rewritten. It's values where:#{row.to_s}", entity)
           next
         end
         attribute = structure.r_get_attribute(row[H_ATTRIBUTE_NAME], true)
@@ -397,7 +397,7 @@ module CCDH
       end
 
       if structure[K_GENERATED_NOW]
-        r_build_entry("Generated for attribute: #{row[H_ATTRIBUTE_NAME]}", structure)
+        r_build_entry("Generated for attribute:#{row[H_ATTRIBUTE_NAME]}", structure)
         r_build_entry("Had it's structure #{H_NAME} generated.", attribute)
       end
 
@@ -410,7 +410,7 @@ module CCDH
       # puts "K:#{k} V:#{v}"
       k.nil? || k = k.strip
       vStripped = v.strip
-      vStripped == v || r_build_entry("#{k}: value: #{v} was updated to #{vStripped}", entity)
+      vStripped == v || r_build_entry("#{k}: value: #{v} was updated to:#{vStripped}", entity)
       if k
         if k == H_BUILD && !entity[k].nil? && !entity[k].empty?
           # make sure we don't lose any build logging on the entity before adding any build from the headers

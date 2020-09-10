@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -x
+set -x
 set -e
 set -u
 set -o pipefail
@@ -16,9 +16,18 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $DIR
 
-for m in $(find  model_sets/src -maxdepth 1 -mindepth 1 -type f -iname '*.xlsx')
+cd ${DIR}/model_sets
+for m in $(find  src -maxdepth 1 -mindepth 1 -type f -iname '*.xlsx')
 do
-  java -jar "${DIR}/bin/converter.jar" --file "${DIR}/${m}"
+  java -jar "${DIR}/bin/converter.jar" --file "../model_sets/${m}" --direction csv
 done
 
 ${DIR}/run.sh
+
+
+for m in $(find  src -maxdepth 1 -mindepth 1 -type f -iname '*.xlsx')
+do
+  java -jar "${DIR}/bin/converter.jar" --file "../model_sets/${m}" --direction excel
+done
+
+

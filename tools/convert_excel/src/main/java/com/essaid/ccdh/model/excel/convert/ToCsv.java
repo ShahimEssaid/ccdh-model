@@ -18,13 +18,13 @@ import java.nio.file.Paths;
 
 public class ToCsv extends Converter {
 
-    ToCsv(Options options) {
+    ToCsv(Options options) throws IOException {
         super(options);
     }
 
     @Override
     void convert() throws IOException, InvalidFormatException {
-        XSSFWorkbook wb = new XSSFWorkbook(excelFilePath.toFile());
+        XSSFWorkbook wb = new XSSFWorkbook(excelFile);
 
         for (String name : SHEET_NAMES) {
             Sheet sheet = wb.getSheet(name);
@@ -39,7 +39,7 @@ public class ToCsv extends Converter {
 
     void writeCsv(Sheet sheet, int[] size) throws IOException {
         String sheetName = sheet.getSheetName();
-        File sheetFile = Paths.get(excelFilePath.getParent().toString(), fileSimpleName, sheetName + ".csv").toFile();
+        File sheetFile = Paths.get(excelFile.getParent().toString(), fileSimpleName, sheetName + ".csv").toFile();
         sheetFile.getParentFile().mkdirs();
         FileWriter writer = new FileWriter(sheetFile);
         CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT.withQuoteMode(QuoteMode.ALL));

@@ -136,7 +136,7 @@ module CCDH
           if parent
             concept[K_PARENTS][parentRef] = parent
           else
-            r_build_entry("Parent ref #{parentRef} was not resolvable", concept)
+            r_build_entry("Parent ref #{parentRef} was not resolvable.", concept)
           end
         end
       end
@@ -153,7 +153,7 @@ module CCDH
           if related
             concept[K_RELATED][relatedRef] = related
           else
-            r_build_entry("Related ref #{relatedRef} was not resolvable", concept)
+            r_build_entry("Related ref #{relatedRef} was not resolvable.", concept)
           end
         end
       end
@@ -201,7 +201,7 @@ module CCDH
       path.each do |c|
         pathString += "#{c[VK_FQN]} > "
       end
-      r_build_entry("DAG: #{entity[VK_FQN]} is circular with path: #{pathString}. Not adding #{entity[VK_FQN]} as a descendant again.", entity)
+      r_build_entry("DAG: #{entity[VK_FQN]} is circular with path: #{pathString}. Not adding: #{entity[VK_FQN]} as a descendant again.", entity)
       entity[K_ANCESTORS].merge(path)
       r_populate_concept_descendants(path)
     else

@@ -79,7 +79,7 @@ module CCDH
       site.data["_mss"]["testing4"] = {"name" =>"test2"}
       #publisher = ModelPublisher.new(model, site, "_template", "model")
       #publisher.publishModelFile.
-      CCDH.r_write_modelset(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
+      CCDH.r_write_modelset(current_model_set, File.expand_path(File.join(site.source, "../model_sets/src")))
       #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
 
     end

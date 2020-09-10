@@ -181,9 +181,12 @@ module CCDH
     hash[H_BUILD].nil? && hash[H_BUILD] = ""
 
     # some cleanups
-    hash[H_BUILD] = hash[H_BUILD].gsub(/[ ]+/, "\n")
+    hash[H_BUILD] = hash[H_BUILD].gsub(/[\n\n]+/, "\n")
     hash[H_BUILD] = hash[H_BUILD].gsub(/[ ]+/, " ")
     hash[H_BUILD] = hash[H_BUILD].strip
+
+    entry = entry.gsub(/[\n\n]+/, "\n")
+    entry = entry.gsub(/[ ]+/, " ")
 
     unless hash[H_BUILD].empty?
       hash[H_BUILD].include?(entry) && return
@@ -200,7 +203,7 @@ module CCDH
       concept[H_NAME] = conceptName
       concept[H_STATUS] = V_GENERATED
       r_build_entry("Concept not found: #{generatedFor}, generated.", sourceHash)
-      r_build_entry("Generated: for #{generatedFor}", concept)
+      r_build_entry("Generated: for:#{generatedFor}", concept)
     end
     concept
   end
@@ -212,7 +215,7 @@ module CCDH
       element[H_NAME] = elementName
       element[H_STATUS] = V_GENERATED
       r_build_entry("Element not found: #{generatedFor}, generated.", sourceHash)
-      r_build_entry("Generated: for #{generatedFor}", element)
+      r_build_entry("Generated: for:#{generatedFor}", element)
     end
     element
   end

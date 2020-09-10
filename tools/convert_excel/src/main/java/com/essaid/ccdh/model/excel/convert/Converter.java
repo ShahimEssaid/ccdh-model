@@ -13,13 +13,21 @@ import java.nio.file.Paths;
 public abstract class Converter {
 
     static final String[] SHEET_NAMES = {"model", "packages", "concepts", "elements", "structures"};
-    static final String MODEL_FILE = "model.xlsx";
-    final Path file;
+    final Path excelFilePath;
+    final Path csvDirPath;
+    String fileSimpleName;
     Options options;
 
     Converter(Options options) {
         this.options = options;
-        file = Paths.get(options.file);
+        excelFilePath = Paths.get(options.file);
+        fileSimpleName = excelFilePath.toFile().getName();
+        int index = fileSimpleName.indexOf('.');
+        if (index >= 0){
+            fileSimpleName = fileSimpleName.substring(0,index);
+        }
+        csvDirPath = Paths.get(excelFilePath.getParent().toString(), fileSimpleName);
+        System.out.println("");
     }
 
     abstract void convert() throws IOException, InvalidFormatException;

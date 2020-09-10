@@ -24,7 +24,7 @@ public class ToCsv extends Converter {
 
     @Override
     void convert() throws IOException, InvalidFormatException {
-        XSSFWorkbook wb = new XSSFWorkbook(file.toFile());
+        XSSFWorkbook wb = new XSSFWorkbook(excelFilePath.toFile());
 
         for (String name : SHEET_NAMES) {
             Sheet sheet = wb.getSheet(name);
@@ -39,12 +39,7 @@ public class ToCsv extends Converter {
 
     void writeCsv(Sheet sheet, int[] size) throws IOException {
         String sheetName = sheet.getSheetName();
-        String fileName = file.toFile().getName();
-        int index = fileName.indexOf('.');
-        if (index >= 0){
-            fileName = fileName.substring(0,index);
-        }
-        File sheetFile = Paths.get(file.getParent().toString(),fileName, sheetName + ".csv").toFile();
+        File sheetFile = Paths.get(excelFilePath.getParent().toString(), fileSimpleName, sheetName + ".csv").toFile();
         sheetFile.getParentFile().mkdirs();
         FileWriter writer = new FileWriter(sheetFile);
         CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT.withQuoteMode(QuoteMode.ALL));

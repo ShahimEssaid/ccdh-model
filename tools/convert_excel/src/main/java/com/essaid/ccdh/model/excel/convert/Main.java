@@ -10,7 +10,17 @@ public class Main {
     public static void main(String[] args) throws IOException, InvalidFormatException {
         Options options = new Options();
         JCommander.newBuilder().addObject(options).build().parse(args);
-        ToCsv toCsv = new ToCsv(options);
-        toCsv.convert();
+
+        switch (options.direction) {
+            case Options.CSV:
+                new ToCsv(options).convert();
+                break;
+            case Options.EXCEL:
+                new ToExcel(options).convert();
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + options.direction);
+        }
+
     }
 }

@@ -16,7 +16,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $DIR
 
-bundle exec jekyll s --trace -s jekyll -d jekyll/_site --config jekyll/_config.yml
+bundle exec jekyll s --trace http://127.0.0.1:4000
 
 for html_file_path in $(find ./_site -name '*.html' | sort); do
     echo -n "${html_file_path} ..."

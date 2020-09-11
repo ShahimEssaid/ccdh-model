@@ -611,20 +611,20 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="rouge (vbundled(3.22.0)) [path][gem]" type="rubylib">
+      <library name="rouge (vbundled(3.23.0)) [path][gem]" type="rubylib">
         <properties>
           <option name="version" value="4" />
         </properties>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.22.0/bin" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.22.0/lib" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.23.0/bin" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.23.0/lib" />
         </CLASSES>
         <SOURCES>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.22.0/bin" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.22.0/lib" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.23.0/bin" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.23.0/lib" />
         </SOURCES>
         <excluded>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.22.0/bin" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/2.6.0/gems/rouge-3.23.0/bin" />
         </excluded>
       </library>
     </orderEntry>

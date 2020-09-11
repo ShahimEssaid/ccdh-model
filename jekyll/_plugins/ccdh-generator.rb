@@ -14,11 +14,6 @@ require_relative "../_ruby/ccdh-resolve"
 require_relative "../_ruby/ccdh-publisher"
 require_relative "../_ruby/ccdh-model-creator"
 
-module Jekyll
-  class Page
-    attr_accessor :base, :relative_path, :path
-  end
-end
 
 class CSV
   class Table
@@ -34,6 +29,7 @@ class CSV
   end
 end
 
+
 module CCDH
   class JGenerator < Jekyll::Generator
 
@@ -42,16 +38,16 @@ module CCDH
       path = nil
       if Pathname.new(source).absolute?
         #FileUtils.rm_rf(File.join(source, "model"))
-        path = File.join(source, "model")
+        path = File.join(source, "modelset")
       else
         path = File.expand_path(File.join(Dir.pwd, source, "modelset", "current"))
       end
-
       r_clean_generated_pages(path)
-
     end
 
     def generate(site)
+
+      puts "================ running plugin ================="
       #CCDH.generator = self
       @site = site
       model_set_root_dir = File.expand_path(File.join(site.source, "../model_sets/src"))
@@ -70,8 +66,6 @@ module CCDH
       CCDH.r_resolve_model_sets(model_sets)
 
       site.data["_mss"] = model_sets
-      site.data["_mss"]["testing"] = {"name" => "test1", "b" => "Something", "a" => "else", "c" => {}}
-      site.data["_mss"]["testing4"] = {"name" => "test2"}
       publisher = ModelPublisher.new(model_sets[V_MODEL_CURRENT], site, "_template", "modelset/current")
       publisher.publishModel
       CCDH.r_write_modelset(current_model_set, File.expand_path(File.join(site.source, "../model_sets/src")))

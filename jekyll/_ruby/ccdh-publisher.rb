@@ -31,7 +31,7 @@ module CCDH
             relativeDir = @page_dir
             path = File.join(@site.source, relativeDir, concept[VK_FQN] + ".html")
             if File.exist? (path)
-              page = getPage(@site.source, relativeDir, name)
+              page = getPage(@site.source, relativeDir, concept[VK_FQN])
             else
               page = JekyllPage.new(@site, @page_dir, concept[VK_FQN] + ".html", concept)
               @site.pages << page
@@ -82,7 +82,9 @@ module CCDH
       page = nil
       path = File.join(base, dir, basename + ".html")
       @site.pages.each do |p|
-        if p.path == path
+        debug_path = p.path
+        debug_path_1 = File.join(dir, basename + ".html")
+        if p.path == path || p.path == File.join(dir, basename + ".html")
           page = p
           break
         end

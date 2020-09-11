@@ -11,11 +11,11 @@ module CCDH
   def self.r_create_model_files_if_needed(model_set, model_name)
 
     # crate model diretory if needed
-    dir = File.join(model_set[K_MODEL_SET_DIR], model_name)
+    dir = File.join(model_set[K_MODELSET_DIR], model_name)
     !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
 
     # copy excel file template if needed
-    excel_file = File.join(model_set[K_MODEL_SET_DIR], "#{model_name}.xlsx")
+    excel_file = File.join(model_set[K_MODELSET_DIR], "#{model_name}.xlsx")
     if !File.exist?excel_file
       FileUtils.copy_file(File.join(model_set[K_SITE].source, "_template", F_MODEL_XLSX), excel_file)
     end

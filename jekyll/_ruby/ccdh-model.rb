@@ -57,10 +57,10 @@ module CCDH
       end
 
       self[H_NAME] = name
-      self[K_MODEL_SET_DIR] = model_set_dir
+      self[K_MODELSET_DIR] = model_set_dir
 
-      self[K_MODEL_SET_TOP] = top_model_name
-      self[K_MODEL_SET_DEFAULT] = default_model_name
+      self[K_MODELSET_TOP] = top_model_name
+      self[K_MODELSET_DEFAULT] = default_model_name
       self[K_MODELS] = {}
 
       # this is a model set wide resolution of entity name to instance, per model
@@ -88,8 +88,8 @@ module CCDH
       # we need this to avoid errors on new model.xlsx/csv files  TODO: necessary?
       self[H_DEPENDS_ON] = ""
 
-      self[K_MODEL_SET] = model_set
-      self[K_MODEL_DIR] = File.join(model_set[K_MODEL_SET_DIR], name)
+      self[K_MODELSET] = model_set
+      self[K_MODEL_DIR] = File.join(model_set[K_MODELSET_DIR], name)
 
       self[K_DEPENDS_ON] = []
       self[K_DEPENDED_ON] = []
@@ -139,7 +139,7 @@ module CCDH
         models << model
       end
 
-      self[K_MODEL_SET][K_MODELS].each do |model|
+      self[K_MODELSET][K_MODELS].each do |model|
         unless models.index(model)
           # a model not on path
           entity = model[K_MODEL_ENTITIES][entity_name]

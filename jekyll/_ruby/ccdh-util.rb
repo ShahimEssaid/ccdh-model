@@ -27,25 +27,18 @@ module CCDH
   H_ELEMENT = "element"
   H_STRUCTURES = "structures"
 
-
-  # H_MESG = "message"
-  # H_WARNINGS = "warnings"
-  # H_ERRORS = "errors"
-  # H_OBJECT = "object"
-  # H_ATTRIBUTE = "attribute"
-  # H_CONCEPT = "concept"
-  # H_VAL_CONCEPT = "val_concept"
-
   K_SITE = "_site"
   K_NIL = "_NIL"
-  VK_FQN = "_fqn"
-  VK_ENTITY_NAME = "_entity_name" # this is the FQN without the model name prefix. It's a FQN within a model.
+  VK_FQN = "_fqn"                 # this is the a FQN like modelname:P:packagename:C:conceptname
+  VK_ENTITY_NAME = "_entity_name" # this is the name without the model name prefix. It's a FQN within a model.
   K_MODEL = "_model"
   K_MODELS = "_models"
-  K_MODEL_SET = "_ms"
-  K_MODEL_SET_DIR = "_ms_dir"
-  K_MODEL_SET_TOP = "_ms_top"
-  K_MODEL_SET_DEFAULT = "_ms_default"
+  K_MODELSET = "_ms"
+  K_MODELSET_DIR = "_ms_dir"
+  K_MODELSET_TOP = "_ms_top"
+  K_MODELSET_DEFAULT = "_ms_default"
+
+
   K_TYPE = "_type"
 
   K_ENTITIES ="_entities"

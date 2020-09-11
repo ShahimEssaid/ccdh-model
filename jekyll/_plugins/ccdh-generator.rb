@@ -26,6 +26,7 @@ class CSV
       self
     end
   end
+
   class Row
     def to_liquid
       self
@@ -35,6 +36,7 @@ end
 
 module CCDH
   class JGenerator < Jekyll::Generator
+
     def initialize(config)
       source = config["source"]
       path = nil
@@ -42,18 +44,11 @@ module CCDH
         #FileUtils.rm_rf(File.join(source, "model"))
         path = File.join(source, "model")
       else
-        path = File.expand_path(File.join(Dir.pwd, source, "model"))
+        path = File.expand_path(File.join(Dir.pwd, source, "modelset", "current"))
       end
-      Dir.glob("**/*", base: path).each { |f|
-        file = File.join(path, f)
-        next if File.directory?(file)
-        fileContent = File.read(file)
-        if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
-          postYamlContent = $POSTMATCH
-          yaml = SafeYAML.load(Regexp.last_match(1))
-          yaml.nil? || (yaml["generated"] && File.delete(file))
-        end
-      }
+
+      r_clean_generated_pages(path)
+
     end
 
     def generate(site)
@@ -75,13 +70,25 @@ module CCDH
       CCDH.r_resolve_model_sets(model_sets)
 
       site.data["_mss"] = model_sets
-      site.data["_mss"]["testing"] = {"name" =>"test1", "b" => "Something", "a" => "else", "c" => {}}
-      site.data["_mss"]["testing4"] = {"name" =>"test2"}
-      #publisher = ModelPublisher.new(model, site, "_template", "model")
-      #publisher.publishModelFile.
+      site.data["_mss"]["testing"] = {"name" => "test1", "b" => "Something", "a" => "else", "c" => {}}
+      site.data["_mss"]["testing4"] = {"name" => "test2"}
+      publisher = ModelPublisher.new(model_sets[V_MODEL_CURRENT], site, "_template", "modelset/current")
+      publisher.publishModel
       CCDH.r_write_modelset(current_model_set, File.expand_path(File.join(site.source, "../model_sets/src")))
       #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
+    end
 
+    def r_clean_generated_pages(path)
+      Dir.glob("**/*", base: path).each do |f|
+        file = File.join(path, f)
+        next if File.directory?(file)
+        fileContent = File.read(file)
+        if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
+          postYamlContent = $POSTMATCH
+          yaml = SafeYAML.load(Regexp.last_match(1))
+          yaml.nil? || (yaml["generated"] == true && File.delete(file))
+        end
+      end
     end
   end
 end

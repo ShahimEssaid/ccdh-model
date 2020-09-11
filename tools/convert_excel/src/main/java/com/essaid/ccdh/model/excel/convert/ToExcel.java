@@ -10,6 +10,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -40,6 +41,8 @@ public class ToExcel extends Converter {
             wb = new XSSFWorkbook();
         }
 
+
+
         int order = 0;
         for (String name : SHEET_NAMES) {
             File csvFile = Paths.get(csvDirPath.toString(), name + ".csv").toFile();
@@ -50,7 +53,7 @@ public class ToExcel extends Converter {
                 }
                 Sheet sheet = wb.createSheet(name);
                 wb.setSheetOrder(name, order);
-                writeSheet(sheet, csvFile);
+                writeSheet(wb, sheet, csvFile);
                 ++order;
             }
 
@@ -60,23 +63,37 @@ public class ToExcel extends Converter {
 
     }
 
-    private void writeSheet(Sheet sheet, File csvFile) throws IOException {
+    private void writeSheet(XSSFWorkbook wb, Sheet sheet, File csvFile) throws IOException {
 
-
+        int maxCellIndex = 0;
         CSVParser csvParser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withQuoteMode(QuoteMode.ALL));
         List<CSVRecord> csvRecords = csvParser.getRecords();
         int row = 0;
         for (CSVRecord csvRecord : csvRecords) {
             Iterator<String> csvRecordIterator = csvRecord.iterator();
             Row sheetRow = sheet.createRow(row);
+            XSSFCellStyle cellStyle = wb.createCellStyle();
+            cellStyle.setWrapText(true);
+            sheetRow.setRowStyle(cellStyle);
             int cellIndex = 0;
             while (csvRecordIterator.hasNext()) {
                 String val = csvRecordIterator.next();
+                XSSFCellStyle sytle = wb.createCellStyle();
+                sytle.setWrapText(true);
                 Cell cell = sheetRow.createCell(cellIndex++, CellType.STRING);
+                cell.setCellStyle(sytle);
                 cell.setCellValue(val);
             }
+            if (cellIndex > maxCellIndex) maxCellIndex = cellIndex;
             row++;
         }
-    sheet.createFreezePane(0,1);
+        sheet.createFreezePane(0, 1);
+        for (int i = 0; i < maxCellIndex; ++i) {
+            sheet.autoSizeColumn(i);
+            int colWidth = sheet.getColumnWidth(i);
+            if (colWidth > 50 * 256)
+                sheet.setColumnWidth(i, 50 * 256);
+        }
+
     }
 }

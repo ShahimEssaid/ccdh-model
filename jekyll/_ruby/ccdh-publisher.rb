@@ -15,49 +15,67 @@ module CCDH
 
     # template_dir - the directory under the source that holds temlates for model and other
     # page_dir     - the directory name under source to place the model pages
-    def initialize(model, site, template_dir, page_dir)
-      @model = model
+    def initialize(model_set, site, template_dir, page_dir)
+      @model_set = model_set
       @site = site
       @template_dir = template_dir
       @page_dir = page_dir
     end
 
+
     def publishModel
-      @model.concepts.each do |name, concept|
-        relativeDir = @page_dir + "/concept"
-        path = File.join(@site.source, relativeDir, name + ".html")
-        if File.exist? (path)
-          page = getPage(@site.source, relativeDir, name)
-        else
-          page = JekyllPage.new(@site, @page_dir + "/concept", name + ".html", concept.data)
-          @site.pages << page
+
+      @model_set[K_MODELS].each do |model_name, model|
+        model[K_PACKAGES].each do |package_name, package|
+          package[K_CONCEPTS].each do |name, concept|
+            relativeDir = @page_dir
+            path = File.join(@site.source, relativeDir, concept[VK_FQN] + ".html")
+            if File.exist? (path)
+              page = getPage(@site.source, relativeDir, name)
+            else
+              page = JekyllPage.new(@site, @page_dir, concept[VK_FQN] + ".html", concept)
+              @site.pages << page
+            end
+            page.data["concept"] = concept
+          end
         end
-        page.data["mc"] = concept.data
       end
 
-      @model.groups.each do |name, group|
-        relativeDir = @page_dir + "/group"
-        path = File.join(@site.source, relativeDir, name + ".html")
-        if File.exist? (path)
-          page = getPage(@site.source, relativeDir, name)
-        else
-          page = JekyllPage.new(@site, @page_dir + "/group", name + ".html", group.data)
-          @site.pages << page
-        end
-        page.data["mg"] = group.data
-      end
-
-      @model.structures.each do |name, structure|
-        relativeDir = @page_dir + "/structure"
-        path = File.join(@site.source, relativeDir, name + ".html")
-        if File.exist? (path)
-          page = getPage(@site.source, relativeDir, name)
-        else
-          page = JekyllPage.new(@site, @page_dir + "/structure", name + ".html", structure.data)
-          @site.pages << page
-        end
-        page.data["ms"] = structure.data
-      end
+      # @model_set.concepts.each do |name, concept|
+      #   relativeDir = @page_dir + "/concept"
+      #   path = File.join(@site.source, relativeDir, name + ".html")
+      #   if File.exist? (path)
+      #     page = getPage(@site.source, relativeDir, name)
+      #   else
+      #     page = JekyllPage.new(@site, @page_dir + "/concept", name + ".html", concept.data)
+      #     @site.pages << page
+      #   end
+      #   page.data["mc"] = concept.data
+      # end
+      #
+      # @model.groups.each do |name, group|
+      #   relativeDir = @page_dir + "/group"
+      #   path = File.join(@site.source, relativeDir, name + ".html")
+      #   if File.exist? (path)
+      #     page = getPage(@site.source, relativeDir, name)
+      #   else
+      #     page = JekyllPage.new(@site, @page_dir + "/group", name + ".html", group.data)
+      #     @site.pages << page
+      #   end
+      #   page.data["mg"] = group.data
+      # end
+      #
+      # @model.structures.each do |name, structure|
+      #   relativeDir = @page_dir + "/structure"
+      #   path = File.join(@site.source, relativeDir, name + ".html")
+      #   if File.exist? (path)
+      #     page = getPage(@site.source, relativeDir, name)
+      #   else
+      #     page = JekyllPage.new(@site, @page_dir + "/structure", name + ".html", structure.data)
+      #     @site.pages << page
+      #   end
+      #   page.data["ms"] = structure.data
+      # end
     end
 
     def getPage(base, dir, basename)
@@ -78,7 +96,7 @@ module CCDH
       @data = data
       path = File.join(site.source, dir, name)
       FileUtils.mkdir_p(File.join(site.source, dir))
-      tempaltePath = File.join(site.source, "_template", dir, "page.html")
+      tempaltePath = File.join(site.source, "_template", data[K_TYPE], "page.html")
       rendererFile = site.liquid_renderer.file(tempaltePath)
       templateContent = File.read(tempaltePath)
       parsedTemplate = rendererFile.parse(templateContent)

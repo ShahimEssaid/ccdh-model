@@ -9,3 +9,4 @@ vendor
 /jekyll/model
 TAGS
 /node_modules
+.~lock*

@@ -35,4 +35,5 @@ gem 'ruby-debug-ide', :group => :development
 gem 'debase', :group => :development
 gem 'rufo', :group => :development
 gem 'ripper-tags', :group => :development
-#gem 'jekyll-tidy', '~> 0.2.2'
+
+gem 'octokit', '~> 4.0'

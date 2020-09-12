@@ -26,11 +26,10 @@ module CCDH
   H_ATTRIBUTE_NAME = "attribute"
   H_ELEMENT = "element"
   H_STRUCTURES = "structures"
+  H_GH_LABEL = "gh_label"
 
   K_SITE = "_site"
   K_NIL = "_NIL"
-  VK_FQN = "_fqn"                 # this is the a FQN like modelname:P:packagename:C:conceptname
-  VK_ENTITY_NAME = "_entity_name" # this is the name without the model name prefix. It's a FQN within a model.
   K_MODEL = "_model"
   K_MODELS = "_models"
   K_MODELSET = "_ms"
@@ -38,10 +37,13 @@ module CCDH
   K_MODELSET_TOP = "_ms_top"
   K_MODELSET_DEFAULT = "_ms_default"
 
+  VK_FQN = "_fqn" # this is the a FQN like modelname:P:packagename:C:conceptname
+  VK_ENTITY_NAME = "_entity_name" # this is the name without the model name prefix. It's a FQN within a model.
+  VK_GH_LABEL_NAME = "_gh_label_name"
 
   K_TYPE = "_type"
 
-  K_ENTITIES ="_entities"
+  K_ENTITIES = "_entities"
   K_ENTITIES_VISIBLE = "_entities_visible"
 
 
@@ -98,6 +100,11 @@ module CCDH
   K_CONCEPT_REFS = "_concept_refs"
   K_VAL_CONCEPT_REFS = "_val_concept_refs"
 
+  K_MS_GH_LABELS = "_gh_labels"
+  K_MS_GH_ISSUES = "_gh_issues"
+
+
+
   F_MODEL_XLSX = "model.xlsx"
   F_MODEL_CSV = "model.csv"
   F_PACKAGES_CSV = "packages.csv"
@@ -130,6 +137,17 @@ module CCDH
   V_MODEL_CURRENT = "current"
   V_MODEL_DEFAULT = "default"
 
+  V_MODEL_HEADERS = [H_NAME, H_SUMMARY, H_DESC, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD]
+  V_PACKAGE_HEADERS = [H_NAME, H_SUMMARY, H_DESC, H_STATUS, H_NOTES, H_BUILD]
+  V_CONCEPT_HEADERS = [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
+  V_CONCEPT_THING_ROW = ['default', V_CONCEPT_THING, 'Thing summary', 'Thing summary', '', '', 'current', '', '']
+  V_ELEMENT_HEADERS = [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_CONCEPTS, H_DOMAINS, H_RANGES, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
+  V_ELEMENT_HAS_THING_ROW = ['default', V_ELEMENT_HAS_THING, "#{V_ELEMENT_HAS_THING} summary", "#{V_ELEMENT_HAS_THING} description", '', '', '','','','current','','']
+  V_STRUCTURE_HEADERS = [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESC, H_CONCEPTS, H_RANGES, H_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
+
+  ENV_GH_USER = "GH_USER"
+  ENV_GH_REPO = "GH_REPO"
+  ENV_GH_TOKEN = "GH_TOKEN"
 
   # Allows a-z, A-Z, 0-9, and _
   # If empty, generate with defaultName_randomNumber
@@ -212,7 +230,6 @@ module CCDH
     end
     element
   end
-
 
 
   # =========================================================

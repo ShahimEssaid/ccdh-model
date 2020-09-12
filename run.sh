@@ -16,9 +16,10 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $DIR
 
+. .env
 bundle exec jekyll b --trace -s jekyll -d jekyll/_site --config jekyll/_config.yml
 
-for html_file_path in $(find ./_site -name '*.html' | sort); do
+for html_file_path in $(find jekyll/_site -name '*.html' | sort); do
     echo -n "${html_file_path} ..."
     bin/prettify_html.js "${html_file_path}"
     echo " Done"

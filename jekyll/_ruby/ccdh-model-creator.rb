@@ -25,7 +25,7 @@ module CCDH
     if !File.exist?(model_file)
       # write empty file
       CSV.open(model_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_NAME, H_SUMMARY, H_DESC, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD]
+        csv << V_MODEL_HEADERS
         csv << [model_name, "#{model_name} summary", "#{model_name} description", "", V_GENERATED, "", ""]
       end
     end
@@ -35,7 +35,7 @@ module CCDH
     if !File.exist?(packages_file)
       # write empty file
       CSV.open(packages_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_NAME, H_SUMMARY, H_DESC, H_STATUS, H_NOTES, H_BUILD]
+        csv << V_PACKAGE_HEADERS
       end
     end
 
@@ -45,7 +45,8 @@ module CCDH
     if !File.exist?(concepts_file)
       # write empty file
       CSV.open(concepts_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
+        csv << V_CONCEPT_HEADERS
+        model_name == V_MODEL_DEFAULT && csv << V_CONCEPT_THING_ROW
       end
     end
 
@@ -54,7 +55,8 @@ module CCDH
     if !File.exist?(elements_file)
       # write empty file
       CSV.open(elements_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PACKAGE, H_NAME, H_SUMMARY, H_DESC, H_PARENT, H_CONCEPTS, H_DOMAINS, H_RANGES, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
+        csv << V_ELEMENT_HEADERS
+        model_name == V_MODEL_DEFAULT && csv << V_ELEMENT_HAS_THING_ROW
       end
     end
 
@@ -63,7 +65,7 @@ module CCDH
     if !File.exist?(structures_file)
       # write empty file
       CSV.open(structures_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESC, H_CONCEPTS, H_RANGES, H_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
+        csv << V_STRUCTURE_HEADERS
       end
     end
   end

@@ -1,6 +1,6 @@
-Configuration file: /home/s hahim / git / gh / sie / ccdh - model / jekyll / _config.yml
-Source : /home/s hahim / git / gh / sie / ccdh - model / jekyll
-Destination : /home/s hahim / git / gh / sie / ccdh - model / _site
+Configuration file: /home/s hahim / git / ghclient / sie / ccdh - model / jekyll / _config.yml
+Source : /home/s hahim / git / ghclient / sie / ccdh - model / jekyll
+Destination : /home/s hahim / git / ghclient / sie / ccdh - model / _site
 Incremental build: disabled.Enable with --incremental
 Generating...
     #<Jekyll::Site:0x000056387a6ab838

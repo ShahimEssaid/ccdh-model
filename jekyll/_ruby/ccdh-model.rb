@@ -32,6 +32,8 @@ module CCDH
         "#{self[K_MODEL][H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
       when VK_ENTITY_NAME
         "#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
+      when VK_GH_LABEL_NAME
+        "#{self[H_NAME]}#{SEP_COLON}#{self[K_TYPE].downcase}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}"
       else
         nil
       end
@@ -62,6 +64,9 @@ module CCDH
       self[K_MODELSET_TOP] = top_model_name
       self[K_MODELSET_DEFAULT] = default_model_name
       self[K_MODELS] = {}
+
+      self[K_MS_GH_LABELS] = {}
+      self[K_MS_GH_ISSUES] = {}
 
       # this is a model set wide resolution of entity name to instance, per model
       # it's a hash of entity name to a hash. the hash has a model as a key and and array as the

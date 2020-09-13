@@ -9,7 +9,8 @@ module CCDH
   end
 
   def self.r_resolve_model_set(model_set)
-    r_resolve_entity_names(model_set)
+    r_resolve_model_visible_entities(model_set)
+    # r_resolve_entity_names(model_set)
     r_thing_something_check(model_set)
 
     model_set[K_MODELS].each do |n, model|
@@ -20,46 +21,65 @@ module CCDH
     r_check_DAG_and_closure(model_set)
   end
 
-  # find all possible entity names in the model set and resolve them to build two maps
-  # One for resolving the entity name per model based on the model dependency path
-  # Second for resolving the entity name for the whole model set.
-  def self.r_resolve_entity_names(model_set)
-    model_set[K_MODELS].each do |model_name, model|
-      model[K_MODEL_ENTITIES].each do |entity_name, entity|
-        r_resolve_entity_name(entity_name, model_set)
+  def self.r_resolve_model_visible_entities(model_set)
+    model_set[K_MODELS].each do |m_name, m|
+      m[K_DEPENDS_ON_PATH].each do |dep|
+        dep[K_ENTITIES].each do |dep_en, dep_e|
+
+          # resolve first for model
+          m[K_ENTITIES_VISIBLE][dep_en].nil? && m[K_ENTITIES_VISIBLE][dep_en] = dep_e
+
+          # resolve all for whole model set
+          entity_instances = model_set[K_ENTITIES][dep_en]
+          if entity_instances.nil?
+            entity_instances = []
+            model_set[K_ENTITIES][dep_en] = entity_instances
+          end
+          entity_instances.index(dep_e) || entity_instances << dep_e
+        end
       end
     end
   end
 
-  def self.r_resolve_entity_name(entity_name, model_set)
-    model_set[K_MODELS].each do |model_name, model|
+  # find all possible entity names in the model set and resolve them
+  # for resolving the entity name for the whole model set.
+  # def self.r_resolve_entity_names(model_set)
+  #   model_set[K_MODELS].each do |model_name, model|
+  #     model[K_MODEL_ENTITIES].each do |entity_name, entity|
+  #       r_resolve_entity_name(entity_name, model, model_set)
+  #     end
+  #   end
+  # end
 
-      # the map of entity name to entities with that name on the model path
-      resolution_models = model_set[K_ENTITIES_VISIBLE][entity_name]
-      if resolution_models.nil?
-        resolution_models = {}
-        model_set[K_ENTITIES_VISIBLE][entity_name] = resolution_models
-      end
-      resolution = []
-      model[K_DEPENDS_ON_PATH].each do |dependency_model|
-        entity = dependency_model[K_MODEL_ENTITIES][entity_name]
-        entity.nil? || resolution << entity
-      end
-      resolution.empty? || model_set[K_ENTITIES_VISIBLE][entity_name][model] = resolution
-
-      # the map of entity name to all entities with that name
-      all_models = model_set[K_ENTITIES][entity_name]
-      if all_models.nil?
-        all_models = []
-        model_set[K_ENTITIES][entity_name] = all_models
-      end
-      model_set[K_MODELS].each do |n, m|
-        entity = m[K_MODEL_ENTITIES][entity_name]
-        entity.nil? || all_models.index(entity) || all_models << entity
-      end
-
-    end
-  end
+  # def self.r_resolve_entity_name(entity_name, model_set)
+  #   model_set[K_MODELS].each do |model_name, model|
+  #
+  #     # the map of entity name to entities with that name on the model path
+  #     resolution_models = model_set[K_ENTITIES_VISIBLE][entity_name]
+  #     if resolution_models.nil?
+  #       resolution_models = {}
+  #       model_set[K_ENTITIES_VISIBLE][entity_name] = resolution_models
+  #     end
+  #     resolution = []
+  #     model[K_DEPENDS_ON_PATH].each do |dependency_model|
+  #       entity = dependency_model[K_MODEL_ENTITIES][entity_name]
+  #       entity.nil? || resolution << entity
+  #     end
+  #     resolution.empty? || model_set[K_ENTITIES_VISIBLE][entity_name][model] = resolution
+  #
+  #     # the map of entity name to all entities with that name
+  #     all_models = model_set[K_ENTITIES][entity_name]
+  #     if all_models.nil?
+  #       all_models = []
+  #       model_set[K_ENTITIES][entity_name] = all_models
+  #     end
+  #     model_set[K_MODELS].each do |n, m|
+  #       entity = m[K_MODEL_ENTITIES][entity_name]
+  #       entity.nil? || all_models.index(entity) || all_models << entity
+  #     end
+  #
+  #   end
+  # end
 
   # TODO: this means Thing and hasThing aree required in the set
   def self.r_thing_something_check(model_set)
@@ -78,18 +98,16 @@ module CCDH
     # default:C:Thing and default:E:someThing have to be on all model paths
     error = ""
     model_set[K_MODELS].each do |name, model|
-      resolution = model_set.dig(K_ENTITIES_VISIBLE, V_DEFAULT_C_THING, model)
-      resolution.nil? || thing = resolution[0]
+
+      thing = model[K_ENTITIES_VISIBLE][V_DEFAULT_C_THING]
       unless thing
         error += "#{V_DEFAULT_C_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
       end
 
-      resolution = model_set.dig(K_ENTITIES_VISIBLE, V_DEFAULT_E_HAS_THING, model)
-      resolution.nil? || has_thing = resolution[0]
+      has_thing = model[K_ENTITIES_VISIBLE][V_DEFAULT_E_HAS_THING]
       unless has_thing
         error += "#{V_DEFAULT_E_HAS_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
       end
-
     end
 
     error.empty? || raise(error)
@@ -162,7 +180,7 @@ module CCDH
 
   def self.r_parentless_concepts_to_thing(model)
 
-    thing = model.dig(K_MS, K_ENTITIES_VISIBLE, V_DEFAULT_C_THING, model)[0]
+    thing = model[K_MS][K_ENTITIES][V_DEFAULT_C_THING][0]
     model[K_PACKAGES].each do |pk, p|
       p[K_CONCEPTS].each do |ck, c|
         c == thing && next

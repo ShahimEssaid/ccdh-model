@@ -63,14 +63,6 @@ module CCDH
       self[K_MS_DEFAULT] = default_model_name
       self[K_MODELS] = {}
 
-      # this is a model set wide resolution of entity name to instance, per model
-      # it's a hash of entity name to a hash. the hash has a model as a key and and array as the
-      # resovled entity instances for that model's path as the values. This means that that model will
-      # resolve that entity name as shown my the array. The first entry in the array should be the chosen
-      # instance. Later ones are shadowed but this will be reported in a debug/warn report to be addressed later
-      # A name should not resolve to multiple instances but this property accomodates this if it happens.
-      self[K_ENTITIES_VISIBLE] = {}
-
       # this is similar to the above but it's not indexed by model and it's resolution path. It's an entity name
       # to array of entity instances with that name model set wide. The names are not the FQN, they are the
       # entity name (pakcage:type:name)
@@ -99,7 +91,10 @@ module CCDH
       # this is a model wide map of entity instances for this model for reference lookup
       # by entity name. See the model set maps for "resolution" of entity names per model, and
       # model set wide.
-      self[K_MODEL_ENTITIES] = {}
+      self[K_ENTITIES] = {}
+      # These are the entities visible from this model based on the dependency path.
+      # The first resolution of an entity name wins.
+      self[K_ENTITIES_VISIBLE] = {}
       self[K_MODEL_HEADERS] = []
       self[K_PACKAGES_HEADERS] = []
       self[K_CONCEPTS_HEADERS] = []
@@ -132,7 +127,7 @@ module CCDH
       entities = []
       models = []
       self[K_DEPENDS_ON_PATH].each do |model|
-        entity = model[K_MODEL_ENTITIES][entity_name]
+        entity = model[K_ENTITIES][entity_name]
         entity.ni? || entities << entity
         models << model
       end
@@ -140,7 +135,7 @@ module CCDH
       self[K_MS][K_MODELS].each do |model|
         unless models.index(model)
           # a model not on path
-          entity = model[K_MODEL_ENTITIES][entity_name]
+          entity = model[K_ENTITIES][entity_name]
           entity.ni? || entities << entity
         end
       end
@@ -161,7 +156,7 @@ module CCDH
       if concept.nil? && create
         concept = MConcept.new(name, self, self[K_MODEL])
         self[K_CONCEPTS][name] = concept
-        concept[K_MODEL][K_MODEL_ENTITIES][concept[VK_ENTITY_NAME]] = concept
+        concept[K_MODEL][K_ENTITIES][concept[VK_ENTITY_NAME]] = concept
         self
       end
       concept
@@ -172,7 +167,7 @@ module CCDH
       if element.nil? && create
         element = MElement.new(name, self, self[K_MODEL])
         self[K_ELEMENTS][name] = element
-        element[K_MODEL][K_MODEL_ENTITIES][element[VK_ENTITY_NAME]] = element
+        element[K_MODEL][K_ENTITIES][element[VK_ENTITY_NAME]] = element
       end
       element
     end

@@ -46,8 +46,6 @@ module CCDH
 
   K_MODEL_DIR = "_m_dir"
 
-  K_MODEL_ENTITIES = "_model_entities"
-
   K_MODEL_CSV = "_model_csv"
   K_PACKAGES_CSV = "_packages_csv"
   K_CONCEPTS_CSV = "_concepts_csv"
@@ -136,7 +134,7 @@ module CCDH
 
   V_STRUCTURE_HEADERS = [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_CONCEPTS, H_RANGES, H_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
   V_GH_LABEL_COLOR = "fef2c0"
-  
+
   ENV_GH_ACTIVE = "GH_ACTIVE"
   ENV_GH_USER = "GH_USER"
   ENV_GH_REPO = "GH_REPO"

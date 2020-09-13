@@ -27,7 +27,7 @@ module CCDH
 
     model_sets.each do |modelset_name, modelset|
       modelset[K_MODELS].each do |model_name, model|
-        model[K_MODEL_ENTITIES].each do |entity_name, entity|
+        model[K_ENTITIES].each do |entity_name, entity|
           label_name = entity[VK_GH_LABEL_NAME]
           label_index = label_name.downcase
           current_label = self.gh_labels[label_index]

@@ -1,2 +1,5 @@
 "package","name","summary","description","gh_issue","parent","concepts","domains","ranges","related","status","notes","build"
-"default","hasThing","hasThing summary","hasThing description","","","","","","","current","","Had it's package package generated."
+"default","hasThing","hasThing summary","hasThing description","","","","","","","current","","Had it's package package generated.
+Parent ref was not resolvable.
+domain_concepts: was updated to:
+range_concepts: was updated to:"

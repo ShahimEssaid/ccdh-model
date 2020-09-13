@@ -266,14 +266,14 @@ module CCDH
 
 
       # check domain concepts
-      domains = row[H_DOMAINS]
-      row[H_DOMAINS] = r_check_entity_name_bar_list(domains, V_TYPE_CONCEPT)
-      row[H_DOMAINS] == domains || r_build_entry("#{H_DOMAINS}: #{domains} was updated to:#{row[H_DOMAINS]}", row)
+      domains = row[H_DOMAIN_CONCEPTS]
+      row[H_DOMAIN_CONCEPTS] = r_check_entity_name_bar_list(domains, V_TYPE_CONCEPT)
+      row[H_DOMAIN_CONCEPTS] == domains || r_build_entry("#{H_DOMAIN_CONCEPTS}: #{domains} was updated to:#{row[H_DOMAIN_CONCEPTS]}", row)
 
       # check range concepts
-      ranges = row[H_RANGES]
-      row[H_RANGES] = r_check_entity_name_bar_list(ranges, V_TYPE_CONCEPT)
-      row[H_RANGES] == ranges || r_build_entry("#{H_RANGES}: #{ranges} was updated to:#{row[H_RANGES]}", row)
+      ranges = row[H_RANGE_CONCEPTS]
+      row[H_RANGE_CONCEPTS] = r_check_entity_name_bar_list(ranges, V_TYPE_CONCEPT)
+      row[H_RANGE_CONCEPTS] == ranges || r_build_entry("#{H_RANGE_CONCEPTS}: #{ranges} was updated to:#{row[H_RANGE_CONCEPTS]}", row)
 
       # check related elements
       related = row[H_RELATED]
@@ -308,7 +308,7 @@ module CCDH
     if !File.exist?(structures_file)
       # write empty file
       CSV.open(structures_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_CONCEPTS, H_RANGES, H_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
+        csv << [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_CONCEPTS, H_RANGE_CONCEPTS, H_RANGE_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
       end
     end
     model[K_STRUCTURES_CSV] = CSV.read(structures_file, headers: true)
@@ -349,14 +349,14 @@ module CCDH
       row[H_CONCEPTS] == concepts || r_build_entry("#{H_CONCEPTS}: #{concepts} was updated to:#{row[H_CONCEPTS]}", row)
 
       # check range
-      concepts = row[H_RANGES]
-      row[H_RANGES] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
-      row[H_RANGES] == concepts || r_build_entry("#{H_RANGES}: #{concepts} was updated to:#{row[H_RANGES]}", row)
+      concepts = row[H_RANGE_CONCEPTS]
+      row[H_RANGE_CONCEPTS] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
+      row[H_RANGE_CONCEPTS] == concepts || r_build_entry("#{H_RANGE_CONCEPTS}: #{concepts} was updated to:#{row[H_RANGE_CONCEPTS]}", row)
 
       # check structures
-      structures = row[H_STRUCTURES]
-      row[H_STRUCTURES] = r_check_entity_name_bar_list(structures, V_TYPE_STRUCTURE)
-      row[H_STRUCTURES] == structures || r_build_entry("#{H_STRUCTURES}: #{structures} was updated to:#{row[H_STRUCTURES]}", row)
+      structures = row[H_RANGE_STRUCTURES]
+      row[H_RANGE_STRUCTURES] = r_check_entity_name_bar_list(structures, V_TYPE_STRUCTURE)
+      row[H_RANGE_STRUCTURES] == structures || r_build_entry("#{H_RANGE_STRUCTURES}: #{structures} was updated to:#{row[H_RANGE_STRUCTURES]}", row)
 
 
       # we need a package for creating the entity

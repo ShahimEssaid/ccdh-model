@@ -229,6 +229,9 @@ module CCDH
       self[K_NE_RANGES] = Set.new().compare_by_identity
 
       self[K_RELATED] = {}
+
+      self[K_ANCESTORS] = Set.new().compare_by_identity
+      self[K_DESCENDANTS] = Set.new().compare_by_identity
     end
   end
 

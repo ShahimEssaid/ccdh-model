@@ -10,116 +10,85 @@ module CCDH
 
   def self.r_resolve_model_set(model_set)
     r_resolve_model_visible_entities(model_set)
-    # r_resolve_entity_names(model_set)
     r_thing_something_check(model_set)
 
     model_set[K_MODELS].each do |n, model|
       r_resolve(model)
     end
 
-    # TODO: add check for elements
     r_check_DAG_and_closure(model_set)
+    r_resolve_elements_effective(model_set)
+
   end
 
   def self.r_resolve_model_visible_entities(model_set)
-    model_set[K_MODELS].each do |m_name, m|
-      m[K_DEPENDS_ON_PATH].each do |dep|
-        dep[K_ENTITIES].each do |dep_en, dep_e|
+    model_set[K_MODELS].each do |model_name, model|
+      model[K_DEPENDS_ON_PATH].each do |dep_model|
+        dep_model[K_ENTITIES].each do |dep_entity_name, dep_entity|
 
           # resolve first for model
-          m[K_ENTITIES_VISIBLE][dep_en].nil? && m[K_ENTITIES_VISIBLE][dep_en] = dep_e
+          model[K_ENTITIES_VISIBLE][dep_entity_name].nil? && model[K_ENTITIES_VISIBLE][dep_entity_name] = dep_entity
 
           # resolve all for whole model set
-          entity_instances = model_set[K_ENTITIES][dep_en]
+          entity_instances = model_set[K_ENTITIES][dep_entity_name]
           if entity_instances.nil?
             entity_instances = []
-            model_set[K_ENTITIES][dep_en] = entity_instances
+            model_set[K_ENTITIES][dep_entity_name] = entity_instances
           end
-          entity_instances.index(dep_e) || entity_instances << dep_e
+          entity_instances.index(dep_entity) || entity_instances << dep_entity
         end
       end
     end
   end
 
-  # find all possible entity names in the model set and resolve them
-  # for resolving the entity name for the whole model set.
-  # def self.r_resolve_entity_names(model_set)
-  #   model_set[K_MODELS].each do |model_name, model|
-  #     model[K_MODEL_ENTITIES].each do |entity_name, entity|
-  #       r_resolve_entity_name(entity_name, model, model_set)
-  #     end
-  #   end
-  # end
-
-  # def self.r_resolve_entity_name(entity_name, model_set)
-  #   model_set[K_MODELS].each do |model_name, model|
-  #
-  #     # the map of entity name to entities with that name on the model path
-  #     resolution_models = model_set[K_ENTITIES_VISIBLE][entity_name]
-  #     if resolution_models.nil?
-  #       resolution_models = {}
-  #       model_set[K_ENTITIES_VISIBLE][entity_name] = resolution_models
-  #     end
-  #     resolution = []
-  #     model[K_DEPENDS_ON_PATH].each do |dependency_model|
-  #       entity = dependency_model[K_MODEL_ENTITIES][entity_name]
-  #       entity.nil? || resolution << entity
-  #     end
-  #     resolution.empty? || model_set[K_ENTITIES_VISIBLE][entity_name][model] = resolution
-  #
-  #     # the map of entity name to all entities with that name
-  #     all_models = model_set[K_ENTITIES][entity_name]
-  #     if all_models.nil?
-  #       all_models = []
-  #       model_set[K_ENTITIES][entity_name] = all_models
-  #     end
-  #     model_set[K_MODELS].each do |n, m|
-  #       entity = m[K_MODEL_ENTITIES][entity_name]
-  #       entity.nil? || all_models.index(entity) || all_models << entity
-  #     end
-  #
-  #   end
-  # end
-
   # TODO: this means Thing and hasThing aree required in the set
   def self.r_thing_something_check(model_set)
-
+    error = ""
     things = model_set[K_ENTITIES][V_DEFAULT_C_THING]
     if things.size > 1
       things.each do |thing|
-        raise("There are multiple #{V_DEFAULT_C_THING} instances in the model set #{model_set[H_NAME]}: ")
+        error += "There are multiple #{V_DEFAULT_C_THING} instances in the model set:#{model_set[H_NAME]}.\n"
       end
     end
 
     if things.empty?
-      raise("model set #{model_set[H_NAME]} does not have a #{V_DEFAULT_C_THING}")
+      error += "Model set #{model_set[H_NAME]} does not have a #{V_DEFAULT_C_THING}.\n"
     end
 
-    # default:C:Thing and default:E:someThing have to be on all model paths
-    error = ""
+    has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING]
+    if has_thing.size > 1
+      has_thing.each do |thing|
+        error += "There are multiple #{V_DEFAULT_E_HAS_THING} instances in the model set:#{model_set[H_NAME]}.\n"
+      end
+    end
+
+    if has_thing.empty?
+      error += "Model set #{model_set[H_NAME]} does not have a #{V_DEFAULT_E_HAS_THING}.\n"
+    end
+
     model_set[K_MODELS].each do |name, model|
 
       thing = model[K_ENTITIES_VISIBLE][V_DEFAULT_C_THING]
       unless thing
-        error += "#{V_DEFAULT_C_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
+        error += "#{V_DEFAULT_C_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}.\n"
       end
 
       has_thing = model[K_ENTITIES_VISIBLE][V_DEFAULT_E_HAS_THING]
       unless has_thing
-        error += "#{V_DEFAULT_E_HAS_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}\n"
+        error += "#{V_DEFAULT_E_HAS_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}.\n"
       end
     end
 
     error.empty? || raise(error)
-
   end
 
   def self.r_resolve(model)
 
-    r_resolve_concept_parents(model)
-    r_resolve_concept_related(model)
-    r_parentless_concepts_to_thing(model)
-    puts "debug"
+    r_resolve_concepts(model)
+    r_resolve_elements(model)
+    r_parentless_entities(model)
+
+
     #
     # resolveElementParent(model_set)
     # resolveElementConcepts(model_set)
@@ -144,61 +113,148 @@ module CCDH
   end
 
 
-  def self.r_resolve_concept_parents(model)
+  def self.r_resolve_concepts(model)
     model[K_PACKAGES].each do |pkg_name, package|
       package[K_CONCEPTS].each do |concept_name, concept|
-        parents = concept[H_PARENTS]
-        parents.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |parentRef|
-          resolution = model.dig(K_MS, K_ENTITIES_VISIBLE, parentRef, model)
-          resolution.nil? || parent = resolution[0]
+
+        # parents
+        concept[H_PARENTS].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |parent_name|
+          parent = model[K_ENTITIES_VISIBLE][parent_name]
           if parent
-            concept[K_PARENTS][parentRef] = parent
+            concept[K_PARENTS][parent_name[VK_FQN]] = parent
+            parent[K_CHILDREN][concept[VK_FQN]] = concept
           else
-            r_build_entry("Parent ref #{parentRef} was not resolvable.", concept)
+            r_build_entry("Parent ref #{parent_name} was not resolvable.", concept)
           end
         end
-      end
-    end
-  end
 
-  def self.r_resolve_concept_related(model)
-    model[K_PACKAGES].each do |pkg_name, package|
-      package[K_CONCEPTS].each do |concept_name, concept|
-        related_value = concept[H_RELATED]
-        related_value.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |relatedRef|
-          resolution = model.dig(K_MS, K_ENTITIES_VISIBLE, relatedRef, model)
-          resolution.nil? || related = resolution[0]
+        #related
+        concept[H_RELATED].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |related_name|
+          related = model[K_ENTITIES_VISIBLE][related_name]
           if related
-            concept[K_RELATED][relatedRef] = related
+            concept[K_RELATED][related[VK_FQN]] = related
+            related_name[K_RELATED][concept[VK_FQN]] = concept
           else
-            r_build_entry("Related ref #{relatedRef} was not resolvable.", concept)
+            r_build_entry("Related ref #{related_name} was not resolvable.", concept)
           end
         end
       end
     end
   end
 
-  def self.r_parentless_concepts_to_thing(model)
+  def self.r_resolve_elements(model)
+    model[K_PACKAGES].each do |package_name, package|
+      package[K_ELEMENTS].each do |element_name, element|
 
+        # parent
+        parent = model[K_ENTITIES_VISIBLE][element[H_PARENT]]
+        if parent
+          element[K_PARENT] = parent
+          parent[K_CHILDREN][element[VK_FQN]] = element
+        else
+          r_build_entry("Parent ref #{element[H_PARENT]} was not resolvable.", element)
+        end
+
+        # related
+        element[H_RELATED].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |related_name|
+          related = model[K_ENTITIES_VISIBLE][related_name]
+          if related
+            element[K_RELATED][related[VK_FQN]] = related
+            related[K_RELATED][element[VK_FQN]] = element
+          else
+            r_build_entry("Related ref #{related_name} was not resolvable.", element)
+          end
+        end
+
+        # concepts
+        element[H_CONCEPTS].split(SEP_BAR).collect(&:trim).reject(&:empty?).each do |concept_group|
+          concepts = []
+          effective_concepts = Set.new().compare_by_identity
+          concept_group.split(SEP_COMMA).collect(&:trim).reject(&:empty?).each do |concept_name|
+            concept = model[K_ENTITIES_VISIBLE][concept_name]
+            if concept
+              if !concepts.index(concepts)
+                concepts << concept
+                effective_concepts.empty? && effective_concepts.merge(concepts[K_DESCENDANTS])
+                effective_concepts = effective_concepts.intersection(concepts[K_DESCENDANTS])
+              end
+            else
+              r_build_entry("Concept name: #{concept_name} was not resolved", element)
+            end
+          end
+          if !concepts.empty?
+            element[K_CONCEPTS] << concepts
+            element[K_E_CONCEPTS].merge(effective_concepts)
+          end
+        end
+
+        # domains
+        element[H_DOMAIN_CONCEPTS].split(SEP_BAR).collect(&:trim).reject(&:empty?).each do |concept_group|
+          concepts = []
+          effective_concepts = Set.new().compare_by_identity
+          concept_group.split(SEP_COMMA).collect(&:trim).reject(&:empty?).each do |concept_name|
+            concept = model[K_ENTITIES_VISIBLE][concept_name]
+            if concept
+              if !concepts.index(concepts)
+                concepts << concept
+                effective_concepts.empty? && effective_concepts.merge(concepts[K_DESCENDANTS])
+                effective_concepts = effective_concepts.intersection(concepts[K_DESCENDANTS])
+              end
+            else
+              r_build_entry("Domain name: #{concept_name} was not resolved", element)
+            end
+          end
+          if !concepts.empty?
+            element[K_DOMAINS] << concepts
+            element[K_E_DOMAINS].merge(effective_concepts)
+          end
+        end
+
+        # ranges
+        element[H_RANGE_CONCEPTS].split(SEP_BAR).collect(&:trim).reject(&:empty?).each do |concept_group|
+          concepts = []
+          effective_concepts = Set.new().compare_by_identity
+          concept_group.split(SEP_COMMA).collect(&:trim).reject(&:empty?).each do |concept_name|
+            concept = model[K_ENTITIES_VISIBLE][concept_name]
+            if concept
+              if !concepts.index(concepts)
+                concepts << concept
+                effective_concepts.empty? && effective_concepts.merge(concepts[K_DESCENDANTS])
+                effective_concepts = effective_concepts.intersection(concepts[K_DESCENDANTS])
+              end
+            else
+              r_build_entry("Range name: #{concept_name} was not resolved", element)
+            end
+          end
+          if !concepts.empty?
+            element[K_RANGES] << concepts
+            element[K_E_RANGES].merge(effective_concepts)
+          end
+        end
+
+      end
+    end
+  end
+
+  def self.r_parentless_entities(model)
+
+    # concepts
     thing = model[K_MS][K_ENTITIES][V_DEFAULT_C_THING][0]
     model[K_PACKAGES].each do |pk, p|
       p[K_CONCEPTS].each do |ck, c|
         c == thing && next
-        c[K_PARENTS].empty? && c[K_PARENTS][VK_ENTITY_NAME] = thing
+        c[K_PARENTS].empty? && c[K_PARENTS][thing[VK_FQN]] = thing
+        thing[K_CHILDREN][c[VK_FQN]] = c
       end
     end
 
-    # make sure each parent has the child in it's child array
+    # elements
+    has_thing = model[K_MS][K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
     model[K_PACKAGES].each do |pk, p|
-      p[K_CONCEPTS].each do |ck, c|
-        c[K_PARENTS].each do |name, parent|
-          # children could have same entity name so we need the FQN since the same entity name might resolve
-          # differently in each model.
-          entity_name = c[VK_FQN]
-          if !parent[K_CHILDREN].has_key?(entity_name)
-            parent[K_CHILDREN][entity_name] = c
-          end
-        end
+      p[K_ELEMENTS].each do |ck, e|
+        e == has_thing && next
+        e[K_PARENTS].empty? && e[K_PARENTS][has_thing[VK_FQN]] = has_thing
+        has_thing[K_CHILDREN][e[VK_FQN]] = e
       end
     end
   end
@@ -206,19 +262,24 @@ module CCDH
   # TODO: add check for elements
   def self.r_check_DAG_and_closure(model_set)
     thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
-
     path = []
     r_check_DAG_and_closure_recursive(path, thing)
+
+    has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
+    path = []
+    r_check_DAG_and_closure_recursive(path, has_thing)
   end
 
   def self.r_check_DAG_and_closure_recursive(path, entity)
 
     if path.index(entity)
       # a circle is found
+      path << entity
       pathString = ""
-      path.each do |c|
-        pathString += "#{c[VK_FQN]} > "
+      path.each do |e|
+        pathString += "#{e[VK_FQN]} > "
       end
+      path.pop
       r_build_entry("DAG: #{entity[VK_FQN]} is circular with path: #{pathString}. Not adding: #{entity[VK_FQN]} as a descendant again.", entity)
       entity[K_ANCESTORS].merge(path)
       r_populate_concept_descendants(path)
@@ -240,74 +301,40 @@ module CCDH
     end
   end
 
-  #
-  #
-  #
-  #
-  #
-  #
+  def self.r_resolve_elements_effective(model_set)
+    has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
+    r_resolve_elements_effective_recursive(has_thing)
+  end
 
-  def self.resolveElementParent(model)
-    model[K_PACKAGES].keys.each do |pn|
-      p = model[K_PACKAGES][pn]
-      p[K_ELEMENTS].keys.each do |en|
-        e = p[K_ELEMENTS][en]
-        parent = e[H_PARENT]
-        (parent.nil? || parent.empty?) && next
-        pkgName, typeName, elementName = parent.split(SEP_COLON)
-        package = r_get_package_generate(pkgName, "#{e.fqn} has parent #{parent}", model, e)
-        element = getElementGenerated(elementName, "#{e.fqn} has parent #{parent}", package, e)
-        e[K_PARENT][element.fqn] = element
-      end
+  def self.r_resolve_elements_effective_recursive(element)
+    element[K_CHILDREN].each do |child_fqn, child|
+
+      # concepts
+      old_effecitve = child[K_E_CONCEPTS]
+      child[K_E_CONCEPTS] = element[K_E_CONCEPTS].intersection(old_effecitve).compare_by_identity
+      child[K_NE_CONCEPTS] = old_effecitve.difference(child[K_E_CONCEPTS]).compare_by_identity
+
+      # domains
+      old_effecitve = child[K_E_DOMAINS]
+      child[K_E_DOMAINS] = element[K_E_DOMAINS].intersection(old_effecitve).compare_by_identity
+      child[K_NE_DOMAINS] = old_effecitve.difference(child[K_E_DOMAINS]).compare_by_identity
+
+      # ranges
+      old_effecitve = child[K_E_RANGES]
+      child[K_E_RANGES] = element[K_E_RANGES].intersection(old_effecitve).compare_by_identity
+      child[K_NE_RANGES] = old_effecitve.difference(child[K_E_RANGES]).compare_by_identity
+
+      r_resolve_elements_effective_recursive(child)
     end
   end
 
+  #
+  #
+  #
+  #
+  #
+  #
 
-  def self.resolveElementConcepts(model)
-    generalEntityResovleConcepts(model, K_ELEMENTS, H_CONCEPTS, K_CONCEPTS, "concept")
-  end
-
-  def self.resolveElementDomains(model)
-    generalEntityResovleConcepts(model, K_ELEMENTS, H_DOMAINS, K_DOMAINS, "domain")
-  end
-
-  def self.resolveElementRanges(model)
-    generalEntityResovleConcepts(model, K_ELEMENTS, H_RANGES, K_RANGES, "range")
-  end
-
-  def self.resolveElementRelated(model)
-    model[K_PACKAGES].keys.each do |pn|
-      p = model[K_PACKAGES][pn]
-      p[K_ELEMENTS].keys.each do |en|
-        element = p[K_ELEMENTS][en]
-        element[H_RELATED].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |e|
-          pkgName, typeName, elementName = e.split(SEP_COLON)
-          package = r_get_package_generate(pkgName, "#{element.fqn} has related #{e}", model, element)
-          re = getElementGenerated(elementName, "#{element.fqn} has related #{e}", package, element)
-          e[K_RELATED][re.fqn] = re
-        end
-      end
-    end
-  end
-
-  def self.generalEntityResovleConcepts(model, pkgKey, entityHeader, entityKey, generatedFor)
-    model[K_PACKAGES].keys.each do |pn|
-      p = model[K_PACKAGES][pn]
-      p[pkgKey].keys.each do |en|
-        entity = p[pkgKey][en]
-        concepts = entity[entityHeader]
-        concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
-          clist_array = []
-          clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-            pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = r_get_package_generate(pkg_name, "#{entity[VK_FQN]} has #{generatedFor} #{c}", model, entity)
-            clist_array << getConceptGenerated(concept_name, "#{entity[VK_FQN]} has #{generatedFor} #{c}", package, entity)
-          end
-          entity[entityKey] << clist_array
-        end
-      end
-    end
-  end
 
   def self.resolveStructAndAttribConcepts(model)
     model[K_PACKAGES].keys.each do |pn|
@@ -328,7 +355,7 @@ module CCDH
         end
 
         # ranges
-        concepts = structure[H_RANGES]
+        concepts = structure[H_RANGE_CONCEPTS]
         concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
           clist_array = []
           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
@@ -354,7 +381,7 @@ module CCDH
             attribute[K_CONCEPTS] << clist_array
           end
           # ranges
-          concepts = attribute[H_RANGES]
+          concepts = attribute[H_RANGE_CONCEPTS]
           concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
             clist_array = []
             clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
@@ -369,156 +396,4 @@ module CCDH
     end
   end
 
-  ##
-  #
-  #
-  # after all possible generated entities created
-  #
-
-
-  ##
-  #
-  #  packages stuff
-  #
-  #
-  # def self.resolvePackageGraph(model)
-  #   defaultPkg = model[K_PACKAGES][V_PKG_DEFAULT]
-  #
-  #   # at least depend on default package
-  #   # and add inverse dependency
-  #   model[K_PACKAGES].each do |pn, p|
-  #     p == defaultPkg && next
-  #     p[K_DEPENDS_ON].empty? && p[K_DEPENDS_ON][defaultPkg.fqn] = defaultPkg
-  #     p[K_DEPENDS_ON].each do |dpn, dp|
-  #       dp[K_DEPENDED_ON][p.fqn] = p
-  #     end
-  #   end
-  #   # now need a closure and DAG check
-  #   path = []
-  #   resolvePackageGraphRecursive(defaultPkg, path)
-  # end
-
-  # def self.resolvePackageGraphRecursive(package, path)
-  #   # cycle detection
-  #   if path.index(package)
-  #     pathString = ""
-  #     path.each do |p|
-  #       pathString += "#{p.fqn} > "
-  #     end
-  #     r_build_entry("DAG: #{package.fqn} is circular with path: #{pathString}", package)
-  #     package[K_ANCESTORS].merge(path)
-  #     populatePackageDescendants(path)
-  #   else
-  #     path << package
-  #     package[K_DEPENDED_ON].each do |pn, p|
-  #       resolvePackageGraphRecursive(p, path)
-  #     end
-  #     package[K_ANCESTORS].merge(path)
-  #     populatePackageDescendants(path)
-  #     path.pop
-  #   end
-  # end
-
-  # def self.populatePackageDescendants(path)
-  #   path.each.with_index.map do |v, i|
-  #     v[K_DESCENDANTS].merge(path[i..])
-  #   end
-  # end
-
-
-  ##
-  #
-  #  concept stuff
-  #
-  #
-
-
-  def self.parentlessElementsToHasSomething(model)
-    hasThing = model[K_PACKAGES][V_PKG_DEFAULT][K_ELEMENTS][V_ELEMENT_HAS_THING]
-
-    # link to hashThing if no parent
-    model[K_PACKAGES].each do |pk, p|
-      p[K_ELEMENTS].each do |ek, e|
-        e == hasThing && next
-        e[K_PARENT].nil? && e[K_PARENT] = hasThing
-      end
-    end
-
-    #link children
-    model[K_PACKAGES].each do |pk, p|
-      p[K_ELEMENTS].each do |ek, e|
-        e == hasThing && next
-        parent = e[K_PARENT]
-        parent[K_CHILDREN].index(e) || parent[K_CHILDREN] << e
-      end
-    end
-  end
-
-
-  def self.effectiveElementConcepts(model)
-    model[K_PACKAGES].each do |pn, p|
-      p[K_ELEMENTS].each do |en, e|
-
-        # effecitve concepts
-        e[K_CONCEPTS].each do |ca|
-          arrayConcepts = Set.new.compare_by_identity
-          ca.each do |c|
-            # we have a concept from an AND array
-            arrayConcepts.empty? && arrayConcepts.merge(c[K_DESCENDANTS])
-            arrayConcepts = arrayConcepts.intersection(c[K_DESCENDANTS])
-          end
-          e[K_E_CONCEPTS].merge(arrayConcepts)
-        end
-
-        # effective domains
-        e[K_DOMAINS].each do |ca|
-          arrayConcepts = Set.new.compare_by_identity
-          ca.each do |c|
-            # we have a concept from an AND array
-            arrayConcepts.empty? && arrayConcepts.merge(c[K_DESCENDANTS])
-            arrayConcepts = arrayConcepts.intersection(c[K_DESCENDANTS])
-          end
-          e[K_E_DOMAINS].merge(arrayConcepts)
-        end
-
-        # effective ranges
-        e[K_RANGES].each do |ca|
-          arrayConcepts = Set.new.compare_by_identity
-          ca.each do |c|
-            # we have a concept from an AND array
-            arrayConcepts.empty? && arrayConcepts.merge(c[K_DESCENDANTS])
-            arrayConcepts = arrayConcepts.intersection(c[K_DESCENDANTS])
-          end
-          e[K_E_RANGES].merge(arrayConcepts)
-        end
-      end
-    end
-  end
-
-  def self.notEffectiveElementConcepts(model)
-    hasThing = model[K_PACKAGES][V_PKG_DEFAULT][K_ELEMENTS][V_ELEMENT_HAS_THING]
-    hasThing[K_CHILDREN].each do |e|
-      notEffecitveElementConceptsRecursive(e)
-    end
-  end
-
-  def self.notEffecitveElementConceptsRecursive(element)
-    parent = element[K_PARENT]
-
-    oldConcepts = element[K_E_CONCEPTS]
-    element[K_E_CONCEPTS] = parent[K_E_CONCEPTS].intersection(element[K_E_CONCEPTS]).compare_by_identity
-    element[K_NE_CONCEPTS] = oldConcepts.difference(element[K_E_CONCEPTS]).compare_by_identity
-
-    oldConcepts = element[K_E_DOMAINS]
-    element[K_E_DOMAINS] = parent[K_E_DOMAINS].intersection(element[K_E_DOMAINS]).compare_by_identity
-    element[K_NE_DOMAINS] = oldConcepts.difference(element[K_E_DOMAINS]).compare_by_identity
-
-    oldConcepts = element[K_E_RANGES]
-    element[K_E_RANGES] = parent[K_E_RANGES].intersection(element[K_E_RANGES]).compare_by_identity
-    element[K_NE_RANGES] = oldConcepts.difference(element[K_E_RANGES]).compare_by_identity
-
-    element[K_CHILDREN].each do |e|
-      notEffecitveElementConceptsRecursive(e)
-    end
-  end
 end

@@ -3,6 +3,9 @@ language: ruby
 sudo: required
 
 before_install:
+    - sudo add-apt-repository universe
+    - sudo add-apt-repository multiverse
+    - sudo apt update
     - sudo apt install openjdk-11-jre nodejs
 
 script:

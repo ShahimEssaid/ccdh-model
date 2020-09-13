@@ -227,6 +227,9 @@ module CCDH
       self[K_OF_E_CONCEPTS] = {}
       self[K_OF_E_DOMAINS] = {}
       self[K_OF_E_RANGES] = {}
+
+      self[K_OF_S_CONCEPTS] = {}
+
     end
   end
 
@@ -265,9 +268,17 @@ module CCDH
       super(name, package, model, V_TYPE_STRUCTURE)
 
       self[K_CONCEPTS] = []
+      self[K_E_CONCEPTS] = Set.new().compare_by_identity
+      self
+
       self[K_MIXINS] = []
+      self[K_MIXIN_PATH] = []
+      self[K_MIXIN_OF] = []
 
       self[K_ATTRIBUTES] = {}
+
+      self[K_ELEMENTS] = {}
+      self[K_SUB_ELEMENTS] = {}
     end
 
     def r_get_attribute(name, create)

@@ -90,9 +90,15 @@ module CCDH
   K_NE_CONCEPTS = "_ne_concepts"
 
   K_MIXINS = "_mixins"
+  K_MIXIN_PATH = "_mixin_path"
+
+  K_MIXIN_OF = "_mixin_of"
   K_OF_E_CONCEPTS = "_of_e_concepts"
   K_OF_E_DOMAINS = "_of_e_domains"
   K_OF_E_RANGES = "_of_e_ranges"
+
+  K_OF_S_CONCEPTS = "_of_s_concepts"
+  K_SUB_ELEMENTS = "_sub_elements"
 
   F_MODEL_XLSX = "model.xlsx"
   F_MODEL_CSV = "model.csv"

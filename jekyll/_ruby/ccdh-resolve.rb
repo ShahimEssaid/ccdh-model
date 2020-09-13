@@ -347,69 +347,129 @@ module CCDH
 
   def self.r_resolve_structures(model_set)
     model_set[K_MODELS].each do |model_name, model|
+      model[K_PACKAGES].each do |package_name, package|
+        package[K_STRUCTURES].each do |structure_name, structure|
 
-    end
-  end
-
-
-  def self.resolveStructAndAttribConcepts(model)
-    model[K_PACKAGES].keys.each do |pn|
-      p = model[K_PACKAGES][pn]
-      p[K_STRUCTURES].keys.each do |en|
-        structure = p[K_STRUCTURES][en]
-
-        # concepts
-        concepts = structure[H_CONCEPTS]
-        concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
-          clist_array = []
-          clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-            pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = r_get_package_generate(pkg_name, "#{structure[VK_FQN]} has concept #{c}", model, structure)
-            clist_array << getConceptGenerated(concept_name, "#{structure[VK_FQN]} has concept #{c}", package, structure)
-          end
-          structure[K_CONCEPTS] << clist_array
-        end
-
-        # ranges
-        concepts = structure[H_RANGE_CONCEPTS]
-        concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
-          clist_array = []
-          clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-            pkg_name, typeName, concept_name = c.split(SEP_COLON)
-            package = r_get_package_generate(pkg_name, "#{structure[VK_FQN]} has concept #{c}", model, structure)
-            clist_array << getConceptGenerated(concept_name, "#{structure[VK_FQN]} has concept #{c}", package, structure)
-          end
-          structure[K_RANGES] << clist_array
-        end
-
-        structure[K_ATTRIBUTES].keys.each do |an|
-          attribute = structure[K_ATTRIBUTES][an]
-
-          # concepts
-          concepts = attribute[H_CONCEPTS]
-          concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
-            clist_array = []
-            clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-              pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = r_get_package_generate(pkg_name, "#{attribute[VK_FQN]} has concept #{c}", model, attribute)
-              clist_array << getConceptGenerated(concept_name, "#{attribute[VK_FQN]} has concept #{c}", package, attribute)
+          # structure concepts
+          structure[H_CONCEPTS].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |concept_group|
+            concepts = []
+            concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
+              concept = model[K_ENTITIES_VISIBLE][concept_name]
+              if concept
+                concepts.index(concept) || concepts << concept
+              else
+                r_build_entry("Concept #{concept_name} not resolved.", structure)
+              end
             end
-            attribute[K_CONCEPTS] << clist_array
+            concepts.empty? || structure[K_CONCEPTS] << concepts
           end
-          # ranges
-          concepts = attribute[H_RANGE_CONCEPTS]
-          concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
-            clist_array = []
-            clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-              pkg_name, typeName, concept_name = c.split(SEP_COLON)
-              package = r_get_package_generate(pkg_name, "#{attribute[VK_FQN]} has concept #{c}", model, attribute)
-              clist_array << getConceptGenerated(concept_name, "#{attribute[VK_FQN]} has concept #{c}", package, attribute)
+          # effective concepts (i.e. ancestors)
+          # all the concepts are ORed instead of AND/OR
+          structure[K_CONCEPTS].each do |concept_array|
+            concept_array.each do |concept|
+              structure[K_E_CONCEPTS].merge(concept[K_ANCESTORS])
             end
-            attribute[K_RANGES] << clist_array
           end
+
+          # inverse concept to structure concept, and elements
+          structure[K_E_CONCEPTS].each do |concept|
+            concept[K_OF_S_CONCEPTS][structure[VK_FQN]] = structure
+            concept[K_OF_E_DOMAINS].each do |element_name, element|
+              structure[K_ELEMENTS][element[VK_FQN]] = element
+            end
+          end
+
+          # effective sub concepts to find sub elements
+          effective_sub_concepts = Set.new().compare_by_identity
+          structure[K_CONCEPTS].each do |concept_array|
+            concept_array.each do |concept|
+              effective_sub_concepts.merge(concept[K_DESCENDANTS])
+            end
+          end
+          effective_sub_concepts = effective_sub_concepts.subtract(structure[K_E_CONCEPTS])
+          effective_sub_concepts.each do |sub_concept|
+            sub_concept[K_OF_E_DOMAINS].each do |element_name, element|
+              structure[K_SUB_ELEMENTS][element[VK_FQN]] = element
+            end
+          end
+
+          # structure mixins
+          structure[H_MIXINS].split(SEP_COMMA).collect(&:trim).reject(&:empty?).each do |mixin_name|
+            mixin = model[K_ENTITIES_VISIBLE][mixin_name]
+            if mixin
+              structure[K_MIXINS].index(mixin) || structure[K_MIXINS] << mixin
+              mixin[K_MIXIN_OF].index(structure) || mixin[K_MIXIN_OF] << structure
+            else
+              r_build_entry("Mixing #{mixin_name} not resolved.", structure)
+            end
+          end
+          TODO: HERE, add mixin path, mixin_of closure
+          #
+
         end
       end
     end
   end
+
+
+  # def self.resolveStructAndAttribConcepts(model)
+  #   model[K_PACKAGES].keys.each do |pn|
+  #     p = model[K_PACKAGES][pn]
+  #     p[K_STRUCTURES].keys.each do |en|
+  #       structure = p[K_STRUCTURES][en]
+  #
+  #       # concepts
+  #       concepts = structure[H_CONCEPTS]
+  #       concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
+  #         clist_array = []
+  #         clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
+  #           pkg_name, typeName, concept_name = c.split(SEP_COLON)
+  #           package = r_get_package_generate(pkg_name, "#{structure[VK_FQN]} has concept #{c}", model, structure)
+  #           clist_array << getConceptGenerated(concept_name, "#{structure[VK_FQN]} has concept #{c}", package, structure)
+  #         end
+  #         structure[K_CONCEPTS] << clist_array
+  #       end
+  #
+  #       # ranges
+  #       concepts = structure[H_RANGE_CONCEPTS]
+  #       concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
+  #         clist_array = []
+  #         clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
+  #           pkg_name, typeName, concept_name = c.split(SEP_COLON)
+  #           package = r_get_package_generate(pkg_name, "#{structure[VK_FQN]} has concept #{c}", model, structure)
+  #           clist_array << getConceptGenerated(concept_name, "#{structure[VK_FQN]} has concept #{c}", package, structure)
+  #         end
+  #         structure[K_RANGES] << clist_array
+  #       end
+  #
+  #       structure[K_ATTRIBUTES].keys.each do |an|
+  #         attribute = structure[K_ATTRIBUTES][an]
+  #
+  #         # concepts
+  #         concepts = attribute[H_CONCEPTS]
+  #         concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
+  #           clist_array = []
+  #           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
+  #             pkg_name, typeName, concept_name = c.split(SEP_COLON)
+  #             package = r_get_package_generate(pkg_name, "#{attribute[VK_FQN]} has concept #{c}", model, attribute)
+  #             clist_array << getConceptGenerated(concept_name, "#{attribute[VK_FQN]} has concept #{c}", package, attribute)
+  #           end
+  #           attribute[K_CONCEPTS] << clist_array
+  #         end
+  #         # ranges
+  #         concepts = attribute[H_RANGE_CONCEPTS]
+  #         concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
+  #           clist_array = []
+  #           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
+  #             pkg_name, typeName, concept_name = c.split(SEP_COLON)
+  #             package = r_get_package_generate(pkg_name, "#{attribute[VK_FQN]} has concept #{c}", model, attribute)
+  #             clist_array << getConceptGenerated(concept_name, "#{attribute[VK_FQN]} has concept #{c}", package, attribute)
+  #           end
+  #           attribute[K_RANGES] << clist_array
+  #         end
+  #       end
+  #     end
+  #   end
+  # end
 
 end

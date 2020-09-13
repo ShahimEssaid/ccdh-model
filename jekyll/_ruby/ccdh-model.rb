@@ -19,6 +19,18 @@ module CCDH
     end
 
     def r_get_missing_key(key)
+      nil
+    end
+
+  end
+
+  class PackagableModelElement < ModelElement
+    def initialize(name, package, model, type)
+      super(name, model, type)
+      self[K_PACKAGE] = package
+    end
+
+    def r_get_missing_key(key)
       case key
       when VK_FQN
         "#{self[K_MODEL][H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
@@ -29,13 +41,6 @@ module CCDH
       else
         nil
       end
-    end
-  end
-
-  class PackagableModelElement < ModelElement
-    def initialize(name, package, model, type)
-      super(name, model, type)
-      self[K_PACKAGE] = package
     end
   end
 
@@ -74,6 +79,17 @@ module CCDH
 
     def r_get_missing_key(key)
       nil
+    end
+
+    def r_get_model(name)
+      # only return/create models if the key was already set to indicate that the model name should be loaded.
+      self[K_MODELS].has_key?(name) || (return nil)
+      model = self[K_MODELS][name]
+      if model.nil?
+        model = Model.new(name, self)
+        self[K_MODELS][name] = model
+      end
+      model
     end
   end
 
@@ -141,6 +157,7 @@ module CCDH
       end
       entities
     end
+
   end
 
   class MPackage < ModelElement
@@ -177,6 +194,7 @@ module CCDH
       if structure.nil? && create
         structure = MStructure.new(name, self, self[K_MODEL])
         self[K_STRUCTURES][name] = structure
+        structure[K_MODEL][K_ENTITIES][structure[VK_ENTITY_NAME]] = structure
       end
       structure
     end
@@ -187,7 +205,7 @@ module CCDH
         structure = r_get_structure(structureName, true)
         structure[H_STATUS] = V_GENERATED
         structure[K_GENERATED_NOW] = true
-        structure[H_SUMMARY] = V_GENERATED
+        structure[H_SUMMARY] = "#{structure[VK_ENTITY_NAME]}, #{V_GENERATED}"
       end
       structure
     end
@@ -205,6 +223,10 @@ module CCDH
 
       self[K_ANCESTORS] = Set.new().compare_by_identity
       self[K_DESCENDANTS] = Set.new().compare_by_identity
+
+      self[K_OF_E_CONCEPTS] = {}
+      self[K_OF_E_DOMAINS] = {}
+      self[K_OF_E_RANGES] = {}
     end
   end
 
@@ -243,7 +265,7 @@ module CCDH
       super(name, package, model, V_TYPE_STRUCTURE)
 
       self[K_CONCEPTS] = []
-      self[K_RANGES] = []
+      self[K_MIXINS] = []
 
       self[K_ATTRIBUTES] = {}
     end
@@ -260,11 +282,11 @@ module CCDH
   class MSAttribute < ModelElement
     # attr_accessor :concept_refs, :val_concept_refs
     def initialize(name, structure, model)
-      super(model, V_TYPE_ATTRIBUTE)
+      super(name, model, V_TYPE_ATTRIBUTE)
 
       self[K_STRUCTURE] = structure
 
-      self[K_CONCEPTS] = []
+      self[K_CONCEPTS] = [] # 2d
       self[K_RANGES] = []
     end
 

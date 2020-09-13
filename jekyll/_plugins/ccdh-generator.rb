@@ -82,11 +82,11 @@ module CCDH
       #CCDH.generator = self
       @site = site
       model_set_root_dir = File.expand_path(File.join(site.source, "../model_sets/src"))
-      current_model_set = ModelSet.new("src", model_set_root_dir, V_MODEL_CURRENT, V_MODEL_DEFAULT)
-      current_model_set[K_MODELS][V_MODEL_CURRENT] = nil
-      current_model_set[K_MODELS][V_MODEL_DEFAULT] = nil
+      current_model_set = ModelSet.new("src", model_set_root_dir, V_CURRENT, V_DEFAULT)
+      current_model_set[K_MODELS][V_CURRENT] = nil
+      current_model_set[K_MODELS][V_DEFAULT] = nil
       current_model_set[K_SITE] = site
-      CCDH.model_sets[V_MODEL_CURRENT] = current_model_set
+      CCDH.model_sets[V_CURRENT] = current_model_set
 
       #CCDH.validate(model)
       #CCDH.resolve(CCDH.model_sets[V_MODEL_CURRENT])
@@ -99,7 +99,7 @@ module CCDH
       if ENV[ENV_GH_ACTIVE]
         CCDH.r_gh(model_sets)
       end
-      publisher = ModelPublisher.new(model_sets[V_MODEL_CURRENT], site, "_template", "modelset/current")
+      publisher = ModelPublisher.new(model_sets[V_CURRENT], site, "_template", "modelset/current")
       publisher.publishModel
       CCDH.r_write_modelset(current_model_set, File.expand_path(File.join(site.source, "../model_sets/src")))
       #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))

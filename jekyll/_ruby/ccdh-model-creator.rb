@@ -26,8 +26,8 @@ module CCDH
       # write empty file
       CSV.open(model_file, mode = "wb", {force_quotes: true}) do |csv|
         csv << V_MODEL_HEADERS
-        model_name == V_MODEL_DEFAULT &&csv << V_MODEL_DEFAULT_ROW
-        model_name == V_MODEL_CURRENT && csv << V_MODEL_CURRENT_ROW
+        model_name == V_DEFAULT &&csv << V_MODEL_DEFAULT_ROW
+        model_name == V_CURRENT && csv << V_MODEL_CURRENT_ROW
 
       end
     end
@@ -38,7 +38,7 @@ module CCDH
       # write empty file
       CSV.open(packages_file, mode = "wb", {force_quotes: true}) do |csv|
         csv << V_PACKAGE_HEADERS
-        model_name == V_MODEL_DEFAULT && csv << V_PACKAGE_DEFAULT_ROW
+        model_name == V_DEFAULT && csv << V_PACKAGE_DEFAULT_ROW
       end
     end
 
@@ -49,20 +49,22 @@ module CCDH
       # write empty file
       CSV.open(concepts_file, mode = "wb", {force_quotes: true}) do |csv|
         csv << V_CONCEPT_HEADERS
-        model_name == V_MODEL_DEFAULT && csv << V_CONCEPT_THING_ROW
+        model_name == V_DEFAULT && csv << V_CONCEPT_THING_ROW
       end
     end
 
+    # write elements file
     elements_file = File.join(dir, F_ELEMENTS_CSV)
     ## create new file if missing
     if !File.exist?(elements_file)
       # write empty file
       CSV.open(elements_file, mode = "wb", {force_quotes: true}) do |csv|
         csv << V_ELEMENT_HEADERS
-        model_name == V_MODEL_DEFAULT && csv << V_ELEMENT_HAS_THING_ROW
+        model_name == V_DEFAULT && csv << V_ELEMENT_HAS_THING_ROW
       end
     end
 
+    # write structures file
     structures_file = File.join(dir, F_STRUCTURES_CSV)
     ## create new file if missing
     if !File.exist?(structures_file)

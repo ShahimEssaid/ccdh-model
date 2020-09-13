@@ -20,10 +20,7 @@ module CCDH
     Dir.glob("*", base: model_set[K_MS_DIR]).each do |f|
       dir = File.join(model_set[K_MS_DIR], f)
       File.directory?(dir) || next
-      model_set[K_MODELS].has_key?(f) || next
-      model_set[K_MODELS][f] && next # this dir/name already has an object
-      model = Model.new(f, model_set)
-      model_set[K_MODELS][f] = model
+      model = model_set.r_get_model(f)
     end
 
 
@@ -304,13 +301,7 @@ module CCDH
 
     model_dir = model[K_MODEL_DIR]
     structures_file = File.join(model_dir, F_STRUCTURES_CSV)
-    ## create new file if missing
-    if !File.exist?(structures_file)
-      # write empty file
-      CSV.open(structures_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_CONCEPTS, H_RANGE_CONCEPTS, H_RANGE_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
-      end
-    end
+
     model[K_STRUCTURES_CSV] = CSV.read(structures_file, headers: true)
     # save existing headers to rewrite them same way
     model[K_STRUCTURES_CSV].headers.each do |h|
@@ -358,6 +349,10 @@ module CCDH
       row[H_RANGE_STRUCTURES] = r_check_entity_name_bar_list(structures, V_TYPE_STRUCTURE)
       row[H_RANGE_STRUCTURES] == structures || r_build_entry("#{H_RANGE_STRUCTURES}: #{structures} was updated to:#{row[H_RANGE_STRUCTURES]}", row)
 
+      # check mixins
+      mixins = row[H_MIXINS]
+      row[H_MIXINS] = r_check_entity_name_bar_list(mixins.gsub(/[#{SEP_BAR}]/, ""), V_TYPE_STRUCTURE)
+      row[H_MIXINS] == mixins || r_build_entry("#{H_RANGE_STRUCTURES}: #{structures} was updated to:#{row[H_RANGE_STRUCTURES]}", row)
 
       # we need a package for creating the entity
       package = model.r_get_package_generate(row[H_PACKAGE])
@@ -376,7 +371,7 @@ module CCDH
       else
         # this is an attribute row
         # there should only be one row
-        structure = r_get_structure_generated(row[H_NAME])
+        structure = package.r_get_structure_generated(row[H_NAME])
         attribute = structure.r_get_attribute(row[H_ATTRIBUTE_NAME], false)
         if !attribute.nil?
           r_build_entry("This entity was found again in later rows. The later one is skipped and not rewritten. It's values where:#{row.to_s}", entity)

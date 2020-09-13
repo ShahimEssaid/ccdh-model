@@ -89,6 +89,11 @@ module CCDH
   K_NE_DOMAINS = "_ne_domains"
   K_NE_CONCEPTS = "_ne_concepts"
 
+  K_MIXINS = "_mixins"
+  K_OF_E_CONCEPTS = "_of_e_concepts"
+  K_OF_E_DOMAINS = "_of_e_domains"
+  K_OF_E_RANGES = "_of_e_ranges"
+
   F_MODEL_XLSX = "model.xlsx"
   F_MODEL_CSV = "model.csv"
   F_PACKAGES_CSV = "packages.csv"
@@ -117,21 +122,21 @@ module CCDH
   V_TYPE_ELEMENT = "E"
   V_TYPE_STRUCTURE = "S"
   V_TYPE_ATTRIBUTE = "a"
-  V_MODEL_CURRENT = "current"
-  V_MODEL_DEFAULT = "default"
+  V_CURRENT = "current"
+  V_DEFAULT = "default"
 
   V_MODEL_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD]
-  V_MODEL_DEFAULT_ROW = [V_MODEL_DEFAULT, "Model #{V_MODEL_DEFAULT} summary.", "Model #{V_MODEL_DEFAULT} description.", "", "", V_STATUS_CURRENT, "", ""]
-  V_MODEL_CURRENT_ROW = [V_MODEL_CURRENT, "Model #{V_MODEL_CURRENT} summary.", "Model #{V_MODEL_CURRENT} description.", "", V_MODEL_DEFAULT, V_STATUS_CURRENT, "", ""]
+  V_MODEL_DEFAULT_ROW = [V_DEFAULT, "Model #{V_DEFAULT} summary.", "Model #{V_DEFAULT} description.", "", "", V_STATUS_CURRENT, "", ""]
+  V_MODEL_CURRENT_ROW = [V_CURRENT, "Model #{V_CURRENT} summary.", "Model #{V_CURRENT} description.", "", V_DEFAULT, V_STATUS_CURRENT, "", ""]
 
   V_PACKAGE_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_STATUS, H_NOTES, H_BUILD]
   V_PACKAGE_DEFAULT_ROW = [V_PKG_DEFAULT, "Package #{V_PKG_DEFAULT} summary.", "Package #{V_PKG_DEFAULT} description.", "", V_STATUS_CURRENT, "", ""]
 
   V_CONCEPT_HEADERS = [H_PACKAGE, H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_PARENTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
-  V_CONCEPT_THING_ROW = ['default', V_CONCEPT_THING, 'Thing summary.', 'Thing description.', '', '', '', 'current', '', '']
+  V_CONCEPT_THING_ROW = ['default', V_CONCEPT_THING, 'Thing summary.', 'Thing description.', '', '', '', V_CURRENT, '', '']
 
   V_ELEMENT_HEADERS = [H_PACKAGE, H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_PARENT, H_CONCEPTS, H_DOMAIN_CONCEPTS, H_RANGE_CONCEPTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
-  V_ELEMENT_HAS_THING_ROW = ['default', V_ELEMENT_HAS_THING, "#{V_ELEMENT_HAS_THING} summary", "#{V_ELEMENT_HAS_THING} description", '', '', '', '', '', '', 'current', '', '']
+  V_ELEMENT_HAS_THING_ROW = ['default', V_ELEMENT_HAS_THING, "#{V_ELEMENT_HAS_THING} summary", "#{V_ELEMENT_HAS_THING} description", '', '', V_DEFAULT_C_THING, V_DEFAULT_C_THING, V_DEFAULT_C_THING, '', V_CURRENT, '', '']
 
   V_STRUCTURE_HEADERS = [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_CONCEPTS, H_RANGE_CONCEPTS, H_RANGE_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
   V_GH_LABEL_COLOR = "fef2c0"

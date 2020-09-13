@@ -1,3 +1,0 @@
-"package","name","summary","description","parents","related","status","notes","build"
-"Test","Lab","Lab summary","","","","","","parents: was changed from wrong to:"
-"Test","Specimen","Specimen summary","Specimen description","default:C:Thing","default:C:Thing, default:c:Thing","","","Related ref default:c:Thing was not resolvable."

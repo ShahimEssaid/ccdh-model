@@ -131,7 +131,7 @@ module CCDH
       package[K_CONCEPTS].each do |concept_name, concept|
         parents = concept[H_PARENTS]
         parents.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |parentRef|
-          resolution = model.dig(K_MODELSET, K_ENTITIES_VISIBLE, parentRef, model)
+          resolution = model.dig(K_MS, K_ENTITIES_VISIBLE, parentRef, model)
           resolution.nil? || parent = resolution[0]
           if parent
             concept[K_PARENTS][parentRef] = parent
@@ -148,7 +148,7 @@ module CCDH
       package[K_CONCEPTS].each do |concept_name, concept|
         related_value = concept[H_RELATED]
         related_value.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |relatedRef|
-          resolution = model.dig(K_MODELSET, K_ENTITIES_VISIBLE, relatedRef, model)
+          resolution = model.dig(K_MS, K_ENTITIES_VISIBLE, relatedRef, model)
           resolution.nil? || related = resolution[0]
           if related
             concept[K_RELATED][relatedRef] = related
@@ -162,7 +162,7 @@ module CCDH
 
   def self.r_parentless_concepts_to_thing(model)
 
-    thing = model.dig(K_MODELSET, K_ENTITIES_VISIBLE, V_DEFAULT_C_THING, model)[0]
+    thing = model.dig(K_MS, K_ENTITIES_VISIBLE, V_DEFAULT_C_THING, model)[0]
     model[K_PACKAGES].each do |pk, p|
       p[K_CONCEPTS].each do |ck, c|
         c == thing && next

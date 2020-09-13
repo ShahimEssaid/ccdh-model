@@ -11,11 +11,11 @@ module CCDH
   def self.r_create_model_files_if_needed(model_set, model_name)
 
     # crate model diretory if needed
-    dir = File.join(model_set[K_MODELSET_DIR], model_name)
+    dir = File.join(model_set[K_MS_DIR], model_name)
     !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
 
     # copy excel file template if needed
-    excel_file = File.join(model_set[K_MODELSET_DIR], "#{model_name}.xlsx")
+    excel_file = File.join(model_set[K_MS_DIR], "#{model_name}.xlsx")
     if !File.exist?excel_file
       FileUtils.copy_file(File.join(model_set[K_SITE].source, "_template", F_MODEL_XLSX), excel_file)
     end
@@ -26,7 +26,9 @@ module CCDH
       # write empty file
       CSV.open(model_file, mode = "wb", {force_quotes: true}) do |csv|
         csv << V_MODEL_HEADERS
-        csv << [model_name, "#{model_name} summary", "#{model_name} description", "", V_GENERATED, "", ""]
+        model_name == V_MODEL_DEFAULT &&csv << V_MODEL_DEFAULT_ROW
+        model_name == V_MODEL_CURRENT && csv << V_MODEL_CURRENT_ROW
+
       end
     end
 
@@ -36,6 +38,7 @@ module CCDH
       # write empty file
       CSV.open(packages_file, mode = "wb", {force_quotes: true}) do |csv|
         csv << V_PACKAGE_HEADERS
+        model_name == V_MODEL_DEFAULT && csv << V_PACKAGE_DEFAULT_ROW
       end
     end
 

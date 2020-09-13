@@ -7,23 +7,15 @@ module CCDH
 
 
   class ModelElement < Hash
-    def initialize(model, type)
+    def initialize(name, model, type)
+      self[H_NAME] = name
       self[K_TYPE] = type
       self[K_MODEL] = model
       self[K_NIL] = []
       self[K_GENERATED_NOW] = false
-    end
-
-  end
-
-  class PackagableModelElement < ModelElement
-    def initialize(package, model, type)
-      super(model, type)
-      self[K_PACKAGE] = package
       self.default_proc = proc do |hash, key|
         hash.r_get_missing_key(key)
       end
-
     end
 
     def r_get_missing_key(key)
@@ -33,12 +25,18 @@ module CCDH
       when VK_ENTITY_NAME
         "#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
       when VK_GH_LABEL_NAME
-        "#{self[H_NAME]}#{SEP_COLON}#{self[K_TYPE].downcase}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}"
+        "#{self[H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}"
       else
         nil
       end
     end
+  end
 
+  class PackagableModelElement < ModelElement
+    def initialize(name, package, model, type)
+      super(name, model, type)
+      self[K_PACKAGE] = package
+    end
   end
 
   class ModelSet < Hash
@@ -59,14 +57,11 @@ module CCDH
       end
 
       self[H_NAME] = name
-      self[K_MODELSET_DIR] = model_set_dir
+      self[K_MS_DIR] = model_set_dir
 
-      self[K_MODELSET_TOP] = top_model_name
-      self[K_MODELSET_DEFAULT] = default_model_name
+      self[K_MS_TOP] = top_model_name
+      self[K_MS_DEFAULT] = default_model_name
       self[K_MODELS] = {}
-
-      self[K_MS_GH_LABELS] = {}
-      self[K_MS_GH_ISSUES] = {}
 
       # this is a model set wide resolution of entity name to instance, per model
       # it's a hash of entity name to a hash. the hash has a model as a key and and array as the
@@ -84,29 +79,27 @@ module CCDH
       # aggregated view over the models
       # self[K_PACKAGES] = {}
     end
+
+    def r_get_missing_key(key)
+      nil
+    end
   end
 
   class Model < ModelElement
     def initialize(name, model_set)
-      super(self, V_TYPE_MODEL)
-      self[H_NAME] = name
+      super(name, self, V_TYPE_MODEL)
       # we need this to avoid errors on new model.xlsx/csv files  TODO: necessary?
-      self[H_DEPENDS_ON] = ""
-
-      self[K_MODELSET] = model_set
-      self[K_MODEL_DIR] = File.join(model_set[K_MODELSET_DIR], name)
-
+      #self[H_DEPENDS_ON] = ""
+      self[K_MS] = model_set
+      self[K_MODEL_DIR] = File.join(model_set[K_MS_DIR], name)
       self[K_DEPENDS_ON] = []
       self[K_DEPENDED_ON] = []
       self[K_DEPENDS_ON_PATH] = []
-
       self[K_PACKAGES] = {}
-
       # this is a model wide map of entity instances for this model for reference lookup
       # by entity name. See the model set maps for "resolution" of entity names per model, and
       # model set wide.
       self[K_MODEL_ENTITIES] = {}
-
       self[K_MODEL_HEADERS] = []
       self[K_PACKAGES_HEADERS] = []
       self[K_CONCEPTS_HEADERS] = []
@@ -144,7 +137,7 @@ module CCDH
         models << model
       end
 
-      self[K_MODELSET][K_MODELS].each do |model|
+      self[K_MS][K_MODELS].each do |model|
         unless models.index(model)
           # a model not on path
           entity = model[K_MODEL_ENTITIES][entity_name]
@@ -157,18 +150,10 @@ module CCDH
 
   class MPackage < ModelElement
     def initialize(name, model)
-      super(model, V_TYPE_PACKAGE)
-      self[H_NAME] = name
-
-      self[K_DEPENDS_ON] = {}
-      self[K_DEPENDED_ON] = {}
-
+      super(name, model, V_TYPE_PACKAGE)
       self[K_CONCEPTS] = {}
       self[K_STRUCTURES] = {}
       self[K_ELEMENTS] = {}
-
-      self[K_ANCESTORS] = Set.new().compare_by_identity
-      self[K_DESCENDANTS] = Set.new().compare_by_identity
     end
 
     def r_get_concept(name, create)
@@ -216,8 +201,7 @@ module CCDH
 
   class MConcept < PackagableModelElement
     def initialize(name, package, model)
-      super(package, model, V_TYPE_CONCEPT)
-      self[H_NAME] = name
+      super(name, package, model, V_TYPE_CONCEPT)
 
       # ConceptRef
       self[K_PARENTS] = {}
@@ -232,14 +216,12 @@ module CCDH
   class MElement < PackagableModelElement
 
     def initialize(name, package, model)
-      super(package, model, V_TYPE_ELEMENT)
-      self[H_NAME] = name
-
+      super(name, package, model, V_TYPE_ELEMENT)
 
       self[K_PARENT] = nil
       self[K_CHILDREN] = {}
 
-      self[K_CONCEPTS] = [] # two dimensional
+      self[K_CONCEPTS] = [] # two dimensional. [OR][AND]
       self[K_E_CONCEPTS] = Set.new().compare_by_identity
       self[K_NE_CONCEPTS] = Set.new().compare_by_identity
 
@@ -260,8 +242,7 @@ module CCDH
     #               :concept_refs #, :val_concept_refs
 
     def initialize(name, package, model)
-      super(package, model, V_TYPE_STRUCTURE)
-      self[H_NAME] = name
+      super(name, package, model, V_TYPE_STRUCTURE)
 
       self[K_CONCEPTS] = []
       self[K_RANGES] = []
@@ -282,7 +263,6 @@ module CCDH
     # attr_accessor :concept_refs, :val_concept_refs
     def initialize(name, structure, model)
       super(model, V_TYPE_ATTRIBUTE)
-      self[H_NAME] = name
 
       self[K_STRUCTURE] = structure
 

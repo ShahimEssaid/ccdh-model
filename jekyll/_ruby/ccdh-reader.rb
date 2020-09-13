@@ -11,14 +11,14 @@ module CCDH
     r_create_model_objects(model_set)
     r_read_model_file(model_set)
     r_resolve_models(model_set)
-    r_link_models(model_set[K_MODELS][model_set[K_MODELSET_TOP]], [], model_set)
+    r_link_models(model_set[K_MODELS][model_set[K_MS_TOP]], [], model_set)
     r_read_model_set_csvs(model_set)
   end
 
 
   def self.r_create_model_objects(model_set)
-    Dir.glob("*", base: model_set[K_MODELSET_DIR]).each do |f|
-      dir = File.join(model_set[K_MODELSET_DIR], f)
+    Dir.glob("*", base: model_set[K_MS_DIR]).each do |f|
+      dir = File.join(model_set[K_MS_DIR], f)
       File.directory?(dir) || next
       model_set[K_MODELS].has_key?(f) || next
       model_set[K_MODELS][f] && next # this dir/name already has an object
@@ -69,9 +69,9 @@ module CCDH
         depModel.nil? && raise("Couldn't find model #{depName} as a dependency for model #{name}")
       end
       # if there is a default model
-      if model_set[K_MODELSET_DEFAULT]
-        default_model = model_set[K_MODELS][model_set[K_MODELSET_DEFAULT]]
-        default_model.nil? && raise("Couldn't find default model #{model_set[K_MODELSET_DEFAULT]}")
+      if model_set[K_MS_DEFAULT]
+        default_model = model_set[K_MODELS][model_set[K_MS_DEFAULT]]
+        default_model.nil? && raise("Couldn't find default model #{model_set[K_MS_DEFAULT]}")
         # the default model should be first in the search path to not allow overrides
         #if model != default_model
         model[K_DEPENDS_ON_PATH].index(default_model) || model[K_DEPENDS_ON_PATH] << default_model
@@ -109,7 +109,7 @@ module CCDH
       end
 
       if model[K_DEPENDS_ON].empty?
-        default = model_set[K_MODELS][model_set[K_MODELSET_DEFAULT]]
+        default = model_set[K_MODELS][model_set[K_MS_DEFAULT]]
         if default
           model[K_DEPENDS_ON] << default
           default[K_DEPENDED_ON] << model
@@ -129,7 +129,7 @@ module CCDH
     model[K_PACKAGES_CSV] && return # read already
     # load all dependencies first
     model[K_DEPENDS_ON].each do |m|
-      r_read_entity_csvs(m)
+      m != model && r_read_entity_csvs(m)
     end
     r_read_model_csvs(model)
   end
@@ -308,7 +308,7 @@ module CCDH
     if !File.exist?(structures_file)
       # write empty file
       CSV.open(structures_file, mode = "wb", {force_quotes: true}) do |csv|
-        csv << [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESC, H_CONCEPTS, H_RANGES, H_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
+        csv << [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_CONCEPTS, H_RANGES, H_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
       end
     end
     model[K_STRUCTURES_CSV] = CSV.read(structures_file, headers: true)

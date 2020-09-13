@@ -1,2 +1,2 @@
-"name","summary","description","depends_on","status","notes","build"
-"default","default summary","default description","","generated","",""
+"name","summary","description","gh_issue","depends_on","status","notes","build"
+"default","Model default summary.","Model default description.","","","","",""

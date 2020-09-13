@@ -7,15 +7,15 @@ require 'octokit'
 # ruby_files = File.expand_path(File.join(__dir__, "../_ruby"))
 # puts ruby_files
 # Dir.glob(ruby_files + "/ccdh-*.rb", &method(:puts))
-require_relative "../_ruby/ccdh-model"
+require_relative "../_ruby/ccdh-constants"
 require_relative "../_ruby/ccdh-util"
+require_relative "../_ruby/ccdh-model"
 require_relative "../_ruby/ccdh-writer"
 require_relative "../_ruby/ccdh-reader"
 require_relative "../_ruby/ccdh-resolve"
 require_relative "../_ruby/ccdh-publisher"
 require_relative "../_ruby/ccdh-model-creator"
 require_relative "../_ruby/ccdh-gh"
-
 
 class CSV
   class Table
@@ -34,16 +34,32 @@ end
 
 module CCDH
 
-  Octokit.configure do |c|
-    c.auto_paginate = true
-  end
+  if ENV[ENV_GH_ACTIVE]
+    Octokit.configure do |c|
+      c.auto_paginate = true
+    end
 
-  Octokit.default_media_type = "application/vnd.github.v3+json,application/vnd.github.symmetra-preview+json"
-  @gh = Octokit::Client.new(:access_token => ENV[ENV_GH_TOKEN])
-  @gh.user.login
+    stack = Faraday::RackBuilder.new do |builder|
+      builder.use Faraday::Request::Retry, exceptions: [Octokit::ServerError]
+      builder.use Octokit::Middleware::FollowRedirects
+      builder.use Octokit::Response::RaiseError
+      builder.use Octokit::Response::FeedParser
+      builder.response :logger
+      builder.adapter Faraday.default_adapter
+    end
+    Octokit.middleware = stack
+    Octokit.default_media_type = "application/vnd.github.v3+json,application/vnd.github.symmetra-preview+json"
+    @gh = Octokit::Client.new(:access_token => ENV[ENV_GH_TOKEN])
+    @gh.user.login
 
-  def self.ghclient
-    @gh
+    if ENV[ENV_GH_USER] && ENV[ENV_GH_REPO]
+      GH_USR_REPO = "#{ENV[ENV_GH_USER]}/#{ENV[ENV_GH_REPO]}"
+    end
+
+    def self.ghclient
+      @gh
+    end
+
   end
 
   class JGenerator < Jekyll::Generator
@@ -80,8 +96,9 @@ module CCDH
       CCDH.r_read_model_sets(model_sets)
       CCDH.r_resolve_model_sets(model_sets)
       site.data["_mss"] = model_sets
-      CCDH.r_gh(model_sets)
-
+      if ENV[ENV_GH_ACTIVE]
+        CCDH.r_gh(model_sets)
+      end
       publisher = ModelPublisher.new(model_sets[V_MODEL_CURRENT], site, "_template", "modelset/current")
       publisher.publishModel
       CCDH.r_write_modelset(current_model_set, File.expand_path(File.join(site.source, "../model_sets/src")))

@@ -1,9 +1,9 @@
-dist: bionic
+dist: focal
 language: ruby
 sudo: required
 
 before_install:
-    - echo ============= before intall =================
+    - sudo apt install openjdk-11-jre nodejs
 
 script:
     - bin/travis.sh

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+#set -x
 set -e
 set -u
 set -o pipefail
@@ -15,25 +15,18 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 GIT_ROOT="$(dirname "$DIR")"
-GIT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-${TRAVIS_BRANCH}}
-GIT_REPO="/ShahimEssaid/ccdh-model.git"
-# reset origin to default to work around Travis'
-git remote remove origin
-git remote add origin https://github.com${GIT_REPO}
-git fetch --all --tags
 
+cd "${GIT_ROOT}"
 
-# first make sure we clean any previous published pages in case
-# this build fails early
-git worktree add -b gh-pages ${GIT_ROOT}/../stage-gh-pages origin/gh-pages
-rm -rf "${GIT_ROOT}/../stage-gh-pages/$GIT_BRANCH" || true 
-cd ${GIT_ROOT}/../stage-gh-pages
-git reset gh-pages-start
-git add -A &> /dev/null
-git commit -m "Preparing build of $GIT_BRANCH" || true
-git push -f --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" gh-pages || true
+BASE_URL="${BASE_URL:-}"
 
-cd ${GIT_ROOT}/jekyll
-bundle exec jekyll b --baseurl "ccdh-model/${GIT_BRANCH}"
+bundle exec jekyll b --trace --baseurl "${BASE_URL}" -s jekyll -d jekyll/_site --config jekyll/_config.yml
+
+echo =====================  RUNNING PREFFIFY  ========================
+for html_file_path in $(find jekyll/_site -name '*.html' | sort); do
+    echo -n "${html_file_path} ..."
+    bin/prettify_html.js "${html_file_path}"
+    echo " Done"
+done
 
 echo ================= FINISHED BUILDING =========================

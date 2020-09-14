@@ -15,10 +15,6 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 GIT_ROOT="$(dirname "$DIR")"
-GIT_REPO="/ShahimEssaid/ccdh-model.git"
-
-# find git branch for the original commit
-GIT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-${TRAVIS_BRANCH}}
 
 BRANCHES=($(git for-each-ref --format="%(refname)"))
 

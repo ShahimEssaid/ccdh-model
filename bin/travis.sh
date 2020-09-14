@@ -18,6 +18,13 @@ GIT_ROOT="$(dirname "$DIR")"
 
 cd $GIT_ROOT
 
+# find git branch for the original commit
+export GIT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-${TRAVIS_BRANCH}}
+export GIT_REPO="/ShahimEssaid/ccdh-model.git"
+export BASE_URL="ccdh-model/${GIT_BRANCH}"
+
+
+bin/travis-pre-build.sh
 bin/install_dependencies.sh
 bin/build-pages.sh
 bin/publish-pages.sh

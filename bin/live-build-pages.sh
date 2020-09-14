@@ -14,13 +14,19 @@ while [ -h "$SOURCE" ]; do
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-cd $DIR
+GIT_ROOT="$(dirname "$DIR")"
 
-[[ -f ".env" ]] && . .env
-bundle exec jekyll b --trace -s jekyll -d jekyll/_site --config jekyll/_config.yml
+cd "${GIT_ROOT}"
 
+BASE_URL="${BASE_URL:-}"
+
+bundle exec jekyll s -l -o --trace --disable-disk-cache --baseurl "${BASE_URL}" -s jekyll -d jekyll/_site --config jekyll/_config.yml
+
+echo =====================  RUNNING PREFFIFY  ========================
 for html_file_path in $(find jekyll/_site -name '*.html' | sort); do
     echo -n "${html_file_path} ..."
     bin/prettify_html.js "${html_file_path}"
     echo " Done"
 done
+
+echo ================= FINISHED BUILDING =========================

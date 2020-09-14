@@ -9,3 +9,21 @@ generated: true
 {% raw %}
 Model element:
 {% endraw %}
+
+
+---
+layout: page
+# There is "page.e" data that holds the concept's data as defined by the model
+# to be used in this page.
+title: {{name}}
+parent: Concepts
+nav_exclude: true
+generated: true
+---
+
+<h1>Hello world {{ name }}</h1>
+{% raw %}
+Model concept: {{ page.concept.name }}
+{% endraw %}
+
+TYPE C

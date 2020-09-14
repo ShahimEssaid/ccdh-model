@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Concepts
+title: Elements
 has_children: true
 ---
 
-These are the concepts
+These are the elements

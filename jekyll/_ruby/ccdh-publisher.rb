@@ -41,42 +41,7 @@ module CCDH
         end
       end
 
-      # @model_set.concepts.each do |name, concept|
-      #   relativeDir = @page_dir + "/concept"
-      #   path = File.join(@site.source, relativeDir, name + ".html")
-      #   if File.exist? (path)
-      #     page = getPage(@site.source, relativeDir, name)
-      #   else
-      #     page = JekyllPage.new(@site, @page_dir + "/concept", name + ".html", concept.data)
-      #     @site.pages << page
-      #   end
-      #   page.data["mc"] = concept.data
-      # end
-      #
-      # @model.groups.each do |name, group|
-      #   relativeDir = @page_dir + "/group"
-      #   path = File.join(@site.source, relativeDir, name + ".html")
-      #   if File.exist? (path)
-      #     page = getPage(@site.source, relativeDir, name)
-      #   else
-      #     page = JekyllPage.new(@site, @page_dir + "/group", name + ".html", group.data)
-      #     @site.pages << page
-      #   end
-      #   page.data["mg"] = group.data
-      # end
-      #
-      # @model.structures.each do |name, structure|
-      #   relativeDir = @page_dir + "/structure"
-      #   path = File.join(@site.source, relativeDir, name + ".html")
-      #   if File.exist? (path)
-      #     page = getPage(@site.source, relativeDir, name)
-      #   else
-      #     page = JekyllPage.new(@site, @page_dir + "/structure", name + ".html", structure.data)
-      #     @site.pages << page
-      #   end
-      #   page.data["ms"] = structure.data
-      # end
-    end
+   end
 
     def getPage(base, dir, basename)
       page = nil

@@ -18,6 +18,10 @@ GIT_ROOT="$(dirname "$DIR")"
 
 cd ${GIT_ROOT}
 
+git status
+git branch
+cat .git/config
+
 git add -A &>/dev/null
 git commit -m "Travis build of $GIT_BRANCH"
 git push --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" $GIT_BRANCH

@@ -5,14 +5,10 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.poi.EmptyFileException;
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 
 import javax.swing.*;
 import java.io.*;
@@ -42,6 +38,10 @@ public class ToExcel extends Converter {
         }
 
 
+        XSSFCellStyle defaultStyle = wb.createCellStyle();
+        defaultStyle.setWrapText(true);
+        defaultStyle.setDataFormat(BuiltinFormats.getBuiltinFormat("text"));
+
 
         int order = 0;
         for (String name : SHEET_NAMES) {
@@ -53,7 +53,7 @@ public class ToExcel extends Converter {
                 }
                 Sheet sheet = wb.createSheet(name);
                 wb.setSheetOrder(name, order);
-                writeSheet(wb, sheet, csvFile);
+                writeSheet(wb, sheet, csvFile, defaultStyle);
                 ++order;
             }
 
@@ -63,26 +63,35 @@ public class ToExcel extends Converter {
 
     }
 
-    private void writeSheet(XSSFWorkbook wb, Sheet sheet, File csvFile) throws IOException {
+    private void writeSheet(XSSFWorkbook wb, Sheet sheet, File csvFile, XSSFCellStyle defaultStyle) throws IOException {
+        XSSFCreationHelper creationHelper = wb.getCreationHelper();
 
         int maxCellIndex = 0;
         CSVParser csvParser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withQuoteMode(QuoteMode.ALL));
         List<CSVRecord> csvRecords = csvParser.getRecords();
+        int cols = 0;
+        for (CSVRecord record : csvRecords) {
+            if (record.size() > cols) cols = record.size();
+        }
+
+        for (int i = 0; i < cols; ++i) {
+            sheet.setDefaultColumnStyle(i, defaultStyle);
+        }
+
         int row = 0;
         for (CSVRecord csvRecord : csvRecords) {
             Iterator<String> csvRecordIterator = csvRecord.iterator();
             Row sheetRow = sheet.createRow(row);
-            XSSFCellStyle cellStyle = wb.createCellStyle();
-            cellStyle.setWrapText(true);
-            sheetRow.setRowStyle(cellStyle);
             int cellIndex = 0;
             while (csvRecordIterator.hasNext()) {
                 String val = csvRecordIterator.next();
-                XSSFCellStyle sytle = wb.createCellStyle();
-                sytle.setWrapText(true);
                 Cell cell = sheetRow.createCell(cellIndex++, CellType.STRING);
-                cell.setCellStyle(sytle);
                 cell.setCellValue(val);
+                if (val.startsWith("http")) {
+                    XSSFHyperlink hyperlink = creationHelper.createHyperlink(HyperlinkType.URL);
+                    hyperlink.setAddress(val);
+                    cell.setHyperlink(hyperlink);
+                }
             }
             if (cellIndex > maxCellIndex) maxCellIndex = cellIndex;
             row++;

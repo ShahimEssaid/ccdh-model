@@ -96,7 +96,7 @@ module CCDH
       CCDH.r_read_model_sets(model_sets)
       CCDH.r_resolve_model_sets(model_sets)
       site.data["_mss"] = model_sets
-      if ENV[ENV_GH_ACTIVE]
+      if ENV[ENV_GH_ACTIVE] == "true"
         CCDH.r_gh(model_sets)
       end
       publisher = ModelPublisher.new(model_sets[V_CURRENT], site, "_template", "modelset/current")

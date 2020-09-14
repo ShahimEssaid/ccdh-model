@@ -8,6 +8,11 @@ module CCDH
     if name.empty?
       name = "#{entity_type}_#{rand(1000000..9999999)}"
     end
+
+    # starts with alphabet except for V_SELF
+    if name != V_SELF
+      name =~ /^[a-zA-Z]/ || (name = entity_type + name)
+    end
     name
   end
 

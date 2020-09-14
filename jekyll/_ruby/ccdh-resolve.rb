@@ -119,12 +119,14 @@ module CCDH
         package[K_ELEMENTS].each do |element_name, element|
 
           # parent
-          parent = model[K_ENTITIES_VISIBLE][element[H_PARENT]]
-          if parent
-            element[K_PARENT] = parent
-            parent[K_CHILDREN][element[VK_FQN]] = element
-          else
-            r_build_entry("Parent ref #{element[H_PARENT]} was not resolvable.", element)
+          if !element[H_PARENT].empty?
+            parent = model[K_ENTITIES_VISIBLE][element[H_PARENT]]
+            if parent
+              element[K_PARENT] = parent
+              parent[K_CHILDREN][element[VK_FQN]] = element
+            else
+              r_build_entry("Parent ref #{element[H_PARENT]} was not resolvable.", element)
+            end
           end
 
           # related
@@ -139,9 +141,9 @@ module CCDH
           end
 
           # concepts
-          element[H_CONCEPTS].split(SEP_BAR).collect(&:trim).reject(&:empty?).each do |concept_group|
+          element[H_CONCEPTS].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |concept_group|
             concepts = []
-            concept_group.split(SEP_COMMA).collect(&:trim).reject(&:empty?).each do |concept_name|
+            concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]
               if concept
                 if !concepts.index(concepts)
@@ -157,9 +159,9 @@ module CCDH
           end
 
           # domains
-          element[H_DOMAIN_CONCEPTS].split(SEP_BAR).collect(&:trim).reject(&:empty?).each do |concept_group|
+          element[H_DOMAIN_CONCEPTS].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |concept_group|
             concepts = []
-            concept_group.split(SEP_COMMA).collect(&:trim).reject(&:empty?).each do |concept_name|
+            concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]
               if concept
                 if !concepts.index(concepts)
@@ -175,9 +177,9 @@ module CCDH
           end
 
           # ranges
-          element[H_RANGE_CONCEPTS].split(SEP_BAR).collect(&:trim).reject(&:empty?).each do |concept_group|
+          element[H_RANGE_CONCEPTS].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |concept_group|
             concepts = []
-            concept_group.split(SEP_COMMA).collect(&:trim).reject(&:empty?).each do |concept_name|
+            concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]
               if concept
                 if !concepts.index(concepts)
@@ -394,7 +396,7 @@ module CCDH
           end
 
           # structure mixins
-          structure[H_MIXINS].split(SEP_COMMA).collect(&:trim).reject(&:empty?).each do |mixin_name|
+          structure[H_MIXINS].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |mixin_name|
             mixin = model[K_ENTITIES_VISIBLE][mixin_name]
             if mixin
               structure[K_MIXINS].index(mixin) || structure[K_MIXINS] << mixin
@@ -403,7 +405,7 @@ module CCDH
               r_build_entry("Mixing #{mixin_name} not resolved.", structure)
             end
           end
-          TODO: HERE, add mixin path, mixin_of closure
+          #TODO: HERE, add mixin path, mixin_of closure
           #
 
         end

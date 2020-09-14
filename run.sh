@@ -16,7 +16,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $DIR
 
-. .env
+[[ -f ".env" ]] && . .env
 bundle exec jekyll b --trace -s jekyll -d jekyll/_site --config jekyll/_config.yml
 
 for html_file_path in $(find jekyll/_site -name '*.html' | sort); do

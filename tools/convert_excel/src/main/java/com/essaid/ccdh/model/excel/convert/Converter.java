@@ -13,7 +13,19 @@ import java.nio.file.Paths;
 
 public abstract class Converter {
 
-    static final String[] SHEET_NAMES = {"model", "packages", "concepts", "elements", "structures"};
+    static final String MODEL_SHEET = "model";
+    static final String PACKAGES_SHEET = "packages";
+    static final String CONCEPTS_SHEET = "concepts";
+    static final String ELEMENTS_SHEET = "elements";
+    static final String STRUCTURES_SHEET = "structures";
+    static final String V_SELF = "_self_";
+
+    static final String H_PACKAGE = "package";
+    static final String H_NAME = "name";
+    static final String H_ATTRIBUTE = "attribute";
+
+
+    static final String[] SHEET_NAMES = {MODEL_SHEET, PACKAGES_SHEET, CONCEPTS_SHEET, ELEMENTS_SHEET, STRUCTURES_SHEET};
     final File excelFile;
     final Path csvDirPath;
     String fileSimpleName;
@@ -33,22 +45,22 @@ public abstract class Converter {
 
     abstract void convert() throws IOException, InvalidFormatException;
 
-    protected int[] getSheetSize(Sheet sheet) {
+    protected int[] getXYSheetSize(Sheet sheet) {
         int[] size = {0, 0};
         int lastRowNum = sheet.getLastRowNum();
 
-        for (int x = 0; x <= lastRowNum; ++x) {
-            Row row = sheet.getRow(x);
+        for (int y = 0; y <= lastRowNum; ++y) {
+            Row row = sheet.getRow(y);
             if (row == null) continue;
             boolean keep = false;
             int lastCellNum = row.getLastCellNum();
-            for (int y = 0; y < lastCellNum; ++y) {
-                Cell cell = row.getCell(y);
+            for (int x = 0; x < lastCellNum; ++x) {
+                Cell cell = row.getCell(x);
                 if (cell == null) continue;
                 String rawValue = cell.getStringCellValue().strip();
                 if (rawValue != null && !rawValue.isEmpty()) {
-                    size[0] = x;
-                    if (size[1] < y) size[1] = y;
+                    size[1] = y;
+                    if (size[0] < x) size[0] = x;
                 }
                 CellType type = cell.getCellType();
                 switch (type) {

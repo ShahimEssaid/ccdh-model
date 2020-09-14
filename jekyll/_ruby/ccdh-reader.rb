@@ -327,6 +327,11 @@ module CCDH
       #check attribute name
       name = row[H_ATTRIBUTE_NAME]
       row[H_ATTRIBUTE_NAME] = r_check_simple_name(name, V_TYPE_ATTRIBUTE)
+      # first letter has to be lower case, to force ascii sort order after V_SELF, and it makes sense for attributes
+      # needed for sorting from Excel sheets
+      if row[H_ATTRIBUTE_NAME] != V_SELF
+        row[H_ATTRIBUTE_NAME][0] = row[H_ATTRIBUTE_NAME][0].downcase
+      end
       row[H_ATTRIBUTE_NAME] == name || r_build_entry("#{H_ATTRIBUTE_NAME}: #{name} was updated to:#{row[H_ATTRIBUTE_NAME]}", row)
 
       #check element name

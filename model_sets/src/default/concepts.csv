@@ -1,2 +1,3 @@
 "package","name","summary","description","gh_issue","parents","related","status","notes","build"
+"default","Specimen","Specimen summary","some description","https://github.com/ShahimEssaid/ccdh-model/issues/24","default:C:Thing","","","",""
 "default","Thing","Thing summary.","Thing description.","https://github.com/ShahimEssaid/ccdh-model/issues/22","","","current","","parents: was changed from something to:"

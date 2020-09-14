@@ -23,9 +23,12 @@ git branch
 cat .git/config
 git log -5
 
-git add -A &>/dev/null
-git commit -m "Travis build of $GIT_BRANCH"
-git push --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" $GIT_BRANCH
+echo ================================  ADDING BUILD RESULT  ===========================================
+GIT_CURL_VERBOSE=1 GIT_TRACE=1 git add -A &>/dev/null
+echo ================================  COMMITTING BUILD RESULT  ===========================================
+GIT_CURL_VERBOSE=1 GIT_TRACE=1 git commit -m "Travis build of $GIT_BRANCH"
+echo ================================  PUSHING BUILD RESULT  ===========================================
+GIT_CURL_VERBOSE=1 GIT_TRACE=1 git push --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" HEAD:$GIT_BRANCH
 echo ================= FINISHED COMMIT AND PUSH OF BUILD =========================
 
 #env

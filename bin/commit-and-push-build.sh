@@ -21,6 +21,7 @@ cd ${GIT_ROOT}
 git status
 git branch
 cat .git/config
+git log -5
 
 git add -A &>/dev/null
 git commit -m "Travis build of $GIT_BRANCH"

@@ -1,2 +1,2 @@
-"package","name","summary","description","gh_issue","parent","concepts","domain_concepts","range_concepts","related"
-"default","hasThing","hasThing summary","hasThing description","","","default:C:Thing","default:C:Thing","default:C:Thing","","current"
+"package","name","summary","description","gh_issue","parent","concepts","domain_concepts","range_concepts","related","status","notes","build"
+"default","hasThing","hasThing summary","hasThing description","","","default:C:Thing","default:C:Thing","default:C:Thing","","current","",""

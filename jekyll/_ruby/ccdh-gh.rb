@@ -77,21 +77,21 @@ module CCDH
     # TODO: uncomment
     client = Octokit::Client.new(:access_token => ENV[ENV_GH_TOKEN])
 
-    package[K_CONCEPTS].each do |c_name, c|
-      title = "Concept #{c[VK_GH_LABEL_NAME]}"
-      body = "**Concept:** #{c[H_NAME]}\n**Package:** #{c[K_PACKAGE][H_NAME]}\n**Model:** #{c[K_MODEL][H_NAME]}\n\n"
-      body += "**Summary:** #{c[H_SUMMARY]}\n\n"
-      body += "**Description:** #{c[H_DESCRIPTION]}\n\n"
-      body += "**Status:** #{c[H_STATUS]}\n\n"
+    package[K_CONCEPTS].each do |c_name, concept|
+      title = "Concept #{concept[VK_GH_LABEL_NAME]}"
+      body = "**Concept:** #{concept[H_NAME]}\n**Package:** #{concept[K_PACKAGE][H_NAME]}\n**Model:** #{concept[K_MODEL][H_NAME]}\n\n"
+      body += "**Summary:** #{concept[H_SUMMARY]}\n\n"
+      body += "**Description:** #{concept[H_DESCRIPTION]}\n\n"
+      body += "**Status:** #{concept[H_STATUS]}\n\n"
       labels = []
-      labels << c[VK_GH_LABEL_NAME]
-      gh_issue_url = c[H_GH_ISSUE]
+      labels << concept[VK_GH_LABEL_NAME]
+      gh_issue_url = concept[H_GH_ISSUE]
 
       gh_issue_url.nil? || gh_issue = self.gh_issues[gh_issue_url]
       response = nil
       if gh_issue.nil?
         response = client.create_issue(GH_USR_REPO, title, body, {labels: labels})
-        c[H_GH_ISSUE] = response.attrs[:html_url]
+        concept[H_GH_ISSUE] = response.attrs[:html_url]
       else
         gh_issue_labels = []
         gh_issue[:labels].each do |l|

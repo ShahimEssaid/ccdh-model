@@ -18,6 +18,8 @@ GIT_ROOT="$(dirname "$DIR")"
 
 cd "${GIT_ROOT}"
 
+[  -f ".env" ] &&  . .env
+
 BASE_URL="${BASE_URL:-}"
 
 bundle exec jekyll b --trace --baseurl "${BASE_URL}" -s jekyll -d jekyll/_site --config jekyll/_config.yml

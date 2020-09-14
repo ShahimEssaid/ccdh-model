@@ -99,7 +99,7 @@ module CCDH
       if ENV[ENV_GH_ACTIVE] == "true"
         CCDH.r_gh(model_sets)
       end
-      publisher = ModelPublisher.new(model_sets[V_CURRENT], site, "_template", "modelset/current")
+     publisher = ModelPublisher.new(model_sets[V_CURRENT], site, "_template", "modelset/current")
       publisher.publishModel
       CCDH.r_write_modelset(current_model_set, File.expand_path(File.join(site.source, "../model_sets/src")))
       #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))

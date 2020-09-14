@@ -1,2 +1,2 @@
-"package","name","summary","description","gh_issue","parents","related"
-"default","Thing","Thing summary.","Thing description.","https://github.com/ShahimEssaid/ccdh-model/issues/19","","","current"
+"package","name","summary","description","gh_issue","parents","related","status","notes","build"
+"default","Thing","Thing summary.","Thing description.","https://github.com/ShahimEssaid/ccdh-model/issues/22","","","current","",""

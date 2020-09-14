@@ -129,7 +129,7 @@ public class ToCsv extends Converter {
         CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT.withQuoteMode(QuoteMode.ALL));
         // header row
         Row headerRow = sheet.getRow(0);
-        for(int i = 0; i < size[0]; ++i){
+        for(int i = 0; i <= size[0]; ++i){
             printer.print(headerRow.getCell(i).getStringCellValue());
         }
         printer.println();

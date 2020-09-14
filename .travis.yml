@@ -2,6 +2,8 @@ dist: focal
 language: ruby
 sudo: required
 
+if: false
+
 before_install:
     - sudo add-apt-repository universe
     - sudo add-apt-repository multiverse

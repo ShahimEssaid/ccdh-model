@@ -45,7 +45,7 @@ echo "### This file is overwritten with each build. Manual edits will be lost!" 
 
 git reset gh-pages-start
 git add -A &>/dev/null
-git commit -m "Build of $GIT_BRANCH"
+git commit -m "#TravisBuild of $GIT_BRANCH"
 git push -f --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" gh-pages
 echo ================= FINISHED PUBLISHING =========================
 

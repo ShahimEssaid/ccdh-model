@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -x
+set -x
 set -e
 set -u
 set -o pipefail
@@ -15,18 +15,8 @@ done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 
 GIT_ROOT="$(dirname "$DIR")"
-
 cd $GIT_ROOT
 
-# find git branch for the original commit
-export GIT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-${TRAVIS_BRANCH}}
-export GIT_REPO="/ShahimEssaid/ccdh-model.git"
-export BASE_URL="ccdh-model/${GIT_BRANCH}"
-
-bin/travis-pre-build.sh
-bin/install_dependencies.sh
-bin/convert-to-csv.sh
-bin/build-pages.sh
-bin/convert-to-excel.sh
-bin/publish-pages.sh
-bin/commit-and-push-build.sh
+for m in $(find model_sets/src -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
+  java -jar "${DIR}/converter.jar" --file "model_sets/src/${m}.xlsx" --direction excel
+done

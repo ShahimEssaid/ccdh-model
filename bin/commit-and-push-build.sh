@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -x
+set -x
 set -e
 set -u
 set -o pipefail
@@ -16,17 +16,11 @@ DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 
 GIT_ROOT="$(dirname "$DIR")"
 
-cd $GIT_ROOT
+cd ${GIT_ROOT}
 
-# find git branch for the original commit
-export GIT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-${TRAVIS_BRANCH}}
-export GIT_REPO="/ShahimEssaid/ccdh-model.git"
-export BASE_URL="ccdh-model/${GIT_BRANCH}"
+git add -A &>/dev/null
+git commit -m "Travis build of $GIT_BRANCH"
+git push --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" $GIT_BRANCH
+echo ================= FINISHED COMMIT AND PUSH OF BUILD =========================
 
-bin/travis-pre-build.sh
-bin/install_dependencies.sh
-bin/convert-to-csv.sh
-bin/build-pages.sh
-bin/convert-to-excel.sh
-bin/publish-pages.sh
-bin/commit-and-push-build.sh
+#env

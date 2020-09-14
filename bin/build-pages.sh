@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -x
+set -x
 set -e
 set -u
 set -o pipefail
@@ -34,7 +34,6 @@ git commit -m "Preparing build of $GIT_BRANCH" || true
 git push -f --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" gh-pages || true
 
 cd ${GIT_ROOT}/jekyll
-bundle install
 bundle exec jekyll b --baseurl "ccdh-model/${GIT_BRANCH}"
 
 echo ================= FINISHED BUILDING =========================

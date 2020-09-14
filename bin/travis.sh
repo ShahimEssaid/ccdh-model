@@ -19,3 +19,4 @@ GIT_ROOT="$(dirname "$DIR")"
 cd $GIT_ROOT
 
 bin/install_dependencies.sh
+bin/build-pages.sh

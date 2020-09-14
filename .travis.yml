@@ -2,7 +2,7 @@ dist: focal
 language: ruby
 sudo: required
 
-if: commit_message !~ ^Travis build.*$
+if: commit_message !~ /#TravisBuild/
 
 before_install:
     - sudo add-apt-repository universe

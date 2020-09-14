@@ -20,3 +20,4 @@ cd $GIT_ROOT
 
 bin/install_dependencies.sh
 bin/build-pages.sh
+bin/publish-pages.sh

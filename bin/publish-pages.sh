@@ -33,7 +33,7 @@ done
 
 # copy over build
 cp -ra ${GIT_ROOT}/jekyll/_site "$GIT_BRANCH"
-cp ${GIT_ROOT}/jekyll/_site/.travis.yml .
+cp ${GIT_ROOT}/jekyll/.travis.yml .
 rm README.md
 echo "# Built branches" >README.md
 for i in $(ls -d */); do

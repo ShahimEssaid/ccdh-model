@@ -1,2 +1,2 @@
-"name","summary","description","gh_issue","depends_on","status","notes"
-"current","Model current summary.","Model current description.","","default","current","",""
+"name","summary","description","gh_issue","depends_on","status"
+"current","Model current summary.","Model current description.","","default","current",""

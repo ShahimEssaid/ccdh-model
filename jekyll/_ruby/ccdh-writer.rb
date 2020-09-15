@@ -1,8 +1,9 @@
 module CCDH
 
-  def self.r_write_modelset(model_set, dir)
+  def self.r_write_modelset(model_set, write_root=nil)
+    (write_root.nil? || write_root.empty?) && write_root = model_set[K_MS_DIR]
     model_set[K_MODELS].each do |name, model|
-      writeModelToCSV(model, File.join(dir, model[H_NAME]))
+      writeModelToCSV(model, File.join(write_root, model[H_NAME]))
     end
   end
 

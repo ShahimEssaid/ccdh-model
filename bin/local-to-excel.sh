@@ -13,12 +13,11 @@ while [ -h "$SOURCE" ]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-
 GIT_ROOT="$(dirname "$DIR")"
+cd "${GIT_ROOT}"
+[  -f "bin/.config" ] &&  . bin/.config
 
-cd $GIT_ROOT
 
-echo "# Installing gem dependencies"
-bundle check --path vendor/bundle || bundle install --path vendor/bundle
-echo "# Installing npm dependencies"
-npm install
+for m in $(find model_sets/src -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
+  java -jar "${DIR}/converter.jar" --file "model_sets/src/${m}.xlsx" --direction excel
+done

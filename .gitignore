@@ -6,4 +6,4 @@ vendor
 TAGS
 /node_modules
 .~lock*
-.env
+bin/.config

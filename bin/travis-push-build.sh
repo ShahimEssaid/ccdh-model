@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+#set -x
 set -e
 set -u
 set -o pipefail
@@ -13,10 +13,10 @@ while [ -h "$SOURCE" ]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-
 GIT_ROOT="$(dirname "$DIR")"
+cd "${GIT_ROOT}"
+[  -f "bin/.config" ] &&  . bin/.config
 
-cd ${GIT_ROOT}
 
 git status
 git branch

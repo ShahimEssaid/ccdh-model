@@ -13,22 +13,14 @@ while [ -h "$SOURCE" ]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-
 GIT_ROOT="$(dirname "$DIR")"
-
 cd "${GIT_ROOT}"
+[  -f "bin/.config" ] &&  . bin/.config
 
-[  -f ".env" ] &&  . .env
 
-BASE_URL="${BASE_URL:-}"
-
-bundle exec jekyll b --trace --baseurl "${BASE_URL}" -s jekyll -d jekyll/_site --config jekyll/_config.yml
-
-echo ===================== RUNNING PRETTIFY ========================
+echo ===================== RUNNING PRETTIFY HTML ========================
 for html_file_path in $(find jekyll/_site -name '*.html' | sort); do
   echo -n "${html_file_path} ..."
-  bin/prettify_html.js "${html_file_path}"
-  echo " Done"
+  bin/local-prettify-html-file.sh "${html_file_path}"
 done
 
-echo ================= FINISHED BUILDING =========================

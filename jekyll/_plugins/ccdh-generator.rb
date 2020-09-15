@@ -77,31 +77,49 @@ module CCDH
     end
 
     def generate(site)
-
       puts "================ running plugin ================="
-      #CCDH.generator = self
       @site = site
-      model_set_root_dir = File.expand_path(File.join(site.source, "../model_sets/src"))
-      current_model_set = ModelSet.new("src", model_set_root_dir, V_CURRENT, V_DEFAULT)
-      current_model_set[K_MODELS][V_CURRENT] = nil
-      current_model_set[K_MODELS][V_DEFAULT] = nil
-      current_model_set[K_SITE] = site
-      CCDH.model_sets[V_CURRENT] = current_model_set
 
-      #CCDH.validate(model)
-      #CCDH.resolve(CCDH.model_sets[V_MODEL_CURRENT])
-      #CCDH.resolveData(model, site)
+      ENV(ENV_M_MODEL_SETS).split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |model_set_config|
+        config_parts = model_set_config.split(SEP_COMMA).collect(&:strip).reject(&:empty?)
+        if config_parts.size < 3 || !config_parts[0].include?("@")
+          raise("Error with model set configuration string:#{model_set_config}")
+        end
+        model_set_parts = config_parts[0].split("@").collect(&:strip).reject(&:empty?)
+        model_names = config_parts[1..]
+        if model_set_parts.size != 2
+          raise("Error with model set name and directory configuration: #{config_parts[0]}")
+        end
 
-      model_sets = CCDH.model_sets
-      CCDH.r_read_model_sets(model_sets)
-      CCDH.r_resolve_model_sets(model_sets)
-      site.data["_mss"] = model_sets
-      if ENV[ENV_GH_ACTIVE] == "true"
-        CCDH.r_gh(model_sets)
+        model_set_name = model_set_parts[0]
+        model_set_path = File.expand_path(model_set_parts[1])
+
+        model_set = ModelSet.new(model_set_name, model_set_path, model_names)
+        CCDH.model_sets[model_set_name] = model_set
+        model_set[K_SITE] = site
       end
-     publisher = ModelPublisher.new(model_sets[V_CURRENT], site, "_template", "modelset/current")
-      publisher.publishModel
-      CCDH.r_write_modelset(current_model_set, File.expand_path(File.join(site.source, "../model_sets/src")))
+
+      CCDH.r_read_model_sets(CCDH.model_sets)
+      CCDH.r_resolve_model_sets(CCDH.model_sets)
+      site.data["_mss"] = CCDH.model_sets
+      if ENV[ENV_GH_ACTIVE] == "true"
+        CCDH.r_gh(CCDH.model_sets)
+      end
+      CCDH.model_sets.each do |model_set_name, model_set|
+        publisher = ModelPublisher.new(model_set, "_template", "modelsets/#{model_set_name}")
+        publisher.publishModel
+      end
+
+      # if we want to write to a different place pass in a root directory
+      write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]
+      CCDH.model_sets.each do |model_set_name, model_set|
+        if write_path.nil? || write_path.empty?
+          write_root = File.expand_path(model_set_name[K_MS_DIR], model_set_name)
+        else
+          write_root = File.expand_path(write_root, model_set_name)
+        end
+        CCDH.r_write_modelset(model_set, write_root)
+      end
       #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
     end
 

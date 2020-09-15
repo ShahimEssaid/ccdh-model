@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+#set -x
 set -e
 set -u
 set -o pipefail
@@ -13,9 +13,10 @@ while [ -h "$SOURCE" ]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-
 GIT_ROOT="$(dirname "$DIR")"
-cd $GIT_ROOT
+cd "${GIT_ROOT}"
+[  -f "bin/.config" ] &&  . bin/.config
+
 
 if [ -d "model_sets/src" ]; then
   for m in $(find model_sets/src -maxdepth 1 -mindepth 1 -type f -iname '*.xlsx'); do

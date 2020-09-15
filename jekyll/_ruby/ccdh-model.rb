@@ -56,7 +56,7 @@ module CCDH
     # added to the K_MODELS map. Any key in that map that is set to nil, will cause
     # that model be be created (directory and empty files) if it doesn't exist
 
-    def initialize(name, model_set_dir, top_model_name, default_model_name)
+    def initialize(name, model_set_dir, names)
       self.default_proc = proc do |hash, key|
         hash.r_get_missing_key(key)
       end
@@ -64,17 +64,19 @@ module CCDH
       self[H_NAME] = name
       self[K_MS_DIR] = model_set_dir
 
-      self[K_MS_TOP] = top_model_name
-      self[K_MS_DEFAULT] = default_model_name
+      self[K_MS_TOP] = names[0]
+      self[K_MS_DEFAULT] = names[1]
       self[K_MODELS] = {}
+
+      names.each do |name|
+        self[K_MODELS][name] = nil
+      end
 
       # this is similar to the above but it's not indexed by model and it's resolution path. It's an entity name
       # to array of entity instances with that name model set wide. The names are not the FQN, they are the
       # entity name (pakcage:type:name)
       self[K_ENTITIES] = {}
 
-      # aggregated view over the models
-      # self[K_PACKAGES] = {}
     end
 
     def r_get_missing_key(key)

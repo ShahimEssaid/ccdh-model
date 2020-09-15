@@ -13,11 +13,11 @@ module CCDH
 
   class ModelPublisher
 
-    # template_dir - the directory under the source that holds temlates for model and other
-    # page_dir     - the directory name under source to place the model pages
-    def initialize(model_set, site, template_dir, page_dir)
+    # template_dir - the directory under the source that holds templates for model page generation
+    # page_dir     - the directory name under Jekyll source to place the model pages
+    def initialize(model_set, template_dir, page_dir)
       @model_set = model_set
-      @site = site
+      @site = model_set[K_SITE]
       @template_dir = template_dir
       @page_dir = page_dir
     end

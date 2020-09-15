@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+#set -x
 set -e
 set -u
 set -o pipefail
@@ -13,10 +13,11 @@ while [ -h "$SOURCE" ]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-
 GIT_ROOT="$(dirname "$DIR")"
-cd $GIT_ROOT
+cd "${GIT_ROOT}"
+[  -f "bin/.config" ] &&  . bin/.config
 
-for m in $(find model_sets/src -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
-  java -jar "${DIR}/converter.jar" --file "model_sets/src/${m}.xlsx" --direction excel
-done
+echo ===================================  BUILDING AND SERVING JEKYLL SITE ===================================
+
+bundle exec jekyll s -l -o --trace --disable-disk-cache --baseurl "${J_BASE_URL}" -s jekyll -d jekyll/_site --config jekyll/_config.yml
+

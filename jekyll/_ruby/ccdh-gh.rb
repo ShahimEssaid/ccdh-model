@@ -1,10 +1,10 @@
 module CCDH
 
 
-  def self.r_gh(model_sets)
+  def self.r_gh(model_set)
 
-    r_gh_update_labels(model_sets)
-    r_gh_update_issues (model_sets)
+    r_gh_update_labels(model_set)
+    r_gh_update_issues (model_set)
 
   end
 
@@ -14,7 +14,7 @@ module CCDH
     @gh_labels
   end
 
-  def self.r_gh_update_labels(model_sets)
+  def self.r_gh_update_labels(model_set)
     client = CCDH.ghclient
     # TODO: uncomment
     client = Octokit::Client.new(:access_token => ENV[ENV_GH_TOKEN])
@@ -25,25 +25,23 @@ module CCDH
       #client.delete_label!("#{ENV[ENV_GH_USER]}/#{ENV[ENV_GH_REPO]}", l.attrs[:name])
     end
 
-    model_sets.each do |modelset_name, modelset|
-      modelset[K_MODELS].each do |model_name, model|
-        model[K_ENTITIES].each do |entity_name, entity|
-          label_name = entity[VK_GH_LABEL_NAME]
-          label_index = label_name.downcase
-          current_label = self.gh_labels[label_index]
-          response = nil
-          if current_label.nil?
-            response = client.add_label(GH_USR_REPO, label_name, V_GH_LABEL_COLOR, options = {description: entity[H_SUMMARY][0..99]})
-          else
-            if current_label[:name] != label_name ||
-                current_label[:description] != entity[H_SUMMARY][0..99] ||
-                current_label[:color] != V_GH_LABEL_COLOR
-              response = client.update_label(GH_USR_REPO, current_label[:name], {name: label_name, description: entity[H_SUMMARY][0..99], color: V_GH_LABEL_COLOR})
-              r_build_entry("Updated GH label from: #{current_label[:name]}, #{current_label[:description]}, #{current_label[:color]}", entity)
-            end
+    model_set[K_MODELS].each do |model_name, model|
+      model[K_ENTITIES].each do |entity_name, entity|
+        label_name = entity[VK_GH_LABEL_NAME]
+        label_index = label_name.downcase
+        current_label = self.gh_labels[label_index]
+        response = nil
+        if current_label.nil?
+          response = client.add_label(GH_USR_REPO, label_name, V_GH_LABEL_COLOR, options = {description: entity[H_SUMMARY][0..99]})
+        else
+          if current_label[:name] != label_name ||
+              current_label[:description] != entity[H_SUMMARY][0..99] ||
+              current_label[:color] != V_GH_LABEL_COLOR
+            response = client.update_label(GH_USR_REPO, current_label[:name], {name: label_name, description: entity[H_SUMMARY][0..99], color: V_GH_LABEL_COLOR})
+            r_build_entry("Updated GH label from: #{current_label[:name]}, #{current_label[:description]}, #{current_label[:color]}", entity)
           end
-          response.nil? || self.gh_issues[label_index] = response.attrs
         end
+        response.nil? || self.gh_issues[label_index] = response.attrs
       end
     end
   end
@@ -54,7 +52,7 @@ module CCDH
     @gh_issues
   end
 
-  def self.r_gh_update_issues (model_sets)
+  def self.r_gh_update_issues (model_set)
     client = CCDH.ghclient
     # TODO: uncomment
     #client = Octokit::Client.new(:access_token => ENV[ENV_GH_TOKEN])
@@ -63,13 +61,12 @@ module CCDH
       self.gh_issues[issue.attrs[:html_url]] = issue.attrs
     end
 
-    model_sets.each do |ms_name, model_set|
-      model_set[K_MODELS].each do |m_name, model|
-        model[K_PACKAGES].each do |p_name, package|
-          r_gh_update_concept_issues(package)
-        end
+    model_set[K_MODELS].each do |m_name, model|
+      model[K_PACKAGES].each do |p_name, package|
+        r_gh_update_concept_issues(package)
       end
     end
+
   end
 
   def self.r_gh_update_concept_issues(package)

@@ -1,10 +1,4 @@
 module CCDH
-  @model_sets = {}
-
-  def self.model_sets
-    @model_sets
-  end
-
 
   class ModelElement < Hash
     def initialize(name, model, type)
@@ -45,18 +39,14 @@ module CCDH
   end
 
   class ModelSet < Hash
-    # model_set_dir is the parent directory for the models' directories.
+    # name:
     #
-    # top_model_name is the current model, the one that will be loaded for sure
-    #
-    # default_model_name is the default one if it is set. if not, no default model
-    # will be looked for
     #
     # for these models to be created (vs. already existing) they have to also be
     # added to the K_MODELS map. Any key in that map that is set to nil, will cause
     # that model be be created (directory and empty files) if it doesn't exist
 
-    def initialize(name, model_set_dir, names)
+    def initialize(name, model_set_dir, model_names)
       self.default_proc = proc do |hash, key|
         hash.r_get_missing_key(key)
       end
@@ -64,12 +54,12 @@ module CCDH
       self[H_NAME] = name
       self[K_MS_DIR] = model_set_dir
 
-      self[K_MS_TOP] = names[0]
-      self[K_MS_DEFAULT] = names[1]
+      self[K_MS_DEFAULT] = model_names[0].strip
+      self[K_MS_TOP] = model_names[1].strip
       self[K_MODELS] = {}
 
-      names.each do |name|
-        self[K_MODELS][name] = nil
+      model_names.each do |name|
+        self[K_MODELS][name.strip] = nil
       end
 
       # this is similar to the above but it's not indexed by model and it's resolution path. It's an entity name
@@ -83,11 +73,9 @@ module CCDH
       nil
     end
 
-    def r_get_model(name)
-      # only return/create models if the key was already set to indicate that the model name should be loaded.
-      self[K_MODELS].has_key?(name) || (return nil)
+    def r_get_model(name, create)
       model = self[K_MODELS][name]
-      if model.nil?
+      if model.nil? && create
         model = Model.new(name, self)
         self[K_MODELS][name] = model
       end

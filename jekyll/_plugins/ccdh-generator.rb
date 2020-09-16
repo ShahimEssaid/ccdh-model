@@ -34,7 +34,7 @@ end
 
 module CCDH
 
-  if ENV[ENV_GH_ACTIVE]
+  if ENV[ENV_GH_ACTIVE] == V_TRUE
     Octokit.configure do |c|
       c.auto_paginate = true
     end
@@ -65,62 +65,71 @@ module CCDH
   class JGenerator < Jekyll::Generator
 
     def initialize(config)
-      source = config["source"]
-      path = nil
-      if Pathname.new(source).absolute?
-        #FileUtils.rm_rf(File.join(source, "model"))
-        path = File.join(source, "modelset")
-      else
-        path = File.expand_path(File.join(Dir.pwd, source, "modelset", "current"))
-      end
-      r_clean_generated_pages(path)
+      source = File.expand_path(config["source"])
+      # we need to clean up any generated files from previous runs here so Jekyll doesn't pick them up
+      # before calling the generate() method. This allows two things. First, generated files will be removed
+      # and rewritten in case the meta templates have changed. Second, it allows an editor to change the
+      # "generated" variable in the front matter to "false" to customize as needed and this plugin
+      # will use that page from now on and not regenerate it. The editor will then have to manually keep up with any
+      # changes to the meta templates for that type of page, if desired.
+      r_clean_generated_pages(File.join(source, V_J_MS_DIR))
     end
 
     def generate(site)
-      puts "================ running plugin ================="
       @site = site
+      site.data[K_MS] = {}
 
-      ENV(ENV_M_MODEL_SETS).split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |model_set_config|
+      first_model_set = nil
+
+      # first separate into individual model sets
+      ENV[ENV_M_MODEL_SETS].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |model_set_config|
+
+        # for each model set start to break down it's configuration
         config_parts = model_set_config.split(SEP_COMMA).collect(&:strip).reject(&:empty?)
         if config_parts.size < 3 || !config_parts[0].include?("@")
-          raise("Error with model set configuration string:#{model_set_config}")
-        end
-        model_set_parts = config_parts[0].split("@").collect(&:strip).reject(&:empty?)
-        model_names = config_parts[1..]
-        if model_set_parts.size != 2
-          raise("Error with model set name and directory configuration: #{config_parts[0]}")
+          raise("Error with model set configuration string:#{model_set_config} within the full env config: #{ENV[ENV_M_MODEL_SETS]}")
         end
 
-        model_set_name = model_set_parts[0]
-        model_set_path = File.expand_path(model_set_parts[1])
+        model_set_name_dir = config_parts[0].split("@").collect(&:strip).reject(&:empty?)
+        model_names = config_parts[1..]
+        if model_set_name_dir.size != 2
+          raise("Error with model set name and directory configuration: #{model_set_name_dir[0]}")
+        end
+
+        model_set_name = model_set_name_dir[0].strip
+        model_set_path = File.expand_path(model_set_name_dir[1]).strip
 
         model_set = ModelSet.new(model_set_name, model_set_path, model_names)
-        CCDH.model_sets[model_set_name] = model_set
+        site.data[K_MS][model_set_name] = model_set
         model_set[K_SITE] = site
+        first_model_set.nil? && first_model_set = model_set
       end
 
-      CCDH.r_read_model_sets(CCDH.model_sets)
-      CCDH.r_resolve_model_sets(CCDH.model_sets)
-      site.data["_mss"] = CCDH.model_sets
+      CCDH.rr_process_modelsets(site.data[K_MS])
+
+
+      CCDH.r_resolve_model_sets(site.data[K_MS])
+
       if ENV[ENV_GH_ACTIVE] == "true"
-        CCDH.r_gh(CCDH.model_sets)
+        CCDH.r_gh(first_model_set)
       end
-      CCDH.model_sets.each do |model_set_name, model_set|
-        publisher = ModelPublisher.new(model_set, "_template", "modelsets/#{model_set_name}")
-        publisher.publishModel
-      end
-
-      # if we want to write to a different place pass in a root directory
-      write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]
-      CCDH.model_sets.each do |model_set_name, model_set|
-        if write_path.nil? || write_path.empty?
-          write_root = File.expand_path(model_set_name[K_MS_DIR], model_set_name)
-        else
-          write_root = File.expand_path(write_root, model_set_name)
-        end
-        CCDH.r_write_modelset(model_set, write_root)
-      end
-      #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
+      #
+      # site.data[K_MS].each do |model_set_name, model_set|
+      #   publisher = ModelPublisher.new(model_set, V_J_TEMPLATE_PATH, "modelsets/#{model_set_name}")
+      #   publisher.publishModel
+      # end
+      #
+      # # if we want to write to a different place pass in a root directory
+      # write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]
+      # site.data[K_MS].each do |model_set_name, model_set|
+      #   if write_path.nil? || write_path.empty?
+      #     write_dir = File.expand_path(model_set_name[K_MS_DIR], model_set_name)
+      #   else
+      #     write_dir = File.expand_path(write_dir, model_set_name)
+      #   end
+      #   CCDH.r_write_modelset(model_set, write_dir)
+      # end
+      # #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
     end
 
     def r_clean_generated_pages(path)

@@ -1,135 +1,226 @@
 module CCDH
 
-  def self.r_read_model_sets(model_sets)
-    model_sets.each do |name, model_set|
-      r_create_model_set_files(model_set)
-      r_read_model_set(model_set)
+  def self.rr_process_modelsets(modelsets)
+    modelsets.each do |model_set_name, model_set|
+      model_set[K_MODELS].each do |model_name, model|
+        CCDH.rr_load_model_files_and_objects(model_set, model_name)
+      end
+    end
+
+    modelsets.each do |model_set_name, model_set|
+      model_set[K_MODELS].each do |model_name, model|
+        CCDH.rr_process_depends_on(model_set, model)
+      end
+    end
+
+    modelsets.each do |name, model_set|
+      rr_add_default_dependency(model_set)
+    end
+
+    modelsets.each do |model_set_name, model_set|
+      model_set[K_MODELS].each do |model_name, model|
+        CCDH.rr_process_depends_on_path(model_set, model, [])
+      end
+    end
+
+
+    modelsets.each do |model_set_name, model_set|
+      model_set[K_MODELS].each do |model_name, model|
+        CCDH.r_read_model_csvs(model)
+      end
     end
   end
 
-  def self.r_read_model_set(model_set)
-    r_create_model_objects(model_set)
-    r_read_model_file(model_set)
-    r_resolve_models(model_set)
-    r_link_models(model_set[K_MODELS][model_set[K_MS_TOP]], [], model_set)
-    r_read_model_set_csvs(model_set)
+  # this can be called multiple times per model set if needed. the code keeps track of which models have already
+  # been loaded from disk and will skip them, and it also follows any "H_DEPENDS_ON" values to also create/load
+  # those as needed. This method needs be called multiple times if the model set has multiple models that are not
+  # yet connected by a "H_DEPENDS_ON" path. however, this code doesn't resolve the dependencies to link and detect
+  # cycles. it only creates the model disk layout and empty files if needed, instantiates model objects and loads files,
+  # and follows any dependencies to do the same. There is no model to model linking/resolution yet.
+  def self.rr_load_model_files_and_objects(model_set, model_name)
+    # check if we already loaded this model
+    model = model_set.r_get_model(model_name, false)
+    model.nil? || return
+
+    r_create_model_files_if_needed(model_set, model_name)
+    model = model_set.r_get_model(model_name, true)
+    rr_read_model_file(model)
+
+    model[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |name|
+      rr_load_model_files_and_objects(model_set, name)
+    end
   end
 
-
-  def self.r_create_model_objects(model_set)
-    Dir.glob("*", base: model_set[K_MS_DIR]).each do |f|
-      dir = File.join(model_set[K_MS_DIR], f)
-      File.directory?(dir) || next
-      model = model_set.r_get_model(f)
+  def self.rr_add_default_dependency(model_set)
+    default = model_set.r_get_model(model_set[K_MS_DEFAULT], false)
+    if default.nil?
+      raise("Could not find default model #{model_set[K_MS_DEFAULT]}")
     end
 
-
-  end
-
-  def self.r_read_model_file(model_set)
     model_set[K_MODELS].each do |name, model|
-
-      model_file = File.join(model[K_MODEL_DIR], F_MODEL_CSV)
-      model[K_MODEL_CSV] = CSV.read(model_file, headers: true)
-      # save existing headers to rewrite them same way
-      model[K_MODEL_CSV].headers.each do |h|
-        unless h.nil?
-          model[K_MODEL_HEADERS] << h.strip
-        end
-      end
-      model[K_MODEL_CSV].each do |row|
-        row[H_BUILD].nil? && row[H_BUILD] = ""
-
-        name = row[H_NAME]
-        row[H_NAME] = r_check_simple_name(name, "M")
-        row[H_NAME] == name || r_build_entry("#{H_NAME}: was updated from #{name} to:#{row[H_NAME]}", row)
-
-        # check H_DEPENDS_ON
-        depends_on_old = row[H_DEPENDS_ON]
-        row[H_DEPENDS_ON] = ""
-        depends_on_old.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |modelRef|
-          modelRef = r_check_simple_name(modelRef, "P")
-          row[H_DEPENDS_ON].empty? || row[H_DEPENDS_ON] += " #{SEP_BAR} "
-          row[H_DEPENDS_ON] += modelRef
-        end
-        row[H_DEPENDS_ON] == depends_on_old || r_build_entry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to:#{row[H_DEPENDS_ON]}.", row)
-        r_copy_row_vals(model, row)
+      if model[K_DEPENDS_ON].empty?
+        model[K_DEPENDS_ON] << default
+        default[K_DEPENDED_ON].include?(model) || default[K_DEPENDED_ON] << model
       end
     end
+
   end
 
-  def self.r_resolve_models(model_set)
-    # check that we can resolve all dependencies
-    model_set[K_MODELS].each do |name, model|
-      model[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |depName|
-        depModel = model_set[K_MODELS][depName]
-        depModel.nil? && raise("Couldn't find model #{depName} as a dependency for model #{name}")
-      end
-      # if there is a default model
-      if model_set[K_MS_DEFAULT]
-        default_model = model_set[K_MODELS][model_set[K_MS_DEFAULT]]
-        default_model.nil? && raise("Couldn't find default model #{model_set[K_MS_DEFAULT]}")
-        # the default model should be first in the search path to not allow overrides
-        #if model != default_model
-        model[K_DEPENDS_ON_PATH].index(default_model) || model[K_DEPENDS_ON_PATH] << default_model
-        #end
-      end
-    end
-  end
-
-  def self.r_link_models(model, path, model_set)
-    path << model
-
-    lastModule = true
-    model[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |depName|
-      lastModule = false
-      depModel = model_set[K_MODELS][depName]
-      if path.index(depModel) # cycle
-        pathString = ""
-        path.each do |m|
-          pathString += "#{m[VK_FQN]} > "
-        end
-        r_build_entry("Model cycle found with path #{pathString} for model #{model[VK_FQN]} and dependency #{depName}. Not linking this dependency.", model)
+  def self.rr_process_depends_on(model_set, model)
+    model[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |name|
+      dependency = model_set.r_get_model(name, false)
+      if dependency.nil?
+        r_build_entry("Could not find dependency name: #{name} of model #{model[H_NAME]} in model set #{model_set[H_NAME]}", model_set)
+        r_build_entry("Could not find dependency name: #{name} of this model in model set #{model_set[H_NAME]}", model)
         next
       end
-      model[K_DEPENDS_ON].index(depModel) || model[K_DEPENDS_ON] << depModel
-      depModel[K_DEPENDED_ON].index(model) || depModel[K_DEPENDED_ON] << model
-      r_link_models(depModel, path, model_set)
-    end
-
-    if lastModule
-      # the path is used to build the dependency path
-      path.each.with_index.map do |m, i|
-        path[i..].each do |depModel|
-          model[K_DEPENDS_ON_PATH].index(depModel) || model[K_DEPENDS_ON_PATH] << depModel
-        end
+      if model[K_DEPENDS_ON].include?(dependency)
+        r_build_entry("This model already had the dependency named: #{name} added to its K_DEPENDS_ON array, skipping.", model)
+        next
       end
 
-      if model[K_DEPENDS_ON].empty?
-        default = model_set[K_MODELS][model_set[K_MS_DEFAULT]]
-        if default
-          model[K_DEPENDS_ON] << default
-          default[K_DEPENDED_ON] << model
-        end
+      model[K_DEPENDS_ON] << dependency
+      dependency[K_DEPENDED_ON].include?(model) || dependency[K_DEPENDED_ON] << model
+    end
+  end
+
+  def self.rr_process_depends_on_path(model_set, model, models_linked)
+    models_linked << model
+    path = ""
+    models_linked.each do |m|
+      path += "> #{m[H_NAME]} "
+    end
+
+    if models_linked[0...-1].include?(model)
+      # we have a cycle. log and stop
+      models_linked << model
+      r_build_entry("Model dependency cycle: #{path}", model)
+      models_linked.pop
+      return
+    end
+
+    # every model in the models_linked path needs to have this model on its path if not already
+    # this will also place the model as a dependency of itself on it's path, which makes sense.
+    # a model searches in itself first before its dependencies
+    models_linked.each do |m|
+      m[K_DEPENDS_ON_PATH].include?(model) || m[K_DEPENDS_ON_PATH] << model
+    end
+
+    model[K_DEPENDS_ON].each do |dm|
+      rr_process_depends_on_path(model_set, dm, models_linked)
+    end
+    models_linked.pop
+  end
+
+  # def self.r_read_model_sets(model_sets)
+  #   model_sets.each do |name, model_set|
+  #     r_read_model_set(model_set)
+  #   end
+  # end
+
+  # def self.r_read_model_set(model_set)
+  #   # r_create_model_objects(model_set)
+  #   #r_resolve_models(model_set)
+  #   #r_link_models(model_set[K_MODELS][model_set[K_MS_TOP]], [], model_set)
+  #   # r_read_model_set_csvs(model_set)
+  # end
+
+
+  # def self.r_create_model_objects(model_set)
+  #   Dir.glob("*", base: model_set[K_MS_DIR]).each do |f|
+  #     dir = File.join(model_set[K_MS_DIR], f)
+  #     File.directory?(dir) || next
+  #     model = model_set.r_get_model(f)
+  #   end
+  # end
+
+
+  def self.rr_read_model_file(model)
+    model[K_LOADED] && return
+    model_file = File.join(model[K_MODEL_DIR], F_MODEL_CSV)
+    model[K_MODEL_CSV] = CSV.read(model_file, headers: true)
+
+    # save existing headers to rewrite them same way
+    model[K_MODEL_CSV].headers.each do |h|
+      unless h.nil?
+        model[K_MODEL_HEADERS] << h.strip
       end
     end
-    path.pop
+
+    model[K_MODEL_CSV].each do |row|
+      row[H_BUILD].nil? && row[H_BUILD] = ""
+
+      name = row[H_NAME]
+      row[H_NAME] = r_check_simple_name(name, "M")
+      row[H_NAME] == name || r_build_entry("#{H_NAME}: was updated from #{name} to:#{row[H_NAME]}", row)
+
+      # check H_DEPENDS_ON
+      depends_on_old = row[H_DEPENDS_ON]
+      row[H_DEPENDS_ON] = ""
+      depends_on_old.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |modelRef|
+        modelRef = r_check_simple_name(modelRef, V_TYPE_MODEL)
+        row[H_DEPENDS_ON].empty? || row[H_DEPENDS_ON] += " #{SEP_BAR} "
+        row[H_DEPENDS_ON] += modelRef
+      end
+      row[H_DEPENDS_ON] == depends_on_old || r_build_entry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to:#{row[H_DEPENDS_ON]}.", row)
+      r_copy_row_vals(model, row)
+    end
+    model[K_LOADED] = true
   end
 
-  def self.r_read_model_set_csvs(model_set)
-    model_set[K_MODELS].each do |n, model|
-      r_read_entity_csvs(model)
-    end
-  end
+  # def self.r_link_models(model, path, model_set)
+  #   path << model
+  #
+  #   lastModule = true
+  #   model[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |depName|
+  #     lastModule = false
+  #     depModel = model_set[K_MODELS][depName]
+  #     if path.index(depModel) # cycle
+  #       pathString = ""
+  #       path.each do |m|
+  #         pathString += "#{m[VK_FQN]} > "
+  #       end
+  #       r_build_entry("Model cycle found with path #{pathString} for model #{model[VK_FQN]} and dependency #{depName}. Not linking this dependency.", model)
+  #       next
+  #     end
+  #     model[K_DEPENDS_ON].index(depModel) || model[K_DEPENDS_ON] << depModel
+  #     depModel[K_DEPENDED_ON].index(model) || depModel[K_DEPENDED_ON] << model
+  #     r_link_models(depModel, path, model_set)
+  #   end
+  #
+  #   if lastModule
+  #     # the path is used to build the dependency path
+  #     path.each.with_index.map do |m, i|
+  #       path[i..].each do |depModel|
+  #         model[K_DEPENDS_ON_PATH].index(depModel) || model[K_DEPENDS_ON_PATH] << depModel
+  #       end
+  #     end
+  #
+  #     if model[K_DEPENDS_ON].empty?
+  #       default = model_set[K_MODELS][model_set[K_MS_DEFAULT]]
+  #       if default
+  #         model[K_DEPENDS_ON] << default
+  #         default[K_DEPENDED_ON] << model
+  #       end
+  #     end
+  #   end
+  #   path.pop
+  # end
 
-  def self.r_read_entity_csvs(model)
-    model[K_PACKAGES_CSV] && return # read already
-    # load all dependencies first
-    model[K_DEPENDS_ON].each do |m|
-      m != model && r_read_entity_csvs(m)
-    end
-    r_read_model_csvs(model)
-  end
+  # def self.r_read_model_set_csvs(model_set)
+  #   model_set[K_MODELS].each do |n, model|
+  #     r_read_entity_csvs(model)
+  #   end
+  # end
+  #
+  # def self.r_read_entity_csvs(model)
+  #   model[K_PACKAGES_CSV] && return # read already
+  #   # load all dependencies first
+  #   model[K_DEPENDS_ON].each do |m|
+  #     m != model && r_read_entity_csvs(m)
+  #   end
+  #   r_read_model_csvs(model)
+  # end
 
   def self.r_read_model_csvs(model)
     r_read_packages(model)

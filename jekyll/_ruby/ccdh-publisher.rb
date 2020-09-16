@@ -63,7 +63,7 @@ module CCDH
       @data = data
       path = File.join(site.source, dir, name)
       FileUtils.mkdir_p(File.join(site.source, dir))
-      tempaltePath = File.join(site.source, "_template", data[K_TYPE], "page.html")
+      tempaltePath = File.join(site.source, V_J_TEMPLATE_PATH, data[K_TYPE], "page.html")
       rendererFile = site.liquid_renderer.file(tempaltePath)
       templateContent = File.read(tempaltePath)
       parsedTemplate = rendererFile.parse(templateContent)

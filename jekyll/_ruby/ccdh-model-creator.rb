@@ -1,12 +1,12 @@
 module CCDH
 
 
-  def self.r_create_model_set_files(model_set)
-    model_set[K_MODELS].each do |model_name, model|
-      model && next # skip if there is already a model object
-      r_create_model_files_if_needed(model_set, model_name)
-    end
-  end
+  # def self.r_create_model_set_files(model_set)
+  #   model_set[K_MODELS].each do |model_name, model|
+  #     model && next # skip if there is already a model object
+  #     r_create_model_files_if_needed(model_set, model_name)
+  #   end
+  # end
 
   def self.r_create_model_files_if_needed(model_set, model_name)
 
@@ -16,8 +16,8 @@ module CCDH
 
     # copy excel file template if needed
     excel_file = File.join(model_set[K_MS_DIR], "#{model_name}.xlsx")
-    if !File.exist?excel_file
-      FileUtils.copy_file(File.join(model_set[K_SITE].source, "_template", F_MODEL_XLSX), excel_file)
+    if !File.exist? excel_file
+      FileUtils.copy_file(File.join(model_set[K_SITE].source, V_J_TEMPLATE_PATH, F_MODEL_XLSX), excel_file)
     end
 
     # write model file
@@ -26,9 +26,7 @@ module CCDH
       # write empty file
       CSV.open(model_file, mode = "wb", {force_quotes: true}) do |csv|
         csv << V_MODEL_HEADERS
-        model_name == V_DEFAULT &&csv << V_MODEL_DEFAULT_ROW
-        model_name == V_CURRENT && csv << V_MODEL_CURRENT_ROW
-
+        csv << [model_name, "Summary of model #{model_name}", "Description of model #{model_name}", "", "", V_GENERATED, "", ""]
       end
     end
 

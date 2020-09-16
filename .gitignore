@@ -7,3 +7,5 @@ TAGS
 /node_modules
 .~lock*
 bin/.config
+.env
+.idea

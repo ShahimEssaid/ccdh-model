@@ -100,6 +100,11 @@ module CCDH
   K_OF_S_CONCEPTS = "_of_s_concepts"
   K_SUB_ELEMENTS = "_sub_elements"
 
+  # the following two are meant to hold if the modeling element runtime instance has already been fully loaded  from disc
+  # and linked. it's only used when needed, and it's code specific. not meant to be used as "data" in pages
+  K_LOADED = "_loaded"
+  K_LINKED = "-linked"
+
   F_MODEL_XLSX = "model.xlsx"
   F_MODEL_CSV = "model.csv"
   F_PACKAGES_CSV = "packages.csv"
@@ -130,6 +135,11 @@ module CCDH
   V_TYPE_ATTRIBUTE = "a"
   V_CURRENT = "current"
   V_DEFAULT = "default"
+  V_TRUE = "true"
+  # this is the directory path under "Jekyll source" where model sets' page content will be written.
+  V_J_MS_DIR = "modelset"
+  V_J_TEMPLATE_PATH = "_template"
+
 
   V_MODEL_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD]
   V_MODEL_DEFAULT_ROW = [V_DEFAULT, "Model #{V_DEFAULT} summary.", "Model #{V_DEFAULT} description.", "", "", V_STATUS_CURRENT, "", ""]

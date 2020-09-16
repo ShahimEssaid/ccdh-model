@@ -1,6 +1,6 @@
 module CCDH
 
-  class ModelElement < Hash
+  class ModelEntity < Hash
     def initialize(name, model, type)
       self[H_NAME] = name
       self[K_TYPE] = type
@@ -18,7 +18,7 @@ module CCDH
 
   end
 
-  class PackagableModelElement < ModelElement
+  class PackagableEntity < ModelEntity
     def initialize(name, package, model, type)
       super(name, model, type)
       self[K_PACKAGE] = package
@@ -46,25 +46,27 @@ module CCDH
     # added to the K_MODELS map. Any key in that map that is set to nil, will cause
     # that model be be created (directory and empty files) if it doesn't exist
 
-    def initialize(name, model_set_dir, model_names)
+    def initialize(name, dir, model_names)
       self.default_proc = proc do |hash, key|
         hash.r_get_missing_key(key)
       end
 
+      self[K_SITE] = nil  # the Jekyll site
       self[H_NAME] = name
-      self[K_MS_DIR] = model_set_dir
+      self[K_DIR] = dir
 
-      self[K_MS_DEFAULT] = model_names[0].strip
-      self[K_MS_TOP] = model_names[1].strip
+      self[K_DEFAULT] = model_names[0].strip
+      self[K_TOP] = model_names[1].strip
       self[K_MODELS] = {}
 
       model_names.each do |name|
         self[K_MODELS][name.strip] = nil
       end
 
-      # this is similar to the above but it's not indexed by model and it's resolution path. It's an entity name
-      # to array of entity instances with that name model set wide. The names are not the FQN, they are the
-      # entity name (pakcage:type:name)
+      # It's an entity name
+      # to array of entity instances with that name model set wide.
+      # The names are not the FQN, they are the
+      # entity name (package:type:name)
       self[K_ENTITIES] = {}
 
     end
@@ -83,13 +85,13 @@ module CCDH
     end
   end
 
-  class Model < ModelElement
+  class Model < ModelEntity
     def initialize(name, model_set)
       super(name, self, V_TYPE_MODEL)
       # we need this to avoid errors on new model.xlsx/csv files  TODO: necessary?
       #self[H_DEPENDS_ON] = ""
       self[K_MS] = model_set
-      self[K_MODEL_DIR] = File.join(model_set[K_MS_DIR], name)
+      self[K_DIR] = File.join(model_set[K_DIR], name)
       self[K_DEPENDS_ON] = []
       self[K_DEPENDED_ON] = []
       self[K_DEPENDS_ON_PATH] = []
@@ -102,10 +104,10 @@ module CCDH
       # The first resolution of an entity name wins.
       self[K_ENTITIES_VISIBLE] = {}
       self[K_MODEL_HEADERS] = []
-      self[K_PACKAGES_HEADERS] = []
-      self[K_CONCEPTS_HEADERS] = []
-      self[K_ELEMENTS_HEADERS] = []
-      self[K_STRUCTURES_HEADERS] = []
+      self[K_PACKAGE_HEADERS] = []
+      self[K_CONCEPT_HEADERS] = []
+      self[K_ELEMENT_HEADERS] = []
+      self[K_STRUCTURE_HEADERS] = []
 
     end
 
@@ -124,33 +126,32 @@ module CCDH
         package = r_get_package(pkgName, true)
         package[K_GENERATED_NOW] = true
         package[H_STATUS] = V_GENERATED
-        package[H_SUMMARY] = V_GENERATED
+        package[H_SUMMARY] = "Package #{pkgName}, generated"
       end
       package
     end
 
-    def r_resolve_entity_ref(entity_name)
-      entities = []
-      models = []
-      self[K_DEPENDS_ON_PATH].each do |model|
-        entity = model[K_ENTITIES][entity_name]
-        entity.ni? || entities << entity
-        models << model
-      end
-
-      self[K_MS][K_MODELS].each do |model|
-        unless models.index(model)
-          # a model not on path
-          entity = model[K_ENTITIES][entity_name]
-          entity.ni? || entities << entity
-        end
-      end
-      entities
-    end
-
+    # def r_resolve_entity_ref(entity_name)
+    #   entities = []
+    #   models = []
+    #   self[K_DEPENDS_ON_PATH].each do |model|
+    #     entity = model[K_ENTITIES][entity_name]
+    #     entity.ni? || entities << entity
+    #     models << model
+    #   end
+    #
+    #   # self[K_MS][K_MODELS].each do |model|
+    #   #   unless models.index(model)
+    #   #     # a model not on path
+    #   #     entity = model[K_ENTITIES][entity_name]
+    #   #     entity.ni? || entities << entity
+    #   #   end
+    #   # end
+    #   entities
+    # end
   end
 
-  class MPackage < ModelElement
+  class MPackage < ModelEntity
     def initialize(name, model)
       super(name, model, V_TYPE_PACKAGE)
       self[K_CONCEPTS] = {}
@@ -202,7 +203,7 @@ module CCDH
 
   end
 
-  class MConcept < PackagableModelElement
+  class MConcept < PackagableEntity
     def initialize(name, package, model)
       super(name, package, model, V_TYPE_CONCEPT)
 
@@ -223,7 +224,7 @@ module CCDH
     end
   end
 
-  class MElement < PackagableModelElement
+  class MElement < PackagableEntity
 
     def initialize(name, package, model)
       super(name, package, model, V_TYPE_ELEMENT)
@@ -250,16 +251,13 @@ module CCDH
     end
   end
 
-  class MStructure < PackagableModelElement
-    # attr_accessor :attributes,
-    #               :concept_refs #, :val_concept_refs
+  class MStructure < PackagableEntity
 
     def initialize(name, package, model)
       super(name, package, model, V_TYPE_STRUCTURE)
 
-      self[K_CONCEPTS] = []
+      self[K_CONCEPTS] = [] # two dimensional
       self[K_E_CONCEPTS] = Set.new().compare_by_identity
-      self
 
       self[K_MIXINS] = []
       self[K_MIXIN_PATH] = []
@@ -280,7 +278,7 @@ module CCDH
     end
   end
 
-  class MSAttribute < ModelElement
+  class MSAttribute < ModelEntity
     # attr_accessor :concept_refs, :val_concept_refs
     def initialize(name, structure, model)
       super(name, model, V_TYPE_ATTRIBUTE)

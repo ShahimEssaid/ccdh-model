@@ -3,7 +3,7 @@ module CCDH
   def self.rr_process_modelsets(modelsets)
     modelsets.each do |model_set_name, model_set|
       model_set[K_MODELS].each do |model_name, model|
-        CCDH.rr_load_model_files_and_objects(model_set, model_name)
+        CCDH.rr_load_model_files_and_object(model_set, model_name)
       end
     end
 
@@ -37,7 +37,7 @@ module CCDH
   # yet connected by a "H_DEPENDS_ON" path. however, this code doesn't resolve the dependencies to link and detect
   # cycles. it only creates the model disk layout and empty files if needed, instantiates model objects and loads files,
   # and follows any dependencies to do the same. There is no model to model linking/resolution yet.
-  def self.rr_load_model_files_and_objects(model_set, model_name)
+  def self.rr_load_model_files_and_object(model_set, model_name)
     # check if we already loaded this model
     model = model_set.r_get_model(model_name, false)
     model.nil? || return
@@ -47,23 +47,8 @@ module CCDH
     rr_read_model_file(model)
 
     model[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |name|
-      rr_load_model_files_and_objects(model_set, name)
+      rr_load_model_files_and_object(model_set, name)
     end
-  end
-
-  def self.rr_add_default_dependency(model_set)
-    default = model_set.r_get_model(model_set[K_MS_DEFAULT], false)
-    if default.nil?
-      raise("Could not find default model #{model_set[K_MS_DEFAULT]}")
-    end
-
-    model_set[K_MODELS].each do |name, model|
-      if model[K_DEPENDS_ON].empty?
-        model[K_DEPENDS_ON] << default
-        default[K_DEPENDED_ON].include?(model) || default[K_DEPENDED_ON] << model
-      end
-    end
-
   end
 
   def self.rr_process_depends_on(model_set, model)
@@ -83,6 +68,22 @@ module CCDH
       dependency[K_DEPENDED_ON].include?(model) || dependency[K_DEPENDED_ON] << model
     end
   end
+
+  def self.rr_add_default_dependency(model_set)
+    default = model_set.r_get_model(model_set[K_DEFAULT], false)
+    if default.nil?
+      raise("Could not find default model #{model_set[K_DEFAULT]}")
+    end
+
+    model_set[K_MODELS].each do |name, model|
+      if model[K_DEPENDS_ON].empty?
+        model[K_DEPENDS_ON] << default
+        default[K_DEPENDED_ON].include?(model) || default[K_DEPENDED_ON] << model
+      end
+    end
+
+  end
+
 
   def self.rr_process_depends_on_path(model_set, model, models_linked)
     models_linked << model
@@ -112,32 +113,9 @@ module CCDH
     models_linked.pop
   end
 
-  # def self.r_read_model_sets(model_sets)
-  #   model_sets.each do |name, model_set|
-  #     r_read_model_set(model_set)
-  #   end
-  # end
-
-  # def self.r_read_model_set(model_set)
-  #   # r_create_model_objects(model_set)
-  #   #r_resolve_models(model_set)
-  #   #r_link_models(model_set[K_MODELS][model_set[K_MS_TOP]], [], model_set)
-  #   # r_read_model_set_csvs(model_set)
-  # end
-
-
-  # def self.r_create_model_objects(model_set)
-  #   Dir.glob("*", base: model_set[K_MS_DIR]).each do |f|
-  #     dir = File.join(model_set[K_MS_DIR], f)
-  #     File.directory?(dir) || next
-  #     model = model_set.r_get_model(f)
-  #   end
-  # end
-
-
   def self.rr_read_model_file(model)
     model[K_LOADED] && return
-    model_file = File.join(model[K_MODEL_DIR], F_MODEL_CSV)
+    model_file = File.join(model[K_DIR], F_MODEL_CSV)
     model[K_MODEL_CSV] = CSV.read(model_file, headers: true)
 
     # save existing headers to rewrite them same way
@@ -168,60 +146,6 @@ module CCDH
     model[K_LOADED] = true
   end
 
-  # def self.r_link_models(model, path, model_set)
-  #   path << model
-  #
-  #   lastModule = true
-  #   model[H_DEPENDS_ON].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |depName|
-  #     lastModule = false
-  #     depModel = model_set[K_MODELS][depName]
-  #     if path.index(depModel) # cycle
-  #       pathString = ""
-  #       path.each do |m|
-  #         pathString += "#{m[VK_FQN]} > "
-  #       end
-  #       r_build_entry("Model cycle found with path #{pathString} for model #{model[VK_FQN]} and dependency #{depName}. Not linking this dependency.", model)
-  #       next
-  #     end
-  #     model[K_DEPENDS_ON].index(depModel) || model[K_DEPENDS_ON] << depModel
-  #     depModel[K_DEPENDED_ON].index(model) || depModel[K_DEPENDED_ON] << model
-  #     r_link_models(depModel, path, model_set)
-  #   end
-  #
-  #   if lastModule
-  #     # the path is used to build the dependency path
-  #     path.each.with_index.map do |m, i|
-  #       path[i..].each do |depModel|
-  #         model[K_DEPENDS_ON_PATH].index(depModel) || model[K_DEPENDS_ON_PATH] << depModel
-  #       end
-  #     end
-  #
-  #     if model[K_DEPENDS_ON].empty?
-  #       default = model_set[K_MODELS][model_set[K_MS_DEFAULT]]
-  #       if default
-  #         model[K_DEPENDS_ON] << default
-  #         default[K_DEPENDED_ON] << model
-  #       end
-  #     end
-  #   end
-  #   path.pop
-  # end
-
-  # def self.r_read_model_set_csvs(model_set)
-  #   model_set[K_MODELS].each do |n, model|
-  #     r_read_entity_csvs(model)
-  #   end
-  # end
-  #
-  # def self.r_read_entity_csvs(model)
-  #   model[K_PACKAGES_CSV] && return # read already
-  #   # load all dependencies first
-  #   model[K_DEPENDS_ON].each do |m|
-  #     m != model && r_read_entity_csvs(m)
-  #   end
-  #   r_read_model_csvs(model)
-  # end
-
   def self.r_read_model_csvs(model)
     r_read_packages(model)
     r_read_concepts(model)
@@ -230,13 +154,13 @@ module CCDH
   end
 
   def self.r_read_packages(model)
-    model_dir = model[K_MODEL_DIR]
+    model_dir = model[K_DIR]
     packages_file = File.join(model_dir, F_PACKAGES_CSV)
     model[K_PACKAGES_CSV] = CSV.read(packages_file, headers: true)
     # save existing headers to rewrite them same way
     model[K_PACKAGES_CSV].headers.each do |h|
       unless h.nil?
-        model[K_PACKAGES_HEADERS] << h.strip
+        model[K_PACKAGE_HEADERS] << h.strip
       end
     end
 
@@ -255,13 +179,13 @@ module CCDH
   end
 
   def self.r_read_concepts(model)
-    model_dir = model[K_MODEL_DIR]
+    model_dir = model[K_DIR]
     concepts_file = File.join(model_dir, F_CONCEPTS_CSV)
     model[K_CONCEPTS_CSV] = CSV.read(concepts_file, headers: true)
     # save existing headers to rewrite them same way
     model[K_CONCEPTS_CSV].headers.each do |h|
       unless h.nil?
-        model[K_CONCEPTS_HEADERS] << h.strip
+        model[K_CONCEPT_HEADERS] << h.strip
       end
     end
 
@@ -315,7 +239,7 @@ module CCDH
   end
 
   def self.r_read_elements(model)
-    model_dir = model[K_MODEL_DIR]
+    model_dir = model[K_DIR]
     # read elements
     #
     elements_file = File.join(model_dir, F_ELEMENTS_CSV)
@@ -324,7 +248,7 @@ module CCDH
     # save existing headers to rewrite them same way
     model[K_ELEMENTS_CSV].headers.each do |h|
       unless h.nil?
-        model[K_ELEMENTS_HEADERS] << h.strip
+        model[K_ELEMENT_HEADERS] << h.strip
       end
     end
 
@@ -354,14 +278,14 @@ module CCDH
 
 
       # check domain concepts
-      domains = row[H_DOMAIN_CONCEPTS]
-      row[H_DOMAIN_CONCEPTS] = r_check_entity_name_bar_list(domains, V_TYPE_CONCEPT)
-      row[H_DOMAIN_CONCEPTS] == domains || r_build_entry("#{H_DOMAIN_CONCEPTS}: #{domains} was updated to:#{row[H_DOMAIN_CONCEPTS]}", row)
+      domains = row[H_DOMAIN]
+      row[H_DOMAIN] = r_check_entity_name_bar_list(domains, V_TYPE_CONCEPT)
+      row[H_DOMAIN] == domains || r_build_entry("#{H_DOMAIN}: #{domains} was updated to:#{row[H_DOMAIN]}", row)
 
       # check range concepts
-      ranges = row[H_RANGE_CONCEPTS]
-      row[H_RANGE_CONCEPTS] = r_check_entity_name_bar_list(ranges, V_TYPE_CONCEPT)
-      row[H_RANGE_CONCEPTS] == ranges || r_build_entry("#{H_RANGE_CONCEPTS}: #{ranges} was updated to:#{row[H_RANGE_CONCEPTS]}", row)
+      ranges = row[H_RANGE]
+      row[H_RANGE] = r_check_entity_name_bar_list(ranges, V_TYPE_CONCEPT)
+      row[H_RANGE] == ranges || r_build_entry("#{H_RANGE}: #{ranges} was updated to:#{row[H_RANGE]}", row)
 
       # check related elements
       related = row[H_RELATED]
@@ -390,14 +314,14 @@ module CCDH
 
   def self.r_read_structures(model)
 
-    model_dir = model[K_MODEL_DIR]
+    model_dir = model[K_DIR]
     structures_file = File.join(model_dir, F_STRUCTURES_CSV)
 
     model[K_STRUCTURES_CSV] = CSV.read(structures_file, headers: true)
     # save existing headers to rewrite them same way
     model[K_STRUCTURES_CSV].headers.each do |h|
       unless h.nil?
-        model[K_STRUCTURES_HEADERS] << h.strip
+        model[K_STRUCTURE_HEADERS] << h.strip
       end
     end
 
@@ -416,14 +340,14 @@ module CCDH
       row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to:#{row[H_NAME]}", row)
 
       #check attribute name
-      name = row[H_ATTRIBUTE_NAME]
-      row[H_ATTRIBUTE_NAME] = r_check_simple_name(name, V_TYPE_ATTRIBUTE)
+      name = row[H_ATTRIBUTE]
+      row[H_ATTRIBUTE] = r_check_simple_name(name, V_TYPE_ATTRIBUTE)
       # first letter has to be lower case, to force ascii sort order after V_SELF, and it makes sense for attributes
       # needed for sorting from Excel sheets
-      if row[H_ATTRIBUTE_NAME] != V_SELF
-        row[H_ATTRIBUTE_NAME][0] = row[H_ATTRIBUTE_NAME][0].downcase
+      if row[H_ATTRIBUTE] != V_SELF
+        row[H_ATTRIBUTE][0] = row[H_ATTRIBUTE][0].downcase
       end
-      row[H_ATTRIBUTE_NAME] == name || r_build_entry("#{H_ATTRIBUTE_NAME}: #{name} was updated to:#{row[H_ATTRIBUTE_NAME]}", row)
+      row[H_ATTRIBUTE] == name || r_build_entry("#{H_ATTRIBUTE}: #{name} was updated to:#{row[H_ATTRIBUTE]}", row)
 
       #check element name
       name = row[H_ELEMENT]
@@ -436,9 +360,9 @@ module CCDH
       row[H_CONCEPTS] == concepts || r_build_entry("#{H_CONCEPTS}: #{concepts} was updated to:#{row[H_CONCEPTS]}", row)
 
       # check range
-      concepts = row[H_RANGE_CONCEPTS]
-      row[H_RANGE_CONCEPTS] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
-      row[H_RANGE_CONCEPTS] == concepts || r_build_entry("#{H_RANGE_CONCEPTS}: #{concepts} was updated to:#{row[H_RANGE_CONCEPTS]}", row)
+      concepts = row[H_RANGE]
+      row[H_RANGE] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
+      row[H_RANGE] == concepts || r_build_entry("#{H_RANGE}: #{concepts} was updated to:#{row[H_RANGE]}", row)
 
       # check structures
       structures = row[H_RANGE_STRUCTURES]
@@ -455,7 +379,7 @@ module CCDH
 
       structure = nil
       attribute = nil
-      if row[H_ATTRIBUTE_NAME] == V_SELF
+      if row[H_ATTRIBUTE] == V_SELF
         # this is a structure row
         # there should only be one of these in a sheet
         structure = package.r_get_structure(row[H_NAME], false)
@@ -468,17 +392,17 @@ module CCDH
         # this is an attribute row
         # there should only be one row
         structure = package.r_get_structure_generated(row[H_NAME])
-        attribute = structure.r_get_attribute(row[H_ATTRIBUTE_NAME], false)
+        attribute = structure.r_get_attribute(row[H_ATTRIBUTE], false)
         if !attribute.nil?
           r_build_entry("This entity was found again in later rows. The later one is skipped and not rewritten. It's values where:#{row.to_s}", entity)
           next
         end
-        attribute = structure.r_get_attribute(row[H_ATTRIBUTE_NAME], true)
+        attribute = structure.r_get_attribute(row[H_ATTRIBUTE], true)
 
       end
 
       if structure[K_GENERATED_NOW]
-        r_build_entry("Generated for attribute:#{row[H_ATTRIBUTE_NAME]}", structure)
+        r_build_entry("Generated for attribute:#{row[H_ATTRIBUTE]}", structure)
         r_build_entry("Had it's structure #{H_NAME} generated.", attribute)
       end
 

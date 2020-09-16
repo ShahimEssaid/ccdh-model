@@ -31,6 +31,14 @@ class CSV
   end
 end
 
+# TODO: check if this one is legal.
+# should this be mapped to to_a() ?
+class Set
+  def to_liquid
+    self
+  end
+end
+
 
 module CCDH
 
@@ -49,15 +57,15 @@ module CCDH
     end
     Octokit.middleware = stack
     Octokit.default_media_type = "application/vnd.github.v3+json,application/vnd.github.symmetra-preview+json"
-    @gh = Octokit::Client.new(:access_token => ENV[ENV_GH_TOKEN])
-    @gh.user.login
+    @ghclient = Octokit::Client.new(:access_token => ENV[ENV_GH_TOKEN])
+    @ghclient.user.login
 
     if ENV[ENV_GH_USER] && ENV[ENV_GH_REPO]
       GH_USR_REPO = "#{ENV[ENV_GH_USER]}/#{ENV[ENV_GH_REPO]}"
     end
 
     def self.ghclient
-      @gh
+      @ghclient
     end
 
   end

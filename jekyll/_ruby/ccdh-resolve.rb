@@ -159,7 +159,7 @@ module CCDH
           end
 
           # domains
-          element[H_DOMAIN_CONCEPTS].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |concept_group|
+          element[H_DOMAIN].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |concept_group|
             concepts = []
             concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]
@@ -177,7 +177,7 @@ module CCDH
           end
 
           # ranges
-          element[H_RANGE_CONCEPTS].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |concept_group|
+          element[H_RANGE].split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |concept_group|
             concepts = []
             concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]

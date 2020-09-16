@@ -10,11 +10,11 @@ module CCDH
     FileUtils.mkdir_p(dir)
 
     CSV.open(File.join(dir, F_PACKAGES_CSV), mode = "wb", {force_quotes: true}) do |csv|
-      csv << model[K_PACKAGES_HEADERS]
+      csv << model[K_PACKAGE_HEADERS]
       model[K_PACKAGES].keys.sort.each do |pk|
         package = model[K_PACKAGES][pk]
         row = []
-        model[K_PACKAGES_HEADERS].each do |h|
+        model[K_PACKAGE_HEADERS].each do |h|
           row << package[h]
         end
         package[K_NIL].each do |v|
@@ -25,13 +25,13 @@ module CCDH
     end
 
     CSV.open(File.join(dir, F_CONCEPTS_CSV), mode = "wb", {force_quotes: true}) do |csv|
-      csv << model[K_CONCEPTS_HEADERS]
+      csv << model[K_CONCEPT_HEADERS]
       model[K_PACKAGES].keys.sort.each do |pk|
         package = model[K_PACKAGES][pk]
         package[K_CONCEPTS].keys.sort.each do |ck|
           row = []
           concept = package[K_CONCEPTS][ck]
-          model[K_CONCEPTS_HEADERS].each do |h|
+          model[K_CONCEPT_HEADERS].each do |h|
             row << concept[h]
           end
           concept[K_NIL].each do |v|
@@ -43,14 +43,14 @@ module CCDH
     end
 
     CSV.open(File.join(dir, F_ELEMENTS_CSV), mode = "wb", {force_quotes: true}) do |csv|
-      csv << model[K_ELEMENTS_HEADERS]
+      csv << model[K_ELEMENT_HEADERS]
       model[K_PACKAGES].keys.sort.each do |pk|
         package = model[K_PACKAGES][pk]
         package[K_ELEMENTS].keys.sort.each do |ck|
           row = []
           element = package[K_ELEMENTS][ck]
           element[K_GENERATED_NOW] && element[H_STATUS] = V_GENERATED
-          model[K_ELEMENTS_HEADERS].each do |h|
+          model[K_ELEMENT_HEADERS].each do |h|
             row << element[h]
           end
           element[K_NIL].each do |v|
@@ -63,14 +63,14 @@ module CCDH
 
 
     CSV.open(File.join(dir, F_STRUCTURES_CSV), mode = "wb", {force_quotes: true}) do |csv|
-      csv << model[K_STRUCTURES_HEADERS]
+      csv << model[K_STRUCTURE_HEADERS]
       model[K_PACKAGES].keys.sort.each do |pk|
         package = model[K_PACKAGES][pk]
         package[K_STRUCTURES].keys.sort.each do |ck|
           row = []
           structure = package[K_STRUCTURES][ck]
           structure[K_GENERATED_NOW] && structure[H_STATUS] = V_GENERATED
-          model[K_STRUCTURES_HEADERS].each do |h|
+          model[K_STRUCTURE_HEADERS].each do |h|
             row << structure[h]
           end
           structure[K_NIL].each do |v|
@@ -82,7 +82,7 @@ module CCDH
             row = []
             a = structure[K_ATTRIBUTES][an]
             a[K_GENERATED_NOW] && a[H_STATUS] = V_GENERATED # this should not happen
-            model[K_STRUCTURES_HEADERS].each do |h|
+            model[K_STRUCTURE_HEADERS].each do |h|
               row << a[h]
             end
             csv << row

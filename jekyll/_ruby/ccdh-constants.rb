@@ -17,35 +17,33 @@ module CCDH
   H_PARENTS = "parents"
   # element
   H_PARENT = "parent"
-  H_DOMAIN_CONCEPTS = "domain_concepts"
-  H_RANGE_CONCEPTS = "range_concepts"
+  H_DOMAIN = "domain"
+  H_RANGE = "range"
   H_CONCEPTS = "concepts"
-  H_ATTRIBUTE_NAME = "attribute"
+  H_ATTRIBUTE = "attribute"
   H_ELEMENT = "element"
   H_RANGE_STRUCTURES = "range_structures"
   H_GH_ISSUE = "gh_issue"
   H_MIXINS = "mixins"
 
+  #
+  #
+  #
+  #
+  #
+
   K_SITE = "_site"
-  K_NIL = "_NIL"
+  K_NIL = "_nil"
   K_MODEL = "_model"
   K_MODELS = "_models"
   K_MS = "_ms"
-  K_MS_DIR = "_ms_dir"
-  K_MS_TOP = "_ms_top"
-  K_MS_DEFAULT = "_ms_default"
-
-  VK_FQN = "_fqn" # this is the a FQN like modelname:P:packagename:C:conceptname
-  VK_ENTITY_NAME = "_entity_name" # this is the name without the model name prefix. It's a FQN within a model.
-  VK_GH_LABEL_NAME = "_gh_label_name"
-
+  K_DIR = "_dir"
+  K_TOP = "_top"
+  K_DEFAULT = "_default"
   K_TYPE = "_type"
 
   K_ENTITIES = "_entities"
   K_ENTITIES_VISIBLE = "_entities_visible"
-
-
-  K_MODEL_DIR = "_m_dir"
 
   K_MODEL_CSV = "_model_csv"
   K_PACKAGES_CSV = "_packages_csv"
@@ -54,10 +52,10 @@ module CCDH
   K_STRUCTURES_CSV = "_structures_csv"
 
   K_MODEL_HEADERS = "_model_headers"
-  K_PACKAGES_HEADERS = "_packages_headers"
-  K_CONCEPTS_HEADERS = "_concepts_headers"
-  K_ELEMENTS_HEADERS = "_elements_headers"
-  K_STRUCTURES_HEADERS = "_structures_headers"
+  K_PACKAGE_HEADERS = "_package_headers"
+  K_CONCEPT_HEADERS = "_concept_headers"
+  K_ELEMENT_HEADERS = "_element_headers"
+  K_STRUCTURE_HEADERS = "_structure_headers"
 
   K_GENERATED_NOW = "_generated_now"
   K_PACKAGE = "_package"
@@ -105,6 +103,11 @@ module CCDH
   K_LOADED = "_loaded"
   K_LINKED = "-linked"
 
+
+  VK_FQN = "_fqn" # this is the a FQN like modelname:P:packagename:C:conceptname
+  VK_ENTITY_NAME = "_entity_name" # this is the name without the model name prefix. It's a FQN within a model.
+  VK_GH_LABEL_NAME = "_gh_label_name"
+
   F_MODEL_XLSX = "model.xlsx"
   F_MODEL_CSV = "model.csv"
   F_PACKAGES_CSV = "packages.csv"
@@ -151,10 +154,10 @@ module CCDH
   V_CONCEPT_HEADERS = [H_PACKAGE, H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_PARENTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
   V_CONCEPT_THING_ROW = ['default', V_CONCEPT_THING, 'Thing summary.', 'Thing description.', '', '', '', V_CURRENT, '', '']
 
-  V_ELEMENT_HEADERS = [H_PACKAGE, H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_PARENT, H_CONCEPTS, H_DOMAIN_CONCEPTS, H_RANGE_CONCEPTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
+  V_ELEMENT_HEADERS = [H_PACKAGE, H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_PARENT, H_CONCEPTS, H_DOMAIN, H_RANGE, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
   V_ELEMENT_HAS_THING_ROW = ['default', V_ELEMENT_HAS_THING, "#{V_ELEMENT_HAS_THING} summary", "#{V_ELEMENT_HAS_THING} description", '', '', V_DEFAULT_C_THING, V_DEFAULT_C_THING, V_DEFAULT_C_THING, '', V_CURRENT, '', '']
 
-  V_STRUCTURE_HEADERS = [H_PACKAGE, H_NAME, H_ATTRIBUTE_NAME, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_CONCEPTS, H_RANGE_CONCEPTS, H_RANGE_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
+  V_STRUCTURE_HEADERS = [H_PACKAGE, H_NAME, H_ATTRIBUTE, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_CONCEPTS, H_RANGE, H_RANGE_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
   V_GH_LABEL_COLOR = "fef2c0"
 
   ENV_GH_ACTIVE = "GH_ACTIVE"

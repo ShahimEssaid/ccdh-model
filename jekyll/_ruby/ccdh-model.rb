@@ -216,8 +216,8 @@ module CCDH
       self[K_RELATED] = {}
       self[K_CHILDREN] = {}
 
-      self[K_ANCESTORS] = Set.new().compare_by_identity
-      self[K_DESCENDANTS] = Set.new().compare_by_identity
+      self[K_ANCESTORS] = {}
+      self[K_DESCENDANTS] = {}
 
       self[K_OF_E_CONCEPTS] = {}
       self[K_OF_E_DOMAINS] = {}
@@ -237,21 +237,21 @@ module CCDH
       self[K_CHILDREN] = {}
 
       self[K_CONCEPTS] = [] # two dimensional. [OR][AND]
-      self[K_E_CONCEPTS] = Set.new().compare_by_identity
-      self[K_NE_CONCEPTS] = Set.new().compare_by_identity
+      self[K_E_CONCEPTS] = {}
+      self[K_NE_CONCEPTS] = {}
 
       self[K_DOMAINS] = [] # two dimensional
-      self[K_E_DOMAINS] = Set.new().compare_by_identity
-      self[K_NE_DOMAINS] = Set.new().compare_by_identity
+      self[K_E_DOMAINS] = {}
+      self[K_NE_DOMAINS] = {}
 
       self[K_RANGES] = [] # two dimensional
-      self[K_E_RANGES] = Set.new().compare_by_identity
-      self[K_NE_RANGES] = Set.new().compare_by_identity
+      self[K_E_RANGES] = {}
+      self[K_NE_RANGES] ={}
 
       self[K_RELATED] = {}
 
-      self[K_ANCESTORS] = Set.new().compare_by_identity
-      self[K_DESCENDANTS] = Set.new().compare_by_identity
+      self[K_ANCESTORS] = {}
+      self[K_DESCENDANTS] = {}
     end
   end
 
@@ -261,7 +261,7 @@ module CCDH
       super(name, package, model, V_TYPE_STRUCTURE)
 
       self[K_CONCEPTS] = [] # two dimensional
-      self[K_E_CONCEPTS] = Set.new().compare_by_identity
+      self[K_E_CONCEPTS] = {}
 
       self[K_MIXINS] = []
       self[K_MIXIN_PATH] = []

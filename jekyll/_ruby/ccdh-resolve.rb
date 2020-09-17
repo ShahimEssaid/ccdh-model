@@ -260,16 +260,14 @@ module CCDH
 
     if path.include?(entity)
       # a circle is found
-
       # add it to show the circle in the path
       path << entity
       pathString = ""
       path.each do |e|
         pathString += "#{e[VK_FQN]} > "
       end
-
       r_build_entry("DAG check: #{entity[VK_FQN]} is circular with path: #{pathString}. Not re-including in descendants", entity)
-      entity[K_ANCESTORS].merge(path)
+      entity[K_ANCESTORS].merge!(path.to_h { |e| [e[VK_FQN], e] })
       rr_populate_descendants(path)
     else
       path << entity
@@ -278,7 +276,7 @@ module CCDH
         leaf = false
         rr_ce_DAG_ancestors_descendants_recursive(path, child)
       end
-      entity[K_ANCESTORS].merge(path)
+      entity[K_ANCESTORS].merge!(path.to_h { |e| [e[VK_FQN], e] })
       if leaf
         rr_populate_descendants(path)
       end
@@ -288,7 +286,7 @@ module CCDH
 
   def self.rr_populate_descendants(path)
     path.each.with_index.map do |entity, i|
-      entity[K_DESCENDANTS].merge(path[i..])
+      entity[K_DESCENDANTS].merge!(path[i..].to_h { |e| [e[VK_FQN], e] })
     end
   end
 
@@ -296,69 +294,79 @@ module CCDH
     thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
     has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
 
-    has_thing[K_E_CONCEPTS].merge(thing[K_DESCENDANTS])
-    has_thing[K_E_DOMAINS].merge(thing[K_DESCENDANTS])
-    has_thing[K_E_RANGES].merge(thing[K_DESCENDANTS])
+    has_thing[K_E_CONCEPTS].merge!(thing[K_DESCENDANTS])
+    has_thing[K_E_DOMAINS].merge!(thing[K_DESCENDANTS])
+    has_thing[K_E_RANGES].merge!(thing[K_DESCENDANTS])
 
-    r_element_of_concept(has_thing)
-    r_e_effective_recursive(has_thing)
+    rr_e_of_concept(has_thing)
+    rr_e_effective_recursive(has_thing)
   end
 
-  def self.r_e_effective_recursive(element)
-    element[K_CHILDREN].each do |child_fqn, child|
+  def self.rr_e_effective_recursive(element)
+    element[K_CHILDREN].each do |child_fqn, child_element|
 
       # concepts
       element[K_CONCEPTS].each do |concept_group|
-        effective_concepts = Set.new().compare_by_identity
+        effective_concepts = {}
         concept_group.each do |concept|
-          effective_concepts.empty? && effective_concepts.merge(concept[K_DESCENDANTS])
-          effective_concepts = effective_concepts.intersection(concept[K_DESCENDANTS])
+          effective_concepts.merge!(concept[K_DESCENDANTS])
         end
-        child[K_E_CONCEPTS].merge(effective_concepts)
+        child_element[K_E_CONCEPTS].merge!(effective_concepts)
       end
-      old_effective = child[K_E_CONCEPTS]
-      child[K_E_CONCEPTS] = element[K_E_CONCEPTS].intersection(old_effective).compare_by_identity
-      child[K_NE_CONCEPTS] = old_effective.difference(child[K_E_CONCEPTS]).compare_by_identity
+      child_element[K_NE_CONCEPTS] = child_element[K_E_CONCEPTS].clone
+      child_element[K_E_CONCEPTS].keep_if do |key, value|
+        element[K_E_CONCEPTS].key?(key)
+      end
+      child_element[K_NE_CONCEPTS].delete_if do |key, value|
+        element[K_E_CONCEPTS].key?(key)
+      end
 
       # domains
       element[K_DOMAINS].each do |concept_group|
-        effective_concepts = Set.new().compare_by_identity
+        effective_concepts = {}
         concept_group.each do |concept|
-          effective_concepts.empty? && effective_concepts.merge(concept[K_DESCENDANTS])
-          effective_concepts = effective_concepts.intersection(concept[K_DESCENDANTS])
+          effective_concepts.merge!(concept[K_DESCENDANTS])
         end
-        child[K_E_DOMAINS].merge(effective_concepts)
+        child_element[K_E_DOMAINS].merge!(effective_concepts)
       end
-      old_effective = child[K_E_DOMAINS]
-      child[K_E_DOMAINS] = element[K_E_DOMAINS].intersection(old_effective).compare_by_identity
-      child[K_NE_DOMAINS] = old_effective.difference(child[K_E_DOMAINS]).compare_by_identity
+      child_element[K_NE_DOMAINS] = child_element[K_E_DOMAINS].clone
+      child_element[K_E_DOMAINS].keep_if do |key, value|
+        element[K_E_DOMAINS].key?(key)
+      end
+      child_element[K_NE_DOMAINS].delete_if do |key, value|
+        element[K_E_DOMAINS].key?(key)
+      end
 
       # ranges
       element[K_RANGES].each do |concept_group|
-        effective_concepts = Set.new().compare_by_identity
+        effective_concepts = {}
         concept_group.each do |concept|
-          effective_concepts.empty? && effective_concepts.merge(concept[K_DESCENDANTS])
-          effective_concepts = effective_concepts.intersection(concept[K_DESCENDANTS])
+          effective_concepts.merge!(concept[K_DESCENDANTS])
         end
-        child[K_E_RANGES].merge(effective_concepts)
+        child_element[K_E_RANGES].merge!(effective_concepts)
       end
-      old_effective = child[K_E_RANGES]
-      child[K_E_RANGES] = element[K_E_RANGES].intersection(old_effective).compare_by_identity
-      child[K_NE_RANGES] = old_effective.difference(child[K_E_RANGES]).compare_by_identity
-      r_element_of_concept(child)
-      r_e_effective_recursive(child)
+      child_element[K_NE_RANGES] = child_element[K_E_RANGES].clone
+      child_element[K_E_RANGES].keep_if do |key, value|
+        element[K_E_RANGES].key?(key)
+      end
+      child_element[K_NE_RANGES].delete_if do |key, value|
+        element[K_E_RANGES].key?(key)
+      end
+
+      rr_e_of_concept(child_element)
+      rr_e_effective_recursive(child_element)
     end
   end
 
-  def self.r_element_of_concept(element)
-    element[K_E_CONCEPTS].each do |concept|
-      concept[K_OF_E_CONCEPTS][concept[VK_FQN]] = element
+  def self.rr_e_of_concept(element)
+    element[K_E_CONCEPTS].each do |fqn, concept|
+      concept[K_OF_E_CONCEPTS][fqn] = element
     end
-    element[K_E_DOMAINS].each do |concept|
-      concept[K_OF_E_DOMAINS][concept[VK_FQN]] = element
+    element[K_E_DOMAINS].each do |fqn, concept|
+      concept[K_OF_E_DOMAINS][fqn] = element
     end
-    element[K_E_RANGES].each do |concept|
-      concept[K_OF_E_RANGES][concept[VK_FQN]] = element
+    element[K_E_RANGES].each do |fqn, concept|
+      concept[K_OF_E_RANGES][fqn] = element
     end
 
   end
@@ -393,7 +401,7 @@ module CCDH
           # all the concepts are ORed instead of AND/OR
           structure[K_CONCEPTS].each do |concept_array|
             concept_array.each do |concept|
-              structure[K_E_CONCEPTS].merge(concept[K_ANCESTORS])
+              structure[K_E_CONCEPTS].merge!(concept[K_ANCESTORS])
             end
           end
 
@@ -406,7 +414,7 @@ module CCDH
           end
 
           # effective sub concepts to find sub elements
-          effective_sub_concepts = Set.new().compare_by_identity
+          effective_sub_concepts = {}
           structure[K_CONCEPTS].each do |concept_array|
             concept_array.each do |concept|
               effective_sub_concepts.merge(concept[K_DESCENDANTS])

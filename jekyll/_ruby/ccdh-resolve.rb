@@ -2,26 +2,32 @@ require_relative 'ccdh-util'
 require_relative 'ccdh-model'
 module CCDH
 
-  def self.r_resolve_model_sets(model_sets)
+  def self.rr_resolve_model_sets(model_sets)
     model_sets.each do |n, model_set|
-      r_resolve_model_set(model_set)
+      rr_resolve_model_set(model_set)
     end
   end
 
-  def self.r_resolve_model_set(model_set)
-    r_resolve_model_visible_entities(model_set)
-    r_thing_something_check(model_set)
-    r_resolve_concepts(model_set)
-    r_resolve_elements(model_set)
-    r_parentless_entities(model_set)
-    r_check_DAG_and_closure(model_set)
-    r_resolve_elements_effective(model_set)
+  def self.rr_resolve_model_set(model_set)
+    rr_resolve_model_visible_entities(model_set)
+    rr_thing_something_check(model_set)
+    rr_c_resolve_parents_related(model_set)
+    rr_e_resolve_parent_related_domains_ranges(model_set)
+    rr_ce_parentless(model_set)
+    rr_ce_DAG_ancestors_descendants(model_set)
+    r_e_effective(model_set)
 
     r_resolve_structures(model_set)
 
   end
 
-  def self.r_resolve_model_visible_entities(model_set)
+  # this walks through the model path for a model and indexes the first instance for a "name" at the
+  # model level to have a map from all names visible to a model to the instance of that name from any model in the
+  # path. first one wins.
+  # while doing this, it also indexes all instances under a name at the model set level by mapping a name to an array
+  # of instance with that name in case there are multiple. the goal is to keep these arrays at size 1, meaning there
+  # is a unique mapping of a name to an instance across all models.
+  def self.rr_resolve_model_visible_entities(model_set)
     model_set[K_MODELS].each do |model_name, model|
       model[K_DEPENDS_ON_PATH].each do |dep_model|
         dep_model[K_ENTITIES].each do |dep_entity_name, dep_entity|
@@ -41,9 +47,11 @@ module CCDH
     end
   end
 
-  # TODO: this means Thing and hasThing aree required in the set
-  def self.r_thing_something_check(model_set)
+  # TODO: this means Thing and hasThing are required in the set
+  def self.rr_thing_something_check(model_set)
     error = ""
+
+    # thing
     things = model_set[K_ENTITIES][V_DEFAULT_C_THING]
     if things.size > 1
       things.each do |thing|
@@ -55,6 +63,7 @@ module CCDH
       error += "Model set #{model_set[H_NAME]} does not have a #{V_DEFAULT_C_THING}.\n"
     end
 
+    # has_thing
     has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING]
     if has_thing.size > 1
       has_thing.each do |thing|
@@ -66,6 +75,7 @@ module CCDH
       error += "Model set #{model_set[H_NAME]} does not have a #{V_DEFAULT_E_HAS_THING}.\n"
     end
 
+    # check it's visible from each model
     model_set[K_MODELS].each do |name, model|
 
       thing = model[K_ENTITIES_VISIBLE][V_DEFAULT_C_THING]
@@ -82,16 +92,17 @@ module CCDH
     error.empty? || raise(error)
   end
 
-  def self.r_resolve_concepts(model_set)
+  def self.rr_c_resolve_parents_related(model_set)
     model_set[K_MODELS].each do |model_name, model|
       model[K_PACKAGES].each do |pkg_name, package|
         package[K_CONCEPTS].each do |concept_name, concept|
 
           # parents
+          # this one has to follow model visibility rules
           concept[H_PARENTS].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |parent_name|
             parent = model[K_ENTITIES_VISIBLE][parent_name]
             if parent
-              concept[K_PARENTS][parent_name[VK_FQN]] = parent
+              concept[K_PARENTS][parent_name[VK_ENTITY_NAME]] = parent
               parent[K_CHILDREN][concept[VK_FQN]] = concept
             else
               r_build_entry("Parent ref #{parent_name} was not resolvable.", concept)
@@ -100,10 +111,15 @@ module CCDH
 
           #related
           concept[H_RELATED].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |related_name|
-            related = model[K_ENTITIES_VISIBLE][related_name]
+            if rr_is_entity_name(related_name)
+              related = model[K_ENTITIES_VISIBLE][related_name]
+            elsif rr_is_fqn_name(related_name)
+              related = model[K_MS][K_ENTITIES][related_name][0]
+            end
+
             if related
-              concept[K_RELATED][related[VK_FQN]] = related
-              related_name[K_RELATED][concept[VK_FQN]] = concept
+              concept[K_RELATED][related_name[VK_FQN]] = related
+              related[K_RELATED][concept[VK_FQN]] = concept
             else
               r_build_entry("Related ref #{related_name} was not resolvable.", concept)
             end
@@ -113,7 +129,7 @@ module CCDH
     end
   end
 
-  def self.r_resolve_elements(model_set)
+  def self.rr_e_resolve_parent_related_domains_ranges(model_set)
     model_set[K_MODELS].each do |model_name, model|
       model[K_PACKAGES].each do |package_name, package|
         package[K_ELEMENTS].each do |element_name, element|
@@ -148,9 +164,11 @@ module CCDH
               if concept
                 if !concepts.index(concepts)
                   concepts << concept
+                else
+                  r_build_entry("Concept: #{concept_name} is duplicate in its concepts AND group.", element)
                 end
               else
-                r_build_entry("Concept name: #{concept_name} was not resolved", element)
+                r_build_entry("Concept: #{concept_name} in concepts was not resolved.", element)
               end
             end
             if !concepts.empty?
@@ -166,9 +184,11 @@ module CCDH
               if concept
                 if !concepts.index(concepts)
                   concepts << concept
+                else
+                  r_build_entry("Concept: #{concept_name} is duplicate in its domains AND group.", element)
                 end
               else
-                r_build_entry("Domain name: #{concept_name} was not resolved", element)
+                r_build_entry("Concept: #{concept_name} in domains was not resolved.", element)
               end
             end
             if !concepts.empty?
@@ -184,9 +204,11 @@ module CCDH
               if concept
                 if !concepts.index(concepts)
                   concepts << concept
+                else
+                  r_build_entry("Concept: #{concept_name} is duplicate in its ranges AND group.", element)
                 end
               else
-                r_build_entry("Range name: #{concept_name} was not resolved", element)
+                r_build_entry("Concept: #{concept_name} in ranges was not resolved.", element)
               end
             end
             if !concepts.empty?
@@ -199,7 +221,7 @@ module CCDH
     end
   end
 
-  def self.r_parentless_entities(model_set)
+  def self.rr_ce_parentless(model_set)
     model_set[K_MODELS].each do |model_name, model|
       # concepts
       thing = model[K_MS][K_ENTITIES][V_DEFAULT_C_THING][0]
@@ -224,63 +246,65 @@ module CCDH
   end
 
   # TODO: add check for elements
-  def self.r_check_DAG_and_closure(model_set)
+  def self.rr_ce_DAG_ancestors_descendants(model_set)
     thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
     path = []
-    r_check_DAG_and_closure_recursive(path, thing)
+    rr_ce_DAG_ancestors_descendants_recursive(path, thing)
 
     has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
     path = []
-    r_check_DAG_and_closure_recursive(path, has_thing)
+    rr_ce_DAG_ancestors_descendants_recursive(path, has_thing)
   end
 
-  def self.r_check_DAG_and_closure_recursive(path, entity)
+  def self.rr_ce_DAG_ancestors_descendants_recursive(path, entity)
 
-    if path.index(entity)
+    if path.include?(entity)
       # a circle is found
+
+      # add it to show the circle in the path
       path << entity
       pathString = ""
       path.each do |e|
         pathString += "#{e[VK_FQN]} > "
       end
-      path.pop
-      r_build_entry("DAG: #{entity[VK_FQN]} is circular with path: #{pathString}. Not adding: #{entity[VK_FQN]} as a descendant again.", entity)
+
+      r_build_entry("DAG check: #{entity[VK_FQN]} is circular with path: #{pathString}. Not re-including in descendants", entity)
       entity[K_ANCESTORS].merge(path)
-      r_populate_concept_descendants(path)
+      rr_populate_descendants(path)
     else
       path << entity
       leaf = true
       entity[K_CHILDREN].each do |name, child|
         leaf = false
-        r_check_DAG_and_closure_recursive(path, child)
+        rr_ce_DAG_ancestors_descendants_recursive(path, child)
       end
       entity[K_ANCESTORS].merge(path)
       if leaf
-        r_populate_concept_descendants(path)
+        rr_populate_descendants(path)
       end
-      path.pop
     end
-
+    path.pop
   end
 
-  def self.r_populate_concept_descendants(path)
+  def self.rr_populate_descendants(path)
     path.each.with_index.map do |entity, i|
       entity[K_DESCENDANTS].merge(path[i..])
     end
   end
 
-  def self.r_resolve_elements_effective(model_set)
-    has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
+  def self.r_e_effective(model_set)
     thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
+    has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
 
     has_thing[K_E_CONCEPTS].merge(thing[K_DESCENDANTS])
     has_thing[K_E_DOMAINS].merge(thing[K_DESCENDANTS])
     has_thing[K_E_RANGES].merge(thing[K_DESCENDANTS])
+
     r_element_of_concept(has_thing)
-    r_resolve_elements_effective_recursive(has_thing)
+    r_e_effective_recursive(has_thing)
   end
 
-  def self.r_resolve_elements_effective_recursive(element)
+  def self.r_e_effective_recursive(element)
     element[K_CHILDREN].each do |child_fqn, child|
 
       # concepts
@@ -322,7 +346,7 @@ module CCDH
       child[K_E_RANGES] = element[K_E_RANGES].intersection(old_effective).compare_by_identity
       child[K_NE_RANGES] = old_effective.difference(child[K_E_RANGES]).compare_by_identity
       r_element_of_concept(child)
-      r_resolve_elements_effective_recursive(child)
+      r_e_effective_recursive(child)
     end
   end
 

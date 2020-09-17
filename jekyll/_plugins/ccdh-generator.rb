@@ -31,7 +31,8 @@ class CSV
   end
 end
 
-# TODO: check if this one is legal.
+# TODO: check this:
+# if we need to actually convert to an array view.
 # should this be mapped to to_a() ?
 class Set
   def to_liquid
@@ -116,7 +117,7 @@ module CCDH
       CCDH.rr_process_modelsets(site.data[K_MS])
 
 
-      CCDH.r_resolve_model_sets(site.data[K_MS])
+      CCDH.rr_resolve_model_sets(site.data[K_MS])
 
       if ENV[ENV_GH_ACTIVE] == "true"
         CCDH.r_gh(first_model_set)

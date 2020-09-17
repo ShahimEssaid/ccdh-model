@@ -1,5 +1,13 @@
 module CCDH
 
+  def self.rr_is_entity_name(name)
+    name.split(SEP_COLON).size == 3
+  end
+
+  def self.rr_is_fqn_name(name)
+    name.split(SEP_COLON).size == 5
+  end
+
   # Allows a-z, A-Z, 0-9, and _
   # If empty, generate with defaultName_randomNumber
   def self.r_check_simple_name(name, entity_type)

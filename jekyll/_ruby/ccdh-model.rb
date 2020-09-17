@@ -25,16 +25,20 @@ module CCDH
     end
 
     def r_get_missing_key(key)
+      value = self[key]
+      value && (return value)
       case key
       when VK_FQN
-        "#{self[K_MODEL][H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
+        value = "#{self[K_MODEL][H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
       when VK_ENTITY_NAME
-        "#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
+        value = "#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
       when VK_GH_LABEL_NAME
-        "#{self[H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}"
+        value = "#{self[H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}"
       else
-        nil
+        value = nil
       end
+      self[key] = value
+      value
     end
   end
 
@@ -51,7 +55,7 @@ module CCDH
         hash.r_get_missing_key(key)
       end
 
-      self[K_SITE] = nil  # the Jekyll site
+      self[K_SITE] = nil # the Jekyll site
       self[H_NAME] = name
       self[K_DIR] = dir
 

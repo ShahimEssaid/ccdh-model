@@ -15,9 +15,9 @@ module CCDH
     rr_e_resolve_parent_related_domains_ranges(model_set)
     rr_ce_parentless(model_set)
     rr_ce_DAG_ancestors_descendants(model_set)
-    r_e_effective(model_set)
+    rr_e_effective(model_set)
 
-    r_resolve_structures(model_set)
+    #r_resolve_structures(model_set)
 
   end
 
@@ -290,7 +290,7 @@ module CCDH
     end
   end
 
-  def self.r_e_effective(model_set)
+  def self.rr_e_effective(model_set)
     thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
     has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
 

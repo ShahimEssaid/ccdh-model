@@ -15,9 +15,10 @@ done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
-[  -f "bin/.config" ] &&  . bin/.config
+[ -f "bin/.config" ] && . bin/.config
 
 echo "# Installing gem dependencies"
-bundle check --path vendor/bundle || bundle install --path vendor/bundle
+bundle config set path 'vendor/bundle'
+bundle check || bundle install
 echo "# Installing npm dependencies"
 npm install

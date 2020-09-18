@@ -26,7 +26,7 @@ module CCDH
 
     modelsets.each do |model_set_name, model_set|
       model_set[K_MODELS].each do |model_name, model|
-        CCDH.r_read_model_csvs(model)
+        CCDH.rr_read_csvs(model)
       end
     end
   end
@@ -146,7 +146,7 @@ module CCDH
     model[K_LOADED] = true
   end
 
-  def self.r_read_model_csvs(model)
+  def self.rr_read_csvs(model)
     r_read_packages(model)
     r_read_concepts(model)
     r_read_elements(model)

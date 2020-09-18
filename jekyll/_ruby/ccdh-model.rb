@@ -25,8 +25,8 @@ module CCDH
     end
 
     def r_get_missing_key(key)
-      value = self[key]
-      value && (return value)
+      self.has_key?(key) && self[key]
+      
       case key
       when VK_FQN
         value = "#{self[K_MODEL][H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"

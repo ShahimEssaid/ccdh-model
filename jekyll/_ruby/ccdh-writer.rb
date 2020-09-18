@@ -9,7 +9,7 @@ module CCDH
   def self.writeModelToCSV(model, dir)
     FileUtils.mkdir_p(dir)
 
-    CSV.open(File.join(dir, F_PACKAGES_CSV), mode = "wb", {force_quotes: true}) do |csv|
+    CSV.open(File.join(dir, F_PACKAGES_CSV), mode = "wb", force_quotes: true) do |csv|
       csv << model[K_PACKAGE_HEADERS]
       model[K_PACKAGES].keys.sort.each do |pk|
         package = model[K_PACKAGES][pk]
@@ -24,7 +24,7 @@ module CCDH
       end
     end
 
-    CSV.open(File.join(dir, F_CONCEPTS_CSV), mode = "wb", {force_quotes: true}) do |csv|
+    CSV.open(File.join(dir, F_CONCEPTS_CSV), mode = "wb", force_quotes: true) do |csv|
       csv << model[K_CONCEPT_HEADERS]
       model[K_PACKAGES].keys.sort.each do |pk|
         package = model[K_PACKAGES][pk]
@@ -42,7 +42,7 @@ module CCDH
       end
     end
 
-    CSV.open(File.join(dir, F_ELEMENTS_CSV), mode = "wb", {force_quotes: true}) do |csv|
+    CSV.open(File.join(dir, F_ELEMENTS_CSV), mode = "wb", force_quotes: true) do |csv|
       csv << model[K_ELEMENT_HEADERS]
       model[K_PACKAGES].keys.sort.each do |pk|
         package = model[K_PACKAGES][pk]
@@ -62,7 +62,7 @@ module CCDH
     end
 
 
-    CSV.open(File.join(dir, F_STRUCTURES_CSV), mode = "wb", {force_quotes: true}) do |csv|
+    CSV.open(File.join(dir, F_STRUCTURES_CSV), mode = "wb", force_quotes: true) do |csv|
       csv << model[K_STRUCTURE_HEADERS]
       model[K_PACKAGES].keys.sort.each do |pk|
         package = model[K_PACKAGES][pk]

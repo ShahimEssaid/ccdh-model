@@ -46,6 +46,7 @@ module CCDH
   if ENV[CCDH_CONFIGURED].nil?
     lines = File.readlines(File.expand_path(".env"))
     lines.each do |line|
+      line.start_with?("#") && next
       var = line.split("=").collect(&:strip).reject(&:empty?)
       unless var.empty?
         ENV[var[0]] = var[1].gsub(/"/, "")
@@ -140,17 +141,17 @@ module CCDH
       #   publisher.publishModel
       # end
       #
-      # # if we want to write to a different place pass in a root directory
-      # write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]
-      # site.data[K_MS].each do |model_set_name, model_set|
-      #   if write_path.nil? || write_path.empty?
-      #     write_dir = File.expand_path(model_set_name[K_MS_DIR], model_set_name)
-      #   else
-      #     write_dir = File.expand_path(write_dir, model_set_name)
-      #   end
-      #   CCDH.r_write_modelset(model_set, write_dir)
-      # end
-      # #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
+      # if we want to write to a different place pass in a root directory
+      write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]
+      site.data[K_MS].each do |model_set_name, model_set|
+        if write_path.nil? || write_path.empty?
+          write_dir = File.expand_path(model_set_name, model_set[K_MS_DIR] )
+        else
+          write_dir = File.expand_path(model_set_name, File.expand_path(write_path) )
+        end
+        CCDH.r_write_modelset(model_set, write_dir)
+      end
+      #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
     end
 
     def r_clean_generated_pages(path)

@@ -213,8 +213,10 @@ module CCDH
       self[K_OF_EL_RANGES_CLU] = {}
       self[K_OF_EL_RANGES_CLD] = {}
 
-
-      self[K_OF_S_CONCEPTS] = {}
+      # structure stuff
+      self[K_OF_S_CONCEPTS_E] = {}
+      self[K_OF_S_CONCEPTS_CLU] = {}
+      self[K_OF_S_CONCEPTS_CLD] = {}
 
     end
   end
@@ -258,23 +260,26 @@ module CCDH
 
       self[K_CONCEPTS] = [] # two dimensional
       self[K_CONCEPTS_E] = {}
+      self[K_CONCEPTS_CLU] = {}
+      self[K_CONCEPTS_CLD] = {}
 
       # this holds asserted pointers to mixins
       self[K_MIXINS] = []
-      # this is the transitive closure of K_MIXINS and further ones are considered ancestors
-      self[K_MIXINS_ANC] = {}
-
       # the inverse derived of K_MIXINS
       self[K_MIXIN_OF] = {}
+
+      # this is the transitive closure of K_MIXINS and further ones are considered ancestors
+      self[K_MIXINS_ANC] = {}
       # traversing the inverse K_MIXINS_OF as descendants
       self[K_MIXINS_DESC] = {}
 
       # this holds asserted pointers to compositions
       self[K_COMPS] = []
-      # this is the transitive closure of K_COMPS and further ones are considered ancestors
-      self[K_COMPS_ANC] = {}
       # the inverse derived of K_COMPS
       self[K_COMPS_OF] = {}
+
+      # this is the transitive closure of K_COMPS and further ones are considered ancestors
+      self[K_COMPS_ANC] = {}
       # traversing the inverse K_COMPS_OF as descendants
       self[K_COMPS_DESC] = {}
 

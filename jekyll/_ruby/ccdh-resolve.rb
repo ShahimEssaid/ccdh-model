@@ -20,6 +20,7 @@ module CCDH
     rr_s_resolve_concepts_mixins_comps(model_set)
     rr_s_closure_mixins_comps(model_set)
     rr_s_effective_concepts(model_set)
+    rr_s_check_mixin_concepts(model_set)
 
   end
 
@@ -376,6 +377,7 @@ module CCDH
 
 
       # domains
+      #
       child_element[K_DOMAINS].each do |concept_group|
         effective_concepts = nil
         concept_group.each do |concept|
@@ -386,19 +388,90 @@ module CCDH
           end
         end
         # OR
-        child_element[K_DOMAINS_E].merge!(effective_concepts)
+        child_element[K_DOMAINS_E].merge!(rr_concepts_dag_roots(effective_concepts))
       end
+      # we have the effective set of concepts that represent the query
+      # now derive other field
       child_element[K_DOMAINS_NE] = child_element[K_DOMAINS_E].clone
       # only keep if also in parent
       child_element[K_DOMAINS_E].keep_if do |key, value|
-        element[K_DOMAINS_E].key?(key)
+        element[K_CONCEPTS_CLD].key?(key)
       end
       # not effective if not in parent
       child_element[K_DOMAINS_NE].delete_if do |key, value|
-        element[K_DOMAINS_E].key?(key)
+        element[K_CONCEPTS_CLD].key?(key)
       end
+      # the closures
+      child_element[K_DOMAINS_E].each do |c|
+        child_element[K_DOMAINS_CLU].merge!(c[K_ANCESTORS])
+      end
+      child_element[K_DOMAINS_E].each do |c|
+        child_element[K_DOMAINS_CLD].merge!(c[K_DESCENDANTS])
+      end
+      #
+      #
+      #
+      #
+      #
+      # child_element[K_DOMAINS].each do |concept_group|
+      #   effective_concepts = nil
+      #   concept_group.each do |concept|
+      #     effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
+      #     # AND, remove what's not in both
+      #     effective_concepts.keep_if do |key, value|
+      #       concept[K_DESCENDANTS].has_key?(key)
+      #     end
+      #   end
+      #   # OR
+      #   child_element[K_DOMAINS_E].merge!(effective_concepts)
+      # end
+      # child_element[K_DOMAINS_NE] = child_element[K_DOMAINS_E].clone
+      # # only keep if also in parent
+      # child_element[K_DOMAINS_E].keep_if do |key, value|
+      #   element[K_DOMAINS_E].key?(key)
+      # end
+      # # not effective if not in parent
+      # child_element[K_DOMAINS_NE].delete_if do |key, value|
+      #   element[K_DOMAINS_E].key?(key)
+      # end
 
       # ranges
+      #
+      child_element[K_RANGES].each do |concept_group|
+        effective_concepts = nil
+        concept_group.each do |concept|
+          effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
+          # AND, remove what's not in both
+          effective_concepts.keep_if do |key, value|
+            concept[K_DESCENDANTS].has_key?(key)
+          end
+        end
+        # OR
+        child_element[K_RANGES_E].merge!(rr_concepts_dag_roots(effective_concepts))
+      end
+      # we have the effective set of concepts that represent the query
+      # now derive other field
+      child_element[K_RANGES_NE] = child_element[K_RANGES_E].clone
+      # only keep if also in parent
+      child_element[K_RANGES_E].keep_if do |key, value|
+        element[K_CONCEPTS_CLD].key?(key)
+      end
+      # not effective if not in parent
+      child_element[K_RANGES_NE].delete_if do |key, value|
+        element[K_CONCEPTS_CLD].key?(key)
+      end
+      # the closures
+      child_element[K_RANGES_E].each do |c|
+        child_element[K_RANGES_CLU].merge!(c[K_ANCESTORS])
+      end
+      child_element[K_DOMAINS_E].each do |c|
+        child_element[K_RANGES_CLD].merge!(c[K_DESCENDANTS])
+      end
+      #
+      #
+      #
+      #
+      #
       child_element[K_RANGES].each do |concept_group|
         effective_concepts = nil
         concept_group.each do |concept|
@@ -470,7 +543,7 @@ module CCDH
             concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]
               if concept
-                unless concepts.include?(concept)
+                if !concepts.include?(concept)
                   concepts << concept
                 else
                   r_build_entry("Concept #{concept_name} duplcate in AND group #{concept_group}", structure)
@@ -489,7 +562,7 @@ module CCDH
               if mixin == structure
                 r_build_entry("Mixin #{mixin_name} resolved to self.", structure)
               else
-                unless structure[K_MIXINS].include?(mixin)
+                if !structure[K_MIXINS].include?(mixin)
                   structure[K_MIXINS] << mixin
                 else
                   r_build_entry("Mixin #{mixin_name} duplicate in mixins.", structure)
@@ -507,7 +580,7 @@ module CCDH
               if composition == structure
                 r_build_entry("Composition #{composition_name} resolved to self.", structure)
               else
-                unless structure[K_COMPS].include?(composition)
+                if !structure[K_COMPS].include?(composition)
                   structure[K_COMPS] << composition
                 else
                   r_build_entry("Composition #{composition_name} duplicate in compositions.", structure)
@@ -526,13 +599,14 @@ module CCDH
     model_set[K_MODELS].each do |model_name, model|
       model[K_PACKAGES].each do |package_name, package|
         package[K_STRUCTURES].each do |structure_name, structure|
-          rr_s_closure_mixins_comps_recursive(structure, [], K_MIXINS, K_MIXINS_DESC, K_MIXIN_OF)
+          rr_s_closure_mixins_comps_recursive(structure, [], K_MIXINS, K_MIXINS_DESC, K_MIXIN_OF, true, structure)
+          rr_s_closure_mixins_comps_recursive(structure, [], K_COMPS, K_COMPS_DESC, K_COMPS_OF, false, structure)
         end
       end
     end
   end
 
-  def self.rr_s_closure_mixins_comps_recursive(structure, path, key, anc_key, desc_key)
+  def self.rr_s_closure_mixins_comps_recursive(structure, path, key, anc_key, desc_key, is_mixin, starting_structure)
 
     if path.include?(structure)
       # cycle, don't include in path again
@@ -545,9 +619,20 @@ module CCDH
       rr_s_populate_transitive(path, anc_key)
       rr_s_populate_transitive(path.reverse, desc_key)
     else
+      # check if a mixin is valid by it's concepts
+      if is_mixin
+        structure[K_CONCEPTS_E].each do |fqn, concept|
+          unless starting_structure[K_CONCEPTS_CLU].key?(fqn)
+            rr_s_populate_transitive(path, anc_key)
+            rr_s_populate_transitive(path.reverse, desc_key)
+            return
+          end
+        end
+
+      end
       path << structure
       structure[key].each do |s|
-        rr_s_closure_mixins_comps_recursive(s, path, key, anc_key, desc_key)
+        rr_s_closure_mixins_comps_recursive(s, path, key, anc_key, desc_key, is_mixin, starting_structure)
       end
       if structure[key].empty?
         rr_s_populate_transitive(path, anc_key)
@@ -583,22 +668,48 @@ module CCDH
             end
           end
 
-          # how we have all the AND arrays
+          # now we have all the AND arrays
           # calculate final closure
-          concepts.each do |a|
+          concepts.each do |concept_array|
             concept_closure = nil
-            a.each do |concept|
-              concept_closure.nil? && concept_closure = concept[K_ANCESTORS]
+            concept_array.each do |concept|
+              concept_closure.nil? && concept_closure = concept[K_DESCENDANTS]
               concept_closure.keep_if do |key, value|
-                concept[K_ANCESTORS].has_key?(key)
+                concept[K_DESCENDANTS].has_key?(key)
               end
             end
-            structure[K_CONCEPTS_E].merge!(concept_closure)
+            structure[K_CONCEPTS_E].merge!(rr_concepts_dag_roots(concept_closure))
           end
 
           # now link back to concepts
-          structure[K_CONCEPTS_E].each do |concept|
-            concept[K_OF_S_CONCEPTS][concept[VK_FQN]] = structure
+          structure[K_CONCEPTS_E].each do |fqn, concept|
+            concept[K_OF_S_CONCEPTS_E][fqn] = structure
+          end
+
+          structure[K_CONCEPTS_E].each do |fqn, concept|
+            structure[K_CONCEPTS_CLU].merge!(concept[K_ANCESTORS])
+          end
+          structure[K_CONCEPTS_CLU].each do |fqn, concept|
+            concept[K_OF_S_CONCEPTS_CLU][fqn] = concept
+          end
+
+          structure[K_CONCEPTS_E].each do |fqn, concept|
+            structure[K_CONCEPTS_CLD].merge!(concept[K_DESCENDANTS])
+          end
+          structure[K_CONCEPTS_CLD].each do |fqn, concept|
+            concept[K_OF_S_CONCEPTS_CLD][fqn] = concept
+          end
+        end
+      end
+    end
+  end
+
+  def self.rr_s_check_mixin_concepts(model_set)
+    model_set[K_MODELS].each do |model_name, model|
+      model[K_PACKAGES].each do |package_name, package|
+        package[K_STRUCTURES].each do |structure_name, structure|
+          structure[K_MIXINS_ANC].each do |fqn, mixin|
+
           end
         end
       end

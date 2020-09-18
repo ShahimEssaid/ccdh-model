@@ -110,7 +110,11 @@ module CCDH
   K_OF_EL_RANGES_CLU = "_of_el_ranges_clu"
   K_OF_EL_RANGES_CLD = "_of_el_ranges_cld"
 
-  K_OF_S_CONCEPTS = "_of_s_concepts"
+
+  K_OF_S_CONCEPTS_E = "_of_s_concepts_e"
+  K_OF_S_CONCEPTS_CLU = "_of_s_concepts_clu"
+  K_OF_S_CONCEPTS_CLD = "_of_s_concepts_cld"
+
   K_SUB_ELEMENTS = "_sub_elements"
 
   # the following two are meant to hold if the modeling element runtime instance has already been fully loaded  from disc

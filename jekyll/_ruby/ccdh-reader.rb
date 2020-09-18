@@ -223,7 +223,7 @@ module CCDH
 
       concept = package.r_get_concept(row[H_NAME], false)
 
-      if !concept.nil?
+      unless concept.nil?
         r_build_entry("This concept name was found again in later rows. The later one is skipped and not rewritten. It's values where:#{row.to_s}", concept)
         r_build_entry("Had duplicate row for concept name #{row[H_NAME]} with values:#{row.to_s}", package)
         next

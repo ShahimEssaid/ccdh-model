@@ -204,16 +204,18 @@ module CCDH
       row[H_NAME] == name || r_build_entry("#{H_NAME}: #{name} was updated to:#{row[H_NAME]}", row)
 
       # check parents syntax
-      # package name by default is the same package as the concept
       parents = row[H_PARENTS]
       single_parent_list = row[H_PARENTS].split(SEP_BAR)[0]
       single_parent_list.nil? && single_parent_list = ""
       row[H_PARENTS] = r_check_entity_name_bar_list(single_parent_list, V_TYPE_CONCEPT)
+      if row[H_PARENTS].empty?
+        row[H_PARENTS] = V_DEFAULT_C_THING
+      end
       row[H_PARENTS] == parents || r_build_entry("#{H_PARENTS}: was changed from #{parents} to:#{row[H_PARENTS]}", row)
 
       # check related syntax
       related = row[H_RELATED]
-      relatedNew = r_check_entity_name_bar_list(row[H_RELATED], V_TYPE_CONCEPT)
+      row[H_RELATED] = r_check_entity_name_bar_list(row[H_RELATED], V_TYPE_CONCEPT)
       row[H_RELATED] == related || r_build_entry("#{H_RELATED}: was changed from #{related} to:#{row[H_RELATED]}", row)
 
       # we need a package for creating the concept
@@ -269,22 +271,34 @@ module CCDH
       # check parent element name
       parent = row[H_PARENT]
       row[H_PARENT] = r_check_entity_name(parent, V_TYPE_ELEMENT)
+      if row[H_PARENT].empty?
+        row[H_PARENT] = V_DEFAULT_E_HAS_THING
+      end
       row[H_PARENT] == parent || r_build_entry("#{H_PARENT}: #{parent} was updated to:#{row[H_PARENT]}", row)
 
       # check concepts
       concepts = row[H_CONCEPTS]
       row[H_CONCEPTS] = r_check_entity_name_bar_list(concepts, V_TYPE_CONCEPT)
+      if row[H_CONCEPTS].empty?
+        row[H_CONCEPTS] = V_DEFAULT_C_THING
+      end
       row[H_CONCEPTS] == concepts || r_build_entry("#{H_CONCEPTS}: #{concepts} was updated to:#{row[H_CONCEPTS]}", row)
 
 
       # check domain concepts
       domains = row[H_DOMAIN]
       row[H_DOMAIN] = r_check_entity_name_bar_list(domains, V_TYPE_CONCEPT)
+      if row[H_DOMAIN].empty?
+        row[H_DOMAIN] = V_DEFAULT_C_THING
+      end
       row[H_DOMAIN] == domains || r_build_entry("#{H_DOMAIN}: #{domains} was updated to:#{row[H_DOMAIN]}", row)
 
       # check range concepts
       ranges = row[H_RANGE]
       row[H_RANGE] = r_check_entity_name_bar_list(ranges, V_TYPE_CONCEPT)
+      if row[H_RANGE].empty?
+        row[H_RANGE] = V_DEFAULT_C_THING
+      end
       row[H_RANGE] == ranges || r_build_entry("#{H_RANGE}: #{ranges} was updated to:#{row[H_RANGE]}", row)
 
       # check related elements

@@ -25,6 +25,7 @@ module CCDH
   H_RANGE_STRUCTURES = "range_structures"
   H_GH_ISSUE = "gh_issue"
   H_MIXINS = "mixins"
+  H_COMPOSITIONS = "compositions"
 
   #
   #
@@ -74,26 +75,40 @@ module CCDH
   K_DESCENDANTS = "_descendant"
   K_PARENT = "_parent"
   K_RELATED = "_related"
+  K_RELATED_OF = "_related_of"
   K_ATTRIBUTES = "_attributes"
   K_STRUCTURE = "_structure" # used in a hash to point to the vals of a structure
+
+
   K_DOMAINS = "_domains"
   K_RANGES = "_ranges"
 
-  K_E_RANGES = "_e_ranges"
-  K_E_DOMAINS = "_e_domains"
-  K_E_CONCEPTS = "_e_concepts"
+  K_CONCEPTS_E = "_concepts_e"
+  K_CONCEPTS_NE = "_concepts_ne"
+  K_CONCEPTS_CLU = "_concepts_clu"
+  K_CONCEPTS_CLD = "_concepts_cld"
 
-  K_NE_RANGES = "_ne_ranges" # not effective
-  K_NE_DOMAINS = "_ne_domains"
-  K_NE_CONCEPTS = "_ne_concepts"
+  K_DOMAINS_E = "_domains_e"
+  K_DOMAINS_NE = "_domains_ne"
+  K_DOMAINS_CLU = "_domains_clu"
+  K_DOMAINS_CLD = "_domains_cld"
 
-  K_MIXINS = "_mixins"
-  K_MIXIN_PATH = "_mixin_path"
+  K_RANGES_E = "_ranges_e"
+  K_RANGES_NE = "_ranges_ne"
+  K_RANGES_CLU = "_ranges_clu"
+  K_RANGES_CLD = "_ranges_cld"
 
-  K_MIXIN_OF = "_mixin_of"
-  K_OF_E_CONCEPTS = "_of_e_concepts"
-  K_OF_E_DOMAINS = "_of_e_domains"
-  K_OF_E_RANGES = "_of_e_ranges"
+  K_OF_EL_CONCEPTS_E = "_of_el_concepts_e"
+  K_OF_EL_CONCEPTS_CLU = "_of_el_concepts_clu"
+  K_OF_EL_CONCEPTS_CLD = "_of_el_concepts_cld"
+
+  K_OF_EL_DOMAINS_E = "_of_el_domains_e"
+  K_OF_EL_DOMAINS_CLU = "_of_el_domains_clu"
+  K_OF_EL_DOMAINS_CLD = "_of_el_domains_cld"
+
+  K_OF_EL_RANGES_E = "_of_el_ranges_e"
+  K_OF_EL_RANGES_CLU = "_of_el_ranges_clu"
+  K_OF_EL_RANGES_CLD = "_of_el_ranges_cld"
 
   K_OF_S_CONCEPTS = "_of_s_concepts"
   K_SUB_ELEMENTS = "_sub_elements"
@@ -101,12 +116,30 @@ module CCDH
   # the following two are meant to hold if the modeling element runtime instance has already been fully loaded  from disc
   # and linked. it's only used when needed, and it's code specific. not meant to be used as "data" in pages
   K_LOADED = "_loaded"
-  K_LINKED = "-linked"
+  K_LINKED = "_linked"
 
 
-  VK_FQN = "_fqn" # this is the a FQN like modelname:P:packagename:C:conceptname
+  # this holds asserted pointers to mixins
+  K_MIXINS = "_mixins"
+  # this is the transitive closure of K_MIXINS and further ones are considered ancestors
+  K_MIXINS_ANC = "_mixins_anc"
+  # the inverse derived of K_MIXINS
+  K_MIXIN_OF = "_mixin_of"
+  # traversing the inverse K_MIXINS_OF as descendants
+  K_MIXINS_DESC = "_mixins_desc"
+
+  # this holds asserted pointers to compositions
+  K_COMPS = "_comps"
+  # this is the transitive closure of K_COMPS and further ones are considered ancestors
+  K_COMPS_ANC = "_comps_anc"
+  # the inverse derived of K_COMPS
+  K_COMPS_OF = "_comps_of"
+  # traversing the inverse K_COMPS_OF as descendants
+  K_COMPS_DESC = "_comps_desc"
+
+
+  VK_FQN = "_fqn" # this is the a FQN like ConceptName:c:PackageName:p:ModelName
   VK_ENTITY_NAME = "_entity_name" # this is the name without the model name prefix. It's a FQN within a model.
-  VK_GH_LABEL_NAME = "_gh_label_name"
 
   F_MODEL_XLSX = "model.xlsx"
   F_MODEL_CSV = "model.csv"
@@ -115,10 +148,6 @@ module CCDH
   F_ELEMENTS_CSV = "elements.csv"
   F_STRUCTURES_CSV = "structures.csv"
 
-  # P_CONCEPTS = "c:"
-  # P_STRUCTURES = "s:"
-  # P_GROUPS = "g:"
-  # P_MODEL = "m:"
 
   V_SELF = "_self_"
   V_GENERATED = "generated"
@@ -126,14 +155,16 @@ module CCDH
   V_PKG_DEFAULT = "default"
   V_CONCEPT_THING = "Thing"
   V_ELEMENT_HAS_THING = "hasThing"
-  V_DEFAULT_C_THING = "default:C:Thing"
-  V_DEFAULT_E_HAS_THING = "default:E:hasThing"
+
+  V_TYPE_CONCEPT = "C"
+  V_TYPE_ELEMENT = "E"
+
+  V_DEFAULT_C_THING = "Thing:#{V_TYPE_CONCEPT}:default"
+  V_DEFAULT_E_HAS_THING = "hasThing:#{V_TYPE_ELEMENT}:default"
 
   V_TYPE_MODEL_SET = "MS"
   V_TYPE_MODEL = "M"
   V_TYPE_PACKAGE = "P"
-  V_TYPE_CONCEPT = "C"
-  V_TYPE_ELEMENT = "E"
   V_TYPE_STRUCTURE = "S"
   V_TYPE_ATTRIBUTE = "a"
   V_CURRENT = "current"
@@ -157,7 +188,7 @@ module CCDH
   V_ELEMENT_HEADERS = [H_PACKAGE, H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_PARENT, H_CONCEPTS, H_DOMAIN, H_RANGE, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
   V_ELEMENT_HAS_THING_ROW = ['default', V_ELEMENT_HAS_THING, "#{V_ELEMENT_HAS_THING} summary", "#{V_ELEMENT_HAS_THING} description", '', '', V_DEFAULT_C_THING, V_DEFAULT_C_THING, V_DEFAULT_C_THING, '', V_CURRENT, '', '']
 
-  V_STRUCTURE_HEADERS = [H_PACKAGE, H_NAME, H_ATTRIBUTE, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_CONCEPTS, H_RANGE, H_RANGE_STRUCTURES, H_STATUS, H_NOTES, H_BUILD]
+  V_STRUCTURE_HEADERS = [H_PACKAGE, H_NAME, H_ATTRIBUTE, H_ELEMENT, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_CONCEPTS, H_RANGE, H_RANGE_STRUCTURES, H_MIXINS, H_COMPOSITIONS, H_STATUS, H_NOTES, H_BUILD]
   V_GH_LABEL_COLOR = "fef2c0"
 
   ENV_GH_ACTIVE = "GH_ACTIVE"
@@ -165,5 +196,5 @@ module CCDH
   ENV_GH_REPO = "GH_REPO"
   ENV_GH_TOKEN = "GH_TOKEN"
   ENV_M_MODEL_SETS = "M_MODEL_SETS"
-  ENV_M_MODEL_SETS_WRITE_PATH="M_MODEL_SETS_WRITE_PATH"
+  ENV_M_MODEL_SETS_WRITE_PATH = "M_MODEL_SETS_WRITE_PATH"
 end

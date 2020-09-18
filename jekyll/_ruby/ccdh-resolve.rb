@@ -17,7 +17,9 @@ module CCDH
     rr_ce_DAG_ancestors_descendants(model_set)
     rr_e_effective(model_set)
 
-    #r_resolve_structures(model_set)
+    rr_s_resolve_concepts_mixins_comps(model_set)
+    rr_s_closure_mixins_comps(model_set)
+    rr_s_effective_concepts(model_set)
 
   end
 
@@ -41,7 +43,7 @@ module CCDH
             entity_instances = []
             model_set[K_ENTITIES][dep_entity_name] = entity_instances
           end
-          entity_instances.index(dep_entity) || entity_instances << dep_entity
+          entity_instances.include?(dep_entity) || entity_instances << dep_entity
         end
       end
     end
@@ -102,14 +104,22 @@ module CCDH
           concept[H_PARENTS].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |parent_name|
             parent = model[K_ENTITIES_VISIBLE][parent_name]
             if parent
-              concept[K_PARENTS][parent_name[VK_ENTITY_NAME]] = parent
-              parent[K_CHILDREN][concept[VK_FQN]] = concept
+              if parent == concept
+                r_build_entry("Parent  #{parent_name} resolved to self.", concept)
+              else
+                if !concept[K_PARENTS].include?(parent)
+                  concept[K_PARENTS] << parent
+                  parent[K_CHILDREN][concept[VK_FQN]] = concept
+                else
+                  r_build_entry("Parent #{parent_name} was already in parents.", concept)
+                end
+              end
             else
               r_build_entry("Parent ref #{parent_name} was not resolvable.", concept)
             end
           end
 
-          #related
+          # related
           concept[H_RELATED].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |related_name|
             if rr_is_entity_name(related_name)
               related = model[K_ENTITIES_VISIBLE][related_name]
@@ -118,8 +128,16 @@ module CCDH
             end
 
             if related
-              concept[K_RELATED][related_name[VK_FQN]] = related
-              related[K_RELATED][concept[VK_FQN]] = concept
+              if related == concept
+                r_build_entry("Related #{related_name} resolved to self.", concept)
+              else
+                if !concept[K_RELATED].include?(related)
+                  concept[K_RELATED] << related
+                  related[K_RELATED_OF][concept[VK_FQN]] = concept
+                else
+                  r_build_entry("Related #{related_name} was already in related.", concept)
+                end
+              end
             else
               r_build_entry("Related ref #{related_name} was not resolvable.", concept)
             end
@@ -135,11 +153,15 @@ module CCDH
         package[K_ELEMENTS].each do |element_name, element|
 
           # parent
-          if !element[H_PARENT].empty?
+          unless element[H_PARENT].empty?
             parent = model[K_ENTITIES_VISIBLE][element[H_PARENT]]
             if parent
-              element[K_PARENT] = parent
-              parent[K_CHILDREN][element[VK_FQN]] = element
+              if parent == element
+                r_build_entry("Parent #{element[H_PARENT]} resolved to self.", element)
+              else
+                element[K_PARENT] = parent
+                parent[K_CHILDREN][element[VK_FQN]] = element
+              end
             else
               r_build_entry("Parent ref #{element[H_PARENT]} was not resolvable.", element)
             end
@@ -147,10 +169,23 @@ module CCDH
 
           # related
           element[H_RELATED].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |related_name|
-            related = model[K_ENTITIES_VISIBLE][related_name]
+            if rr_is_entity_name(related_name)
+              related = model[K_ENTITIES_VISIBLE][related_name]
+            elsif rr_is_fqn_name(related_name)
+              related = model[K_MS][K_ENTITIES][related_name]
+            end
+
             if related
-              element[K_RELATED][related[VK_FQN]] = related
-              related[K_RELATED][element[VK_FQN]] = element
+              if related == element
+                r_build_entry("Related #{related_name} resolved to self.", element)
+              else
+                if !element[K_RELATED].include?
+                  element[K_RELATED] << related
+                  related[K_RELATED_OF][element[VK_FQN]] = element
+                else
+                  r_build_entry("Related #{related_name} was already in related.", element)
+                end
+              end
             else
               r_build_entry("Related ref #{related_name} was not resolvable.", element)
             end
@@ -162,16 +197,16 @@ module CCDH
             concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]
               if concept
-                if !concepts.index(concepts)
+                if !concepts.include?(concepts)
                   concepts << concept
                 else
-                  r_build_entry("Concept: #{concept_name} is duplicate in its concepts AND group.", element)
+                  r_build_entry("Concept #{concept_name} is duplicated in its concepts AND group #{concept_group}.", element)
                 end
               else
                 r_build_entry("Concept: #{concept_name} in concepts was not resolved.", element)
               end
             end
-            if !concepts.empty?
+            unless concepts.empty?
               element[K_CONCEPTS] << concepts
             end
           end
@@ -182,16 +217,16 @@ module CCDH
             concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]
               if concept
-                if !concepts.index(concepts)
+                if !concepts.include?(concepts)
                   concepts << concept
                 else
-                  r_build_entry("Concept: #{concept_name} is duplicate in its domains AND group.", element)
+                  r_build_entry("Concept: #{concept_name} is duplicate in its domains AND group #{concept_group}.", element)
                 end
               else
                 r_build_entry("Concept: #{concept_name} in domains was not resolved.", element)
               end
             end
-            if !concepts.empty?
+            unless concepts.empty?
               element[K_DOMAINS] << concepts
             end
           end
@@ -202,16 +237,16 @@ module CCDH
             concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]
               if concept
-                if !concepts.index(concepts)
+                if !concepts.include?(concepts)
                   concepts << concept
                 else
-                  r_build_entry("Concept: #{concept_name} is duplicate in its ranges AND group.", element)
+                  r_build_entry("Concept: #{concept_name} is duplicate in its ranges AND group #{concept_group}.", element)
                 end
               else
                 r_build_entry("Concept: #{concept_name} in ranges was not resolved.", element)
               end
             end
-            if !concepts.empty?
+            unless concepts.empty?
               element[K_RANGES] << concepts
             end
           end
@@ -228,7 +263,7 @@ module CCDH
       model[K_PACKAGES].each do |package_name, package|
         package[K_CONCEPTS].each do |ck, c|
           c == thing && next
-          c[K_PARENTS].empty? && c[K_PARENTS][thing[VK_FQN]] = thing
+          c[K_PARENTS].empty? && c[K_PARENTS] << thing
           thing[K_CHILDREN][c[VK_FQN]] = c
         end
       end
@@ -238,7 +273,7 @@ module CCDH
       model[K_PACKAGES].each do |pk, p|
         p[K_ELEMENTS].each do |ck, e|
           e == has_thing && next
-          e[K_PARENTS].empty? && e[K_PARENTS][has_thing[VK_FQN]] = has_thing
+          e[K_PARENT].nil? && e[K_PARENT] = has_thing
           has_thing[K_CHILDREN][e[VK_FQN]] = e
         end
       end
@@ -248,45 +283,39 @@ module CCDH
   # TODO: add check for elements
   def self.rr_ce_DAG_ancestors_descendants(model_set)
     thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
-    path = []
-    rr_ce_DAG_ancestors_descendants_recursive(path, thing)
+    rr_ce_DAG_ancestors_descendants_recursive([], thing)
 
     has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
-    path = []
-    rr_ce_DAG_ancestors_descendants_recursive(path, has_thing)
+    rr_ce_DAG_ancestors_descendants_recursive([], has_thing)
   end
 
   def self.rr_ce_DAG_ancestors_descendants_recursive(path, entity)
-
     if path.include?(entity)
-      # a circle is found
-      # add it to show the circle in the path
-      path << entity
+      # a circle is found, don't include in path again
       pathString = ""
       path.each do |e|
         pathString += "#{e[VK_FQN]} > "
       end
-      r_build_entry("DAG check: #{entity[VK_FQN]} is circular with path: #{pathString}. Not re-including in descendants", entity)
-      entity[K_ANCESTORS].merge!(path.to_h { |e| [e[VK_FQN], e] })
-      rr_populate_descendants(path)
+      pathString += entity[VK_FQN]
+      r_build_entry("DAG check: #{entity[VK_FQN]} is circular with path: #{pathString}.", entity)
+      rr_c_populate_hierarchy(path, K_DESCENDANTS)
+      rr_c_populate_hierarchy(path.reverse, K_ANCESTORS)
     else
       path << entity
-      leaf = true
       entity[K_CHILDREN].each do |name, child|
-        leaf = false
         rr_ce_DAG_ancestors_descendants_recursive(path, child)
       end
-      entity[K_ANCESTORS].merge!(path.to_h { |e| [e[VK_FQN], e] })
-      if leaf
-        rr_populate_descendants(path)
+      if entity[K_CHILDREN].empty? # at a leaf node
+        rr_c_populate_hierarchy(path, K_DESCENDANTS)
+        rr_c_populate_hierarchy(path.reverse, K_ANCESTORS)
       end
+      path.pop
     end
-    path.pop
   end
 
-  def self.rr_populate_descendants(path)
+  def self.rr_c_populate_hierarchy(path, key)
     path.each.with_index.map do |entity, i|
-      entity[K_DESCENDANTS].merge!(path[i..].to_h { |e| [e[VK_FQN], e] })
+      entity[key].merge!(path[i..].to_h { |e| [e[VK_FQN], e] })
     end
   end
 
@@ -294,9 +323,17 @@ module CCDH
     thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
     has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
 
-    has_thing[K_E_CONCEPTS].merge!(thing[K_DESCENDANTS])
-    has_thing[K_E_DOMAINS].merge!(thing[K_DESCENDANTS])
-    has_thing[K_E_RANGES].merge!(thing[K_DESCENDANTS])
+    has_thing[K_CONCEPTS_E][thing[VK_FQN]] = thing
+    has_thing[K_CONCEPTS_CLD].merge!(thing[K_DESCENDANTS])
+    has_thing[K_CONCEPTS_CLU].merge!(thing[K_ANCESTORS])
+
+    has_thing[K_DOMAINS_E][thing[VK_ENTITY_NAME]] = thing
+    has_thing[K_DOMAINS_CLD].merge!(thing[K_DESCENDANTS])
+    has_thing[K_DOMAINS_CLU].merge!(thing[K_ANCESTORS])
+
+    has_thing[K_RANGES_E][thing[VK_ENTITY_NAME]] = thing
+    has_thing[K_RANGES_CLD].merge!(thing[K_DESCENDANTS])
+    has_thing[K_RANGES_CLU].merge!(thing[K_ANCESTORS])
 
     rr_e_of_concept(has_thing)
     rr_e_effective_recursive(has_thing)
@@ -306,51 +343,82 @@ module CCDH
     element[K_CHILDREN].each do |child_fqn, child_element|
 
       # concepts
-      element[K_CONCEPTS].each do |concept_group|
-        effective_concepts = {}
+      child_element[K_CONCEPTS].each do |concept_group|
+        effective_concepts = nil
         concept_group.each do |concept|
-          effective_concepts.merge!(concept[K_DESCENDANTS])
+          effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
+          # AND, remove what's not in both
+          effective_concepts.keep_if do |key, value|
+            concept[K_DESCENDANTS].has_key?(key)
+          end
         end
-        child_element[K_E_CONCEPTS].merge!(effective_concepts)
+        # OR
+        child_element[K_CONCEPTS_E].merge!(rr_concepts_dag_roots(effective_concepts))
       end
-      child_element[K_NE_CONCEPTS] = child_element[K_E_CONCEPTS].clone
-      child_element[K_E_CONCEPTS].keep_if do |key, value|
-        element[K_E_CONCEPTS].key?(key)
+      # we have the effective set of concepts that represent the query
+      # now derive other field
+      child_element[K_CONCEPTS_NE] = child_element[K_CONCEPTS_E].clone
+      # only keep if also in parent
+      child_element[K_CONCEPTS_E].keep_if do |key, value|
+        element[K_CONCEPTS_CLD].key?(key)
       end
-      child_element[K_NE_CONCEPTS].delete_if do |key, value|
-        element[K_E_CONCEPTS].key?(key)
+      # not effective if not in parent
+      child_element[K_CONCEPTS_NE].delete_if do |key, value|
+        element[K_CONCEPTS_CLD].key?(key)
+      end
+      # the closures
+      child_element[K_CONCEPTS_E].each do |c|
+        child_element[K_CONCEPTS_CLU].merge!(c[K_ANCESTORS])
+      end
+      child_element[K_CONCEPTS_E].each do |c|
+        child_element[K_CONCEPTS_CLD].merge!(c[K_DESCENDANTS])
       end
 
+
       # domains
-      element[K_DOMAINS].each do |concept_group|
-        effective_concepts = {}
+      child_element[K_DOMAINS].each do |concept_group|
+        effective_concepts = nil
         concept_group.each do |concept|
-          effective_concepts.merge!(concept[K_DESCENDANTS])
+          effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
+          # AND, remove what's not in both
+          effective_concepts.keep_if do |key, value|
+            concept[K_DESCENDANTS].has_key?(key)
+          end
         end
-        child_element[K_E_DOMAINS].merge!(effective_concepts)
+        # OR
+        child_element[K_DOMAINS_E].merge!(effective_concepts)
       end
-      child_element[K_NE_DOMAINS] = child_element[K_E_DOMAINS].clone
-      child_element[K_E_DOMAINS].keep_if do |key, value|
-        element[K_E_DOMAINS].key?(key)
+      child_element[K_DOMAINS_NE] = child_element[K_DOMAINS_E].clone
+      # only keep if also in parent
+      child_element[K_DOMAINS_E].keep_if do |key, value|
+        element[K_DOMAINS_E].key?(key)
       end
-      child_element[K_NE_DOMAINS].delete_if do |key, value|
-        element[K_E_DOMAINS].key?(key)
+      # not effective if not in parent
+      child_element[K_DOMAINS_NE].delete_if do |key, value|
+        element[K_DOMAINS_E].key?(key)
       end
 
       # ranges
-      element[K_RANGES].each do |concept_group|
-        effective_concepts = {}
+      child_element[K_RANGES].each do |concept_group|
+        effective_concepts = nil
         concept_group.each do |concept|
-          effective_concepts.merge!(concept[K_DESCENDANTS])
+          effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
+          # AND, remove what's not in both
+          effective_concepts.keep_if do |key, value|
+            concept[K_DESCENDANTS].has_key?(key)
+          end
         end
-        child_element[K_E_RANGES].merge!(effective_concepts)
+        # OR
+        child_element[K_RANGES_E].merge!(effective_concepts)
       end
-      child_element[K_NE_RANGES] = child_element[K_E_RANGES].clone
-      child_element[K_E_RANGES].keep_if do |key, value|
-        element[K_E_RANGES].key?(key)
+      child_element[K_RANGES_NE] = child_element[K_DOMAINS_E].clone
+      # only keep if also in parent
+      child_element[K_RANGES_E].keep_if do |key, value|
+        element[K_RANGES_E].key?(key)
       end
-      child_element[K_NE_RANGES].delete_if do |key, value|
-        element[K_E_RANGES].key?(key)
+      # not effective if not in parent
+      child_element[K_RANGES_NE].delete_if do |key, value|
+        element[K_RANGES_E].key?(key)
       end
 
       rr_e_of_concept(child_element)
@@ -359,27 +427,39 @@ module CCDH
   end
 
   def self.rr_e_of_concept(element)
-    element[K_E_CONCEPTS].each do |fqn, concept|
-      concept[K_OF_E_CONCEPTS][fqn] = element
+    element[K_CONCEPTS_E].each do |fqn, concept|
+      concept[K_OF_EL_CONCEPTS_E][fqn] = element
     end
-    element[K_E_DOMAINS].each do |fqn, concept|
-      concept[K_OF_E_DOMAINS][fqn] = element
+    element[K_CONCEPTS_CLU].each do |fqn, concept|
+      concept[K_OF_EL_CONCEPTS_CLU][fqn] = element
     end
-    element[K_E_RANGES].each do |fqn, concept|
-      concept[K_OF_E_RANGES][fqn] = element
+    element[K_CONCEPTS_CLD].each do |fqn, concept|
+      concept[K_OF_EL_CONCEPTS_CLD][fqn] = element
     end
 
+    element[K_DOMAINS_E].each do |fqn, concept|
+      concept[K_OF_EL_DOMAINS_E][fqn] = element
+    end
+    element[K_DOMAINS_CLU].each do |fqn, concept|
+      concept[K_OF_EL_DOMAINS_CLU][fqn] = element
+    end
+    element[K_DOMAINS_CLD].each do |fqn, concept|
+      concept[K_OF_EL_DOMAINS_CLD][fqn] = element
+    end
+
+    element[K_RANGES_E].each do |fqn, concept|
+      concept[K_OF_EL_RANGES_E][fqn] = element
+    end
+    element[K_RANGES_CLU].each do |fqn, concept|
+      concept[K_OF_EL_RANGES_CLU][fqn] = element
+    end
+    element[K_RANGES_CLD].each do |fqn, concept|
+      concept[K_OF_EL_RANGES_CLD][fqn] = element
+    end
   end
 
-  #
-  #
-  #
-  #
-  #
-  #
-  #
 
-  def self.r_resolve_structures(model_set)
+  def self.rr_s_resolve_concepts_mixins_comps(model_set)
     model_set[K_MODELS].each do |model_name, model|
       model[K_PACKAGES].each do |package_name, package|
         package[K_STRUCTURES].each do |structure_name, structure|
@@ -390,120 +470,138 @@ module CCDH
             concept_group.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |concept_name|
               concept = model[K_ENTITIES_VISIBLE][concept_name]
               if concept
-                concepts.index(concept) || concepts << concept
+                unless concepts.include?(concept)
+                  concepts << concept
+                else
+                  r_build_entry("Concept #{concept_name} duplcate in AND group #{concept_group}", structure)
+                end
               else
                 r_build_entry("Concept #{concept_name} not resolved.", structure)
               end
             end
             concepts.empty? || structure[K_CONCEPTS] << concepts
           end
-          # effective concepts (i.e. ancestors)
-          # all the concepts are ORed instead of AND/OR
-          structure[K_CONCEPTS].each do |concept_array|
-            concept_array.each do |concept|
-              structure[K_E_CONCEPTS].merge!(concept[K_ANCESTORS])
-            end
-          end
-
-          # inverse concept to structure concept, and elements
-          structure[K_E_CONCEPTS].each do |concept|
-            concept[K_OF_S_CONCEPTS][structure[VK_FQN]] = structure
-            concept[K_OF_E_DOMAINS].each do |element_name, element|
-              structure[K_ELEMENTS][element[VK_FQN]] = element
-            end
-          end
-
-          # effective sub concepts to find sub elements
-          effective_sub_concepts = {}
-          structure[K_CONCEPTS].each do |concept_array|
-            concept_array.each do |concept|
-              effective_sub_concepts.merge(concept[K_DESCENDANTS])
-            end
-          end
-          effective_sub_concepts = effective_sub_concepts.subtract(structure[K_E_CONCEPTS])
-          effective_sub_concepts.each do |sub_concept|
-            sub_concept[K_OF_E_DOMAINS].each do |element_name, element|
-              structure[K_SUB_ELEMENTS][element[VK_FQN]] = element
-            end
-          end
 
           # structure mixins
           structure[H_MIXINS].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |mixin_name|
             mixin = model[K_ENTITIES_VISIBLE][mixin_name]
             if mixin
-              structure[K_MIXINS].index(mixin) || structure[K_MIXINS] << mixin
-              mixin[K_MIXIN_OF].index(structure) || mixin[K_MIXIN_OF] << structure
+              if mixin == structure
+                r_build_entry("Mixin #{mixin_name} resolved to self.", structure)
+              else
+                unless structure[K_MIXINS].include?(mixin)
+                  structure[K_MIXINS] << mixin
+                else
+                  r_build_entry("Mixin #{mixin_name} duplicate in mixins.", structure)
+                end
+              end
             else
-              r_build_entry("Mixing #{mixin_name} not resolved.", structure)
+              r_build_entry("Mixin #{mixin_name} not resolved.", structure)
             end
           end
-          #TODO: HERE, add mixin path, mixin_of closure
-          #
 
+          # structure compositions
+          structure[H_COMPOSITIONS].split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |composition_name|
+            composition = model[K_ENTITIES_VISIBLE][composition_name]
+            if composition
+              if composition == structure
+                r_build_entry("Composition #{composition_name} resolved to self.", structure)
+              else
+                unless structure[K_COMPS].include?(composition)
+                  structure[K_COMPS] << composition
+                else
+                  r_build_entry("Composition #{composition_name} duplicate in compositions.", structure)
+                end
+              end
+            else
+              r_build_entry("Composition #{composition_name} not resolved.", structure)
+            end
+          end
         end
       end
     end
   end
 
+  def self.rr_s_closure_mixins_comps(model_set)
+    model_set[K_MODELS].each do |model_name, model|
+      model[K_PACKAGES].each do |package_name, package|
+        package[K_STRUCTURES].each do |structure_name, structure|
+          rr_s_closure_mixins_comps_recursive(structure, [], K_MIXINS, K_MIXINS_DESC, K_MIXIN_OF)
+        end
+      end
+    end
+  end
 
-  # def self.resolveStructAndAttribConcepts(model)
-  #   model[K_PACKAGES].keys.each do |pn|
-  #     p = model[K_PACKAGES][pn]
-  #     p[K_STRUCTURES].keys.each do |en|
-  #       structure = p[K_STRUCTURES][en]
-  #
-  #       # concepts
-  #       concepts = structure[H_CONCEPTS]
-  #       concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
-  #         clist_array = []
-  #         clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-  #           pkg_name, typeName, concept_name = c.split(SEP_COLON)
-  #           package = r_get_package_generate(pkg_name, "#{structure[VK_FQN]} has concept #{c}", model, structure)
-  #           clist_array << getConceptGenerated(concept_name, "#{structure[VK_FQN]} has concept #{c}", package, structure)
-  #         end
-  #         structure[K_CONCEPTS] << clist_array
-  #       end
-  #
-  #       # ranges
-  #       concepts = structure[H_RANGE_CONCEPTS]
-  #       concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
-  #         clist_array = []
-  #         clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-  #           pkg_name, typeName, concept_name = c.split(SEP_COLON)
-  #           package = r_get_package_generate(pkg_name, "#{structure[VK_FQN]} has concept #{c}", model, structure)
-  #           clist_array << getConceptGenerated(concept_name, "#{structure[VK_FQN]} has concept #{c}", package, structure)
-  #         end
-  #         structure[K_RANGES] << clist_array
-  #       end
-  #
-  #       structure[K_ATTRIBUTES].keys.each do |an|
-  #         attribute = structure[K_ATTRIBUTES][an]
-  #
-  #         # concepts
-  #         concepts = attribute[H_CONCEPTS]
-  #         concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
-  #           clist_array = []
-  #           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-  #             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-  #             package = r_get_package_generate(pkg_name, "#{attribute[VK_FQN]} has concept #{c}", model, attribute)
-  #             clist_array << getConceptGenerated(concept_name, "#{attribute[VK_FQN]} has concept #{c}", package, attribute)
-  #           end
-  #           attribute[K_CONCEPTS] << clist_array
-  #         end
-  #         # ranges
-  #         concepts = attribute[H_RANGE_CONCEPTS]
-  #         concepts.split(SEP_BAR).collect(&:strip).reject(&:empty?).each do |clist|
-  #           clist_array = []
-  #           clist.split(SEP_COMMA).collect(&:strip).reject(&:empty?).each do |c|
-  #             pkg_name, typeName, concept_name = c.split(SEP_COLON)
-  #             package = r_get_package_generate(pkg_name, "#{attribute[VK_FQN]} has concept #{c}", model, attribute)
-  #             clist_array << getConceptGenerated(concept_name, "#{attribute[VK_FQN]} has concept #{c}", package, attribute)
-  #           end
-  #           attribute[K_RANGES] << clist_array
-  #         end
-  #       end
-  #     end
-  #   end
-  # end
+  def self.rr_s_closure_mixins_comps_recursive(structure, path, key, anc_key, desc_key)
 
+    if path.include?(structure)
+      # cycle, don't include in path again
+      path_string = ""
+      path.each do |s|
+        path_string += "> #{s[VK_FQN]} "
+      end
+      path_string += structure[VK_FQN]
+      r_build_entry("DAG check: #{key} is circular with path: #{path_string}.", structure)
+      rr_s_populate_transitive(path, anc_key)
+      rr_s_populate_transitive(path.reverse, desc_key)
+    else
+      path << structure
+      structure[key].each do |s|
+        rr_s_closure_mixins_comps_recursive(s, path, key, anc_key, desc_key)
+      end
+      if structure[key].empty?
+        rr_s_populate_transitive(path, anc_key)
+        rr_s_populate_transitive(path.reverse, desc_key)
+      end
+      path.pop
+    end
+  end
+
+  def self.rr_s_populate_transitive(path, key)
+    path.each.with_index.map do |structure, index|
+      subpath = path[index + 1..] # skip self
+      if subpath
+        subpath.each do |ss|
+          structure[key][ss[VK_FQN]] = ss
+        end
+      end
+    end
+  end
+
+  # infers the effective closure of structure concepts. it's the ancestor closure of concepts
+  def self.rr_s_effective_concepts(model_set)
+    model_set[K_MODELS].each do |model_name, model|
+      model[K_PACKAGES].each do |package_name, package|
+        package[K_STRUCTURES].each do |structure_name, structure|
+          concepts = []
+          structure[K_CONCEPTS].each do |a|
+            concepts << a.clone
+          end
+          structure[K_COMPS].each do |comp|
+            comp[K_CONCEPTS].each do |a|
+              concepts << a.clone
+            end
+          end
+
+          # how we have all the AND arrays
+          # calculate final closure
+          concepts.each do |a|
+            concept_closure = nil
+            a.each do |concept|
+              concept_closure.nil? && concept_closure = concept[K_ANCESTORS]
+              concept_closure.keep_if do |key, value|
+                concept[K_ANCESTORS].has_key?(key)
+              end
+            end
+            structure[K_CONCEPTS_E].merge!(concept_closure)
+          end
+
+          # now link back to concepts
+          structure[K_CONCEPTS_E].each do |concept|
+            concept[K_OF_S_CONCEPTS][concept[VK_FQN]] = structure
+          end
+        end
+      end
+    end
+  end
 end

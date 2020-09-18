@@ -7,6 +7,10 @@ module CCDH
       self[K_MODEL] = model
       self[K_NIL] = []
       self[K_GENERATED_NOW] = false
+
+      self[K_RELATED] = []
+      self[K_RELATED_OF] = {}
+
       self.default_proc = proc do |hash, key|
         hash.r_get_missing_key(key)
       end
@@ -26,13 +30,11 @@ module CCDH
 
     def r_get_missing_key(key)
       self.has_key?(key) && self[key]
-      
+
       case key
       when VK_FQN
-        value = "#{self[K_MODEL][H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
+        value = "#{self[H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_MODEL][H_NAME]}"
       when VK_ENTITY_NAME
-        value = "#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[H_NAME]}"
-      when VK_GH_LABEL_NAME
         value = "#{self[H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}"
       else
         value = nil
@@ -135,24 +137,6 @@ module CCDH
       package
     end
 
-    # def r_resolve_entity_ref(entity_name)
-    #   entities = []
-    #   models = []
-    #   self[K_DEPENDS_ON_PATH].each do |model|
-    #     entity = model[K_ENTITIES][entity_name]
-    #     entity.ni? || entities << entity
-    #     models << model
-    #   end
-    #
-    #   # self[K_MS][K_MODELS].each do |model|
-    #   #   unless models.index(model)
-    #   #     # a model not on path
-    #   #     entity = model[K_ENTITIES][entity_name]
-    #   #     entity.ni? || entities << entity
-    #   #   end
-    #   # end
-    #   entities
-    # end
   end
 
   class MPackage < ModelEntity
@@ -169,7 +153,6 @@ module CCDH
         concept = MConcept.new(name, self, self[K_MODEL])
         self[K_CONCEPTS][name] = concept
         concept[K_MODEL][K_ENTITIES][concept[VK_ENTITY_NAME]] = concept
-        self
       end
       concept
     end
@@ -211,17 +194,25 @@ module CCDH
     def initialize(name, package, model)
       super(name, package, model, V_TYPE_CONCEPT)
 
-      # ConceptRef
-      self[K_PARENTS] = {}
-      self[K_RELATED] = {}
+      # asserted
+      self[K_PARENTS] = []
       self[K_CHILDREN] = {}
 
+      # inferred
       self[K_ANCESTORS] = {}
       self[K_DESCENDANTS] = {}
 
-      self[K_OF_E_CONCEPTS] = {}
-      self[K_OF_E_DOMAINS] = {}
-      self[K_OF_E_RANGES] = {}
+      # inferred (from the AND/OR concept expressions on Element)
+      self[K_OF_EL_CONCEPTS_E] = {}
+      self[K_OF_EL_CONCEPTS_CLU] = {}
+      self[K_OF_EL_CONCEPTS_CLD] = {}
+      self[K_OF_EL_DOMAINS_E] = {}
+      self[K_OF_EL_DOMAINS_CLU] = {}
+      self[K_OF_EL_DOMAINS_CLD] = {}
+      self[K_OF_EL_RANGES_E] = {}
+      self[K_OF_EL_RANGES_CLU] = {}
+      self[K_OF_EL_RANGES_CLD] = {}
+
 
       self[K_OF_S_CONCEPTS] = {}
 
@@ -236,22 +227,27 @@ module CCDH
       self[K_PARENT] = nil
       self[K_CHILDREN] = {}
 
-      self[K_CONCEPTS] = [] # two dimensional. [OR][AND]
-      self[K_E_CONCEPTS] = {}
-      self[K_NE_CONCEPTS] = {}
-
-      self[K_DOMAINS] = [] # two dimensional
-      self[K_E_DOMAINS] = {}
-      self[K_NE_DOMAINS] = {}
-
-      self[K_RANGES] = [] # two dimensional
-      self[K_E_RANGES] = {}
-      self[K_NE_RANGES] ={}
-
-      self[K_RELATED] = {}
-
       self[K_ANCESTORS] = {}
       self[K_DESCENDANTS] = {}
+
+      self[K_CONCEPTS] = [] # two dimensional. [OR][AND]
+      self[K_CONCEPTS_E] = {}
+      self[K_CONCEPTS_NE] = {}
+      self[K_CONCEPTS_CLU] = {}
+      self[K_CONCEPTS_CLD] = {}
+
+      self[K_DOMAINS] = [] # two dimensional
+      self[K_DOMAINS_E] = {}
+      self[K_DOMAINS_NE] = {}
+      self[K_DOMAINS_CLU] = {}
+      self[K_DOMAINS_CLD] = {}
+
+      self[K_RANGES] = [] # two dimensional
+      self[K_RANGES_E] = {}
+      self[K_RANGES_NE] = {}
+      self[K_RANGES_CLU] = {}
+      self[K_RANGES_CLD] = {}
+
     end
   end
 
@@ -261,11 +257,27 @@ module CCDH
       super(name, package, model, V_TYPE_STRUCTURE)
 
       self[K_CONCEPTS] = [] # two dimensional
-      self[K_E_CONCEPTS] = {}
+      self[K_CONCEPTS_E] = {}
 
+      # this holds asserted pointers to mixins
       self[K_MIXINS] = []
-      self[K_MIXIN_PATH] = []
-      self[K_MIXIN_OF] = []
+      # this is the transitive closure of K_MIXINS and further ones are considered ancestors
+      self[K_MIXINS_ANC] = {}
+
+      # the inverse derived of K_MIXINS
+      self[K_MIXIN_OF] = {}
+      # traversing the inverse K_MIXINS_OF as descendants
+      self[K_MIXINS_DESC] = {}
+
+      # this holds asserted pointers to compositions
+      self[K_COMPS] = []
+      # this is the transitive closure of K_COMPS and further ones are considered ancestors
+      self[K_COMPS_ANC] = {}
+      # the inverse derived of K_COMPS
+      self[K_COMPS_OF] = {}
+      # traversing the inverse K_COMPS_OF as descendants
+      self[K_COMPS_DESC] = {}
+
 
       self[K_ATTRIBUTES] = {}
 

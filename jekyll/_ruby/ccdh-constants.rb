@@ -175,7 +175,7 @@ module CCDH
   V_DEFAULT = "default"
   V_TRUE = "true"
   # this is the directory path under "Jekyll source" where model sets' page content will be written.
-  V_J_MS_DIR = "modelset"
+  V_J_MS_DIR = "model_sets"
   V_J_TEMPLATE_PATH = "_template"
 
 

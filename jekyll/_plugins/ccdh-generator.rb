@@ -55,7 +55,6 @@ module CCDH
   end
 
 
-
   if ENV[ENV_GH_ACTIVE] == V_TRUE
     Octokit.configure do |c|
       c.auto_paginate = true
@@ -135,19 +134,19 @@ module CCDH
       if ENV[ENV_GH_ACTIVE] == V_TRUE
         CCDH.r_gh(first_model_set)
       end
-      #
-      # site.data[K_MS].each do |model_set_name, model_set|
-      #   publisher = ModelPublisher.new(model_set, V_J_TEMPLATE_PATH, "modelsets/#{model_set_name}")
-      #   publisher.publishModel
-      # end
-      #
+
+      site.data[K_MS].each do |model_set_name, model_set|
+        publisher = ModelPublisher.new(model_set, V_J_TEMPLATE_PATH, "#{V_J_MS_DIR}/#{model_set_name}")
+        publisher.publishModel
+      end
+
       # if we want to write to a different place pass in a root directory
       write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]
       site.data[K_MS].each do |model_set_name, model_set|
         if write_path.nil? || write_path.empty?
-          write_dir = File.expand_path(model_set_name, model_set[K_MS_DIR] )
+          write_dir = File.expand_path(model_set_name, model_set[K_MS_DIR])
         else
-          write_dir = File.expand_path(model_set_name, File.expand_path(write_path) )
+          write_dir = File.expand_path(model_set_name, File.expand_path(write_path))
         end
         CCDH.r_write_modelset(model_set, write_dir)
       end
@@ -162,9 +161,11 @@ module CCDH
         if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
           postYamlContent = $POSTMATCH
           yaml = SafeYAML.load(Regexp.last_match(1))
-          yaml.nil? || (yaml["generated"] == true && File.delete(file))
+          yaml.nil? || (yaml[V_GENERATED] == true && File.delete(file))
         end
       end
+
+      #Dir.glob('**/*', base: path).select{ |d|  File.directory? d }.select{ |d| !(Dir.entries(d) - %w[ . .. ]).empty? }.each { |d| puts d }
     end
 
   end

@@ -27,16 +27,31 @@ module CCDH
 
       @model_set[K_MODELS].each do |model_name, model|
         model[K_PACKAGES].each do |package_name, package|
+
+          # concepts
           package[K_CONCEPTS].each do |name, concept|
-            relativeDir = @page_dir
-            path = File.join(@site.source, relativeDir, concept[VK_FQN] + ".html")
+            relative_dir = @page_dir
+            path = File.join(@site.source, relative_dir, concept[VK_FQN] + ".html")
             if File.exist? (path)
-              page = getPage(@site.source, relativeDir, concept[VK_FQN])
+              page = getPage(@site.source, relative_dir, concept[VK_FQN])
             else
               page = JekyllPage.new(@site, @page_dir, concept[VK_FQN] + ".html", concept)
               @site.pages << page
             end
             page.data["concept"] = concept
+          end
+
+          # elements
+          package[K_ELEMENTS].each do |name, element|
+            relative_dir = @page_dir
+            path = File.join(@site.source, relative_dir, element[VK_FQN] + ".html")
+            if File.exist? (path)
+              page = getPage(@site.source, relative_dir, element[VK_FQN])
+            else
+              page = JekyllPage.new(@site, @page_dir, element[VK_FQN] + ".html", element)
+              @site.pages << page
+            end
+            page.data["element"] = element
           end
         end
       end

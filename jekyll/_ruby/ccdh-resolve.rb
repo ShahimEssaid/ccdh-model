@@ -18,9 +18,9 @@ module CCDH
     rr_e_effective(model_set)
 
     rr_s_resolve_concepts_mixins_comps(model_set)
-    rr_s_closure_mixins_comps(model_set)
+    rr_s_closure_comps(model_set)
     rr_s_effective_concepts(model_set)
-    rr_s_check_mixin_concepts(model_set)
+    rr_s_closure_mixins(model_set)
 
   end
 
@@ -409,6 +409,8 @@ module CCDH
         child_element[K_DOMAINS_CLD].merge!(c[K_DESCENDANTS])
       end
 
+      #
+      # ranges
       child_element[K_RANGES].each do |concept_group|
         effective_concepts = nil
         concept_group.each do |concept|
@@ -538,11 +540,10 @@ module CCDH
     end
   end
 
-  def self.rr_s_closure_mixins_comps(model_set)
+  def self.rr_s_closure_comps(model_set)
     model_set[K_MODELS].each do |model_name, model|
       model[K_PACKAGES].each do |package_name, package|
         package[K_STRUCTURES].each do |structure_name, structure|
-          rr_s_closure_mixins_comps_recursive(structure, [], K_MIXINS, K_MIXINS_DESC, K_MIXIN_OF, true, structure)
           rr_s_closure_mixins_comps_recursive(structure, [], K_COMPS, K_COMPS_DESC, K_COMPS_OF, false, structure)
         end
       end
@@ -551,13 +552,14 @@ module CCDH
 
   def self.rr_s_closure_mixins_comps_recursive(structure, path, key, anc_key, desc_key, is_mixin, starting_structure)
 
+    path_string = ""
+    path.each do |s|
+      path_string += "> #{s[VK_FQN]} "
+    end
+    path_string += structure[VK_FQN]
+
     if path.include?(structure)
       # cycle, don't include in path again
-      path_string = ""
-      path.each do |s|
-        path_string += "> #{s[VK_FQN]} "
-      end
-      path_string += structure[VK_FQN]
       r_build_entry("DAG check: #{key} is circular with path: #{path_string}.", structure)
       rr_s_populate_transitive(path, anc_key)
       rr_s_populate_transitive(path.reverse, desc_key)
@@ -566,12 +568,12 @@ module CCDH
       if is_mixin
         structure[K_CONCEPTS_E].each do |fqn, concept|
           unless starting_structure[K_CONCEPTS_CLU].key?(fqn)
+            r_build_entry("Mixin #{structure[VK_FQN]} has concept #{fqn} not under this structure. Mixin path: #{path_string}.", starting_structure)
             rr_s_populate_transitive(path, anc_key)
             rr_s_populate_transitive(path.reverse, desc_key)
             return
           end
         end
-
       end
       path << structure
       structure[key].each do |s|
@@ -647,13 +649,11 @@ module CCDH
     end
   end
 
-  def self.rr_s_check_mixin_concepts(model_set)
+  def self.rr_s_closure_mixins(model_set)
     model_set[K_MODELS].each do |model_name, model|
       model[K_PACKAGES].each do |package_name, package|
         package[K_STRUCTURES].each do |structure_name, structure|
-          structure[K_MIXINS_ANC].each do |fqn, mixin|
-
-          end
+          rr_s_closure_mixins_comps_recursive(structure, [], K_MIXINS, K_MIXINS_DESC, K_MIXIN_OF, true, structure)
         end
       end
     end

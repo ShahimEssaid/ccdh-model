@@ -408,35 +408,7 @@ module CCDH
       child_element[K_DOMAINS_E].each do |c|
         child_element[K_DOMAINS_CLD].merge!(c[K_DESCENDANTS])
       end
-      #
-      #
-      #
-      #
-      #
-      # child_element[K_DOMAINS].each do |concept_group|
-      #   effective_concepts = nil
-      #   concept_group.each do |concept|
-      #     effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
-      #     # AND, remove what's not in both
-      #     effective_concepts.keep_if do |key, value|
-      #       concept[K_DESCENDANTS].has_key?(key)
-      #     end
-      #   end
-      #   # OR
-      #   child_element[K_DOMAINS_E].merge!(effective_concepts)
-      # end
-      # child_element[K_DOMAINS_NE] = child_element[K_DOMAINS_E].clone
-      # # only keep if also in parent
-      # child_element[K_DOMAINS_E].keep_if do |key, value|
-      #   element[K_DOMAINS_E].key?(key)
-      # end
-      # # not effective if not in parent
-      # child_element[K_DOMAINS_NE].delete_if do |key, value|
-      #   element[K_DOMAINS_E].key?(key)
-      # end
 
-      # ranges
-      #
       child_element[K_RANGES].each do |concept_group|
         effective_concepts = nil
         concept_group.each do |concept|
@@ -467,35 +439,6 @@ module CCDH
       child_element[K_DOMAINS_E].each do |c|
         child_element[K_RANGES_CLD].merge!(c[K_DESCENDANTS])
       end
-      #
-      #
-      #
-      #
-      #
-      child_element[K_RANGES].each do |concept_group|
-        effective_concepts = nil
-        concept_group.each do |concept|
-          effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
-          # AND, remove what's not in both
-          effective_concepts.keep_if do |key, value|
-            concept[K_DESCENDANTS].has_key?(key)
-          end
-        end
-        # OR
-        child_element[K_RANGES_E].merge!(effective_concepts)
-      end
-      child_element[K_RANGES_NE] = child_element[K_DOMAINS_E].clone
-      # only keep if also in parent
-      child_element[K_RANGES_E].keep_if do |key, value|
-        element[K_RANGES_E].key?(key)
-      end
-      # not effective if not in parent
-      child_element[K_RANGES_NE].delete_if do |key, value|
-        element[K_RANGES_E].key?(key)
-      end
-
-      rr_e_of_concept(child_element)
-      rr_e_effective_recursive(child_element)
     end
   end
 

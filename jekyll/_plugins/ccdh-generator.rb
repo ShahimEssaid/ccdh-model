@@ -43,6 +43,18 @@ end
 
 module CCDH
 
+  if ENV[CCDH_CONFIGURED].nil?
+    lines = File.readlines(File.expand_path(".env"))
+    lines.each do |line|
+      var = line.split("=").collect(&:strip).reject(&:empty?)
+      unless var.empty?
+        ENV[var[0]] = var[1].gsub(/"/, "")
+      end
+    end
+  end
+
+
+
   if ENV[ENV_GH_ACTIVE] == V_TRUE
     Octokit.configure do |c|
       c.auto_paginate = true
@@ -119,7 +131,7 @@ module CCDH
 
       CCDH.rr_resolve_model_sets(site.data[K_MS])
 
-      if ENV[ENV_GH_ACTIVE] == "true"
+      if ENV[ENV_GH_ACTIVE] == V_TRUE
         CCDH.r_gh(first_model_set)
       end
       #
@@ -153,5 +165,6 @@ module CCDH
         end
       end
     end
+
   end
 end

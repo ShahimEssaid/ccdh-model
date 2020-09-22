@@ -74,6 +74,8 @@ module CCDH
         page_full_path = File.join(@site.source, page_relative_path)
 
         # save the relative path on the entity to use in pages where needed for anchor href, etc.
+        # the key is "_a_" and the template base file name. it implies awareness of templates and which instance
+        # a page author wants to point to.
         entity["_a_#{template_base_name}"] = "/#{page_relative_path}"
 
         if File.exist? (page_full_path)

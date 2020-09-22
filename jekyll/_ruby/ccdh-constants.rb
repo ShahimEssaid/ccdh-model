@@ -178,6 +178,7 @@ module CCDH
   # this is the directory path under "Jekyll source" where model sets' page content will be written.
   V_J_MS_DIR = "ms"
   V_J_TEMPLATE_PATH = "_template"
+  V_PAGE_LINK_KEY_PREFIX = "_l_"
 
 
   V_MODEL_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD, H_GH_REPO]

@@ -79,7 +79,7 @@ module CCDH
         entity["_a_#{template_base_name}"] = "/#{page_relative_path}"
 
         if File.exist? (page_full_path)
-          page = getPage(@site.source, page_relative_dir, page_base_name)
+          page = getPage(@site.source, page_relative_dir, page_name)
         else
           page = JekyllPage.new(@site, page_relative_dir, page_name, entity, template_file)
           @site.pages << page
@@ -88,13 +88,12 @@ module CCDH
       end
     end
 
-    def getPage(base, dir, basename)
+    def getPage(base, dir, file_name)
       page = nil
-      path = File.join(base, dir, basename + ".html")
+      absolute_path = File.join(base, dir, file_name)
+      relative_path = File.join(dir, file_name)
       @site.pages.each do |p|
-        debug_path = p.path
-        debug_path_1 = File.join(dir, basename + ".html")
-        if p.path == path || p.path == debug_path_1
+        if p.path == absolute_path || p.path == relative_path
           page = p
           break
         end

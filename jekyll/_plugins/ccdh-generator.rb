@@ -16,6 +16,7 @@ require_relative "../_ruby/ccdh-resolve"
 require_relative "../_ruby/ccdh-publisher"
 require_relative "../_ruby/ccdh-model-creator"
 require_relative "../_ruby/ccdh-gh"
+require_relative "../_ruby/udml-filters"
 
 class CSV
   class Table
@@ -97,6 +98,9 @@ module CCDH
     end
 
     def generate(site)
+      #r_clean_generated_pages2(File.join(site.source, V_J_MS_DIR), site)
+      # r_clean_deleted_file(File.join(site.source, V_J_MS_DIR), site)
+      puts "================= RUNNING generate()  =============="
       @site = site
       site.data[K_MS] = {}
 
@@ -163,6 +167,51 @@ module CCDH
           yaml = SafeYAML.load(Regexp.last_match(1))
           yaml.nil? || (yaml[V_GENERATED] == true && File.delete(file))
         end
+      end
+
+      #Dir.glob('**/*', base: path).select{ |d|  File.directory? d }.select{ |d| !(Dir.entries(d) - %w[ . .. ]).empty? }.each { |d| puts d }
+    end
+
+    def r_clean_deleted_file(path, site)
+      site.pages.each do |page|
+        relative_path = page.relative_path
+        if (relative_path.start_with?(V_J_MS_DIR + "/"))
+          full_path = File.join(site.source, relative_path)
+          if !File.exist?(full_path)
+            puts "debug"
+          end
+        end
+      end
+
+    end
+
+    def r_clean_generated_pages2(path, site)
+
+      paths_to_delete = {}
+
+      Dir.glob("**/*", base: path).each do |f|
+        relative_path = File.join(V_J_MS_DIR, f)
+        file = File.join(path, f)
+        next if File.directory?(file)
+        fileContent = File.read(file)
+        if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
+          postYamlContent = $POSTMATCH
+          yaml = SafeYAML.load(Regexp.last_match(1))
+          if !yaml.nil? && yaml[V_GENERATED] == true
+            File.delete(file)
+            paths_to_delete[relative_path] = nil
+          end
+        end
+      end
+
+      site.pages.each do |page|
+        if paths_to_delete.key?(page.relative_path)
+          paths_to_delete[page.relative_path] = page
+        end
+      end
+
+      paths_to_delete.each do |rp, page|
+        site.pages.delete(page)
       end
 
       #Dir.glob('**/*', base: path).select{ |d|  File.directory? d }.select{ |d| !(Dir.entries(d) - %w[ . .. ]).empty? }.each { |d| puts d }

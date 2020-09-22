@@ -64,6 +64,7 @@ module CCDH
       self[K_DEFAULT] = model_names[0].strip
       self[K_TOP] = model_names[1].strip
       self[K_MODELS] = {}
+      self[K_TYPE] = V_TYPE_MODEL_SET
 
       model_names.each do |name|
         self[K_MODELS][name.strip] = nil
@@ -78,7 +79,18 @@ module CCDH
     end
 
     def r_get_missing_key(key)
-      nil
+      self.has_key?(key) && self[key]
+
+      case key
+      when VK_FQN
+        value = "#{self[H_NAME]}"
+      when VK_ENTITY_NAME
+        value = "#{self[H_NAME]}"
+      else
+        value = nil
+      end
+      self[key] = value
+      value
     end
 
     def r_get_model(name, create)
@@ -117,6 +129,21 @@ module CCDH
 
     end
 
+    def r_get_missing_key(key)
+      self.has_key?(key) && self[key]
+
+      case key
+      when VK_FQN
+        value = "#{self[H_NAME]}"
+      when VK_ENTITY_NAME
+        value = "#{self[H_NAME]}"
+      else
+        value = nil
+      end
+      self[key] = value
+      value
+    end
+
     def r_get_package(name, create)
       package = self[K_PACKAGES][name]
       if package.nil? && create
@@ -145,6 +172,20 @@ module CCDH
       self[K_CONCEPTS] = {}
       self[K_STRUCTURES] = {}
       self[K_ELEMENTS] = {}
+    end
+    def r_get_missing_key(key)
+      self.has_key?(key) && self[key]
+
+      case key
+      when VK_FQN
+        value = "#{self[H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_MODEL][H_NAME]}"
+      when VK_ENTITY_NAME
+        value = "#{self[H_NAME]}"
+      else
+        value = nil
+      end
+      self[key] = value
+      value
     end
 
     def r_get_concept(name, create)

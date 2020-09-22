@@ -24,6 +24,7 @@ module CCDH
   H_ELEMENT = "element"
   H_RANGE_STRUCTURES = "range_structures"
   H_GH_ISSUE = "gh_issue"
+  H_GH_REPO = "gh_repo"
   H_MIXINS = "mixins"
   H_COMPOSITIONS = "compositions"
 
@@ -175,16 +176,16 @@ module CCDH
   V_DEFAULT = "default"
   V_TRUE = "true"
   # this is the directory path under "Jekyll source" where model sets' page content will be written.
-  V_J_MS_DIR = "model_sets"
+  V_J_MS_DIR = "ms"
   V_J_TEMPLATE_PATH = "_template"
 
 
-  V_MODEL_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD]
-  V_MODEL_DEFAULT_ROW = [V_DEFAULT, "Model #{V_DEFAULT} summary.", "Model #{V_DEFAULT} description.", "", "", V_STATUS_CURRENT, "", ""]
+  V_MODEL_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD, H_GH_REPO]
+  V_MODEL_DEFAULT_ROW = [V_DEFAULT, "Model #{V_DEFAULT} summary.", "Model #{V_DEFAULT} description.", "", "", V_STATUS_CURRENT, "", "", ""]
   V_MODEL_CURRENT_ROW = [V_CURRENT, "Model #{V_CURRENT} summary.", "Model #{V_CURRENT} description.", "", V_DEFAULT, V_STATUS_CURRENT, "", ""]
 
-  V_PACKAGE_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_STATUS, H_NOTES, H_BUILD]
-  V_PACKAGE_DEFAULT_ROW = [V_PKG_DEFAULT, "Package #{V_PKG_DEFAULT} summary.", "Package #{V_PKG_DEFAULT} description.", "", V_STATUS_CURRENT, "", ""]
+  V_PACKAGE_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_STATUS, H_NOTES, H_BUILD, H_GH_REPO]
+  V_PACKAGE_DEFAULT_ROW = [V_PKG_DEFAULT, "Package #{V_PKG_DEFAULT} summary.", "Package #{V_PKG_DEFAULT} description.", "", V_STATUS_CURRENT, "", "", ""]
 
   V_CONCEPT_HEADERS = [H_PACKAGE, H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_PARENTS, H_RELATED, H_STATUS, H_NOTES, H_BUILD]
   V_CONCEPT_THING_ROW = ['default', V_CONCEPT_THING, 'Thing summary.', 'Thing description.', '', '', '', V_CURRENT, '', '']

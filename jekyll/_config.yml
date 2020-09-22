@@ -56,9 +56,9 @@ plugins:
 #   - vendor/gems/
 #   - vendor/ruby/
 
-collection:
-  model:
-    output: true
+#collection:
+#  model:
+#    output: true
 
 # jekyll_tidy:
 #   exclude:

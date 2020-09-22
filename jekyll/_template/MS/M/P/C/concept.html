@@ -1,0 +1,15 @@
+---
+layout: page
+title: Concept {{C.name}} in package {{C._package.name}}:{{C._model.name}}:{{C._model._ms.name}}
+generated: true
+nav_exclude: true
+---
+{% raw %}
+<h1>Model concept: {{ page.C.name }}</h1>
+<p>{{ page.C.summary }}</p>
+<p>{{ page.C.description }}</p>
+
+{% include c-li.html c=page.C %}
+
+{% endraw %}
+

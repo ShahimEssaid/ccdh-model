@@ -6,10 +6,16 @@ layout: home
 
 Introductory text here.
 
-The following are the ModelSet(s) published during this build. Each ModelSet page shows the full content of a ModelSet
-
+The following are the ModelSet(s) published during this build. Each Model set page shows the full content of a ModelSet
 {% assign model_sets = site.data._ms | sort %}
+{% include debug.html name="model sets"  object=model_sets on=false %}
+<ul>
 {% for ms in model_sets %}
-{%  assign model_set = ms[1] %}
-{% include li/ms.html ms=model_set %}
+{% assign model_set = ms[1] %}
+{% include debug.html name="model set"  object=model_set on=false %}
+<a href="{{model_set._urls.model_set_full | relative_url }}">{{model_set.name}}</a>
+
 {% endfor %}
+</ul>
+
+

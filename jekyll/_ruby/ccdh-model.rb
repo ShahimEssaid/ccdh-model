@@ -1,7 +1,20 @@
 module CCDH
 
-  class ModelEntity < Hash
+  class ModelHash < Hash
+
+    def initialize()
+      self[K_URLS] = {}
+
+      if ENV[ENV_DEBUG] == "true"
+        self[K_DEBUG] = true
+      end
+    end
+
+  end
+
+  class ModelEntity < ModelHash
     def initialize(name, model, type)
+      super()
       self[H_NAME] = name
       self[K_TYPE] = type
       self[K_MODEL] = model
@@ -44,7 +57,7 @@ module CCDH
     end
   end
 
-  class ModelSet < Hash
+  class ModelSet < ModelHash
     # name:
     #
     #
@@ -53,6 +66,7 @@ module CCDH
     # that model be be created (directory and empty files) if it doesn't exist
 
     def initialize(name, dir, model_names)
+      super()
       self.default_proc = proc do |hash, key|
         hash.r_get_missing_key(key)
       end
@@ -173,6 +187,7 @@ module CCDH
       self[K_STRUCTURES] = {}
       self[K_ELEMENTS] = {}
     end
+
     def r_get_missing_key(key)
       self.has_key?(key) && self[key]
 

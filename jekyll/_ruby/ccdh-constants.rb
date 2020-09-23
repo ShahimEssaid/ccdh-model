@@ -141,6 +141,8 @@ module CCDH
   K_COMPS_OF = "_comps_of"
   # traversing the inverse K_COMPS_OF as descendants
   K_COMPS_DESC = "_comps_desc"
+  K_URLS = "_urls"
+  K_DEBUG = "_debug"
 
 
   VK_FQN = "_fqn" # this is the a FQN like ConceptName:c:PackageName:p:ModelName
@@ -203,5 +205,6 @@ module CCDH
   ENV_GH_TOKEN = "GH_TOKEN"
   ENV_M_MODEL_SETS = "M_MODEL_SETS"
   ENV_M_MODEL_SETS_WRITE_PATH = "M_MODEL_SETS_WRITE_PATH"
+  ENV_DEBUG = "M_DEBUG"
   CCDH_CONFIGURED = "CCDH_CONFIGURED"
 end

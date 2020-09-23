@@ -1,0 +1,9 @@
+<li><a href="{{include.ms._urls.model_set_full | relative_url}}">{{ include.ms.name }}</a></li>
+<li>Models
+    <ul>
+{% assign models = include.ms._models | sort %}
+{% for model in models %}
+        {% include li/m-r.html m=model %}
+{% endfor %}
+    </ul>
+</li>

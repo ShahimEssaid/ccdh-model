@@ -1,0 +1,22 @@
+---
+layout: page
+title: Model set {{MS.name}} full outline
+generated: true
+nav_exclude: true
+---
+{% raw %}
+<h1>Model set {{ page.MS.name }} full outline</h1>
+
+<p>The following is a full outline of the content of this model set.</p>
+
+<li>Models
+    <ol>
+
+        {% assign models = page.MS._models | sort %}
+        {% for model_entry in models %}
+        {% assign model = model_entry[1] %}
+        {% include li/m-r.html m=model %}
+        {% endfor %}
+    </ol>
+</li>
+{% endraw %}

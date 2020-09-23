@@ -1,1 +1,13 @@
-<li><a href="{{include.m | entity_url | relative_url}}">{{ include.m.name }}</a></li>
+{% assign model = include.m %}
+<li><a href="{{model._urls.model | relative_url }}">{{ model.name }}</a></li>
+<p>Packages:</p>
+<ol>
+    {% include debug.html object=model name="model in m-rhtml" on=false %}
+    {% assign packages = model._packages | sort %}
+    {% for package_entry in packages %}
+    {% assign package = package_entry[1] %}
+    {% include li/p-r.html p=package %}
+    {% endfor %}
+</ol>
+
+

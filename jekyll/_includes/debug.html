@@ -1,0 +1,25 @@
+{% if include.on or include.object._debug%}
+{%- assign sorted = include.object | sort -%}
+<details>
+    <summary><span style="background-color:#fdd;">DEBUGGING</span> {{include.name}} instance</summary>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Value</th>
+        </tr>
+        {%- for entry in sorted -%}
+        <tr>
+            {% if entry[1].first %} {% comment %} this checks if the value is an array/hash, and skips it for custom
+            handling {% endcomment %}
+            <td>{{ entry[0] }}</td>
+            <td>{{ entry[1] | size}}</td>
+            {% else %}
+            <td>{{ entry[0] }}</td>
+            <td>{{ entry[1] }}</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+</details>
+{% endif %}
+

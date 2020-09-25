@@ -1,0 +1,27 @@
+.main-content {
+
+  line-height: unset;
+
+  ol {
+    counter-reset: item
+  }
+
+  li {
+    display: block
+  }
+
+  ol > li:before {
+    content: counters(item, ".") " ";
+    counter-increment: item;
+    position: unset
+  }
+
+  ol > li ol {
+    counter-reset: item
+  }
+
+  ol > li ol li::before {
+    content: counters(item, ".") " ";
+    counter-increment: item
+  }
+}

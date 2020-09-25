@@ -1,1 +1,3 @@
-<li><a href="{{include.e | entity_url | relative_url}}">{{ include.e.name }}</a></li>
+<li><a href="{{include.E._urls.element | relative_url}}">{{ include.E.name }}</a>
+    {% include debug.html object=include.E on="true" name="element in li/e.html" %}
+</li>

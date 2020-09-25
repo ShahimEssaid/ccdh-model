@@ -1,15 +1,18 @@
 module CCDH
 
   class ModelHash < Hash
+    def initialize
+      self.default_proc = proc do |hash, key|
+        hash.r_get_missing_key(key)
+      end
 
-    def initialize()
       self[K_URLS] = {}
 
-      if ENV[ENV_DEBUG] == "true"
-        self[K_DEBUG] = true
-      end
     end
 
+    def to_s
+      self[VK_FQN]
+    end
   end
 
   class ModelEntity < ModelHash
@@ -24,9 +27,6 @@ module CCDH
       self[K_RELATED] = []
       self[K_RELATED_OF] = {}
 
-      self.default_proc = proc do |hash, key|
-        hash.r_get_missing_key(key)
-      end
     end
 
     def r_get_missing_key(key)
@@ -115,6 +115,12 @@ module CCDH
       end
       model
     end
+
+    def to_s
+      self[VK_FQN]
+    end
+
+
   end
 
   class Model < ModelEntity

@@ -5,8 +5,8 @@ generated: true
 nav_exclude: true
 ---
 {% raw %}
-<h1>Model Structure: {{ page.S.name }}</h1>
-<p>Summary: {{ page.S.summary }}</p>
-<p>Description: {{ page.S.description }}</p>
+<h1>{{page.S.name}} structure</h1>
+{% include entity-table.html entity=page.S headers=page.S._model._s_disp_headers %}
 
+{% include debug.html object=page.S name="structure in MS/M/P/S/structure.html" on="false" hr="true" %}
 {% endraw %}

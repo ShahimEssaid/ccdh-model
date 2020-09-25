@@ -7,7 +7,7 @@ nav_exclude: true
 {% raw %}
 <h1>Model set: {{ page.MS.name }}</h1>
 
-The models in this model set are edited:
+The models in this model set are:
 {% assign models = page.MS._models | sort %}
 <ul>
 {% for model_entry in models %}
@@ -15,4 +15,5 @@ The models in this model set are edited:
 {% include li/m.html  m=model %}
 {% endfor %}
 </ul>
+{% include debug.html object=page.MS name="model set in MS/model_set.html" on="false" hr="true"  %}
 {% endraw %}

@@ -1,4 +1,4 @@
-"package","name","attribute","element","summary","description","gh_issue","concepts","ranges","structures","status","notes"
+"package","name","attribute","element","summary","description","gh_issue","concepts","ranges","structures","status","notes","build"
 "test","TestStruct","_self_","","","","","","","","","",""
 "test","TestStruct","aName","","","","","","","","","",""
 "test","TestStruct","cName","","","","","","","","","",""

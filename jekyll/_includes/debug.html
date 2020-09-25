@@ -1,7 +1,14 @@
-{% if include.on or include.object._debug%}
+{%- comment -%}This is how to include this:
+{% include debug.html object=someObject name="summary phrase" on="false" hr="false" %}
+{%- endcomment -%}
+{%- if site._debug == "debug_on" or  site._debug == "debug_on_all"-%}
+{%- if site._debug == "debug_on_all" or include.object._debug == "true"  or include.on == "true" -%}
 {%- assign sorted = include.object | sort -%}
-<details>
-    <summary><span style="background-color:#fdd;">DEBUGGING</span> {{include.name}} instance</summary>
+{%- if include.hr == "true" -%}
+<hr>
+{%- endif -%}
+_<details style="display: inline; vertical-align: top">
+    <summary><span style="background-color:#fdd;">DEBUGGING</span> {{include.name}}</summary>
     <table>
         <tr>
             <th>Name</th>
@@ -9,17 +16,22 @@
         </tr>
         {%- for entry in sorted -%}
         <tr>
-            {% if entry[1].first %} {% comment %} this checks if the value is an array/hash, and skips it for custom
-            handling {% endcomment %}
+            {%- if entry[1].first -%} {%- comment -%} this checks if the value is an array/hash, and skips it for custom
+            handling {%- endcomment -%}
             <td>{{ entry[0] }}</td>
             <td>{{ entry[1] | size}}</td>
             {% else %}
             <td>{{ entry[0] }}</td>
             <td>{{ entry[1] }}</td>
-            {% endif %}
+            {%- endif -%}
         </tr>
-        {% endfor %}
+        {%- endfor -%}
     </table>
-</details>
-{% endif %}
+</details>_
+{%- if include.hr == "true" -%}
+<hr>
+{%- endif -%}
+{%- endif -%}
+{%- else -%}
+{%- endif -%}
 

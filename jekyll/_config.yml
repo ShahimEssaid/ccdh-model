@@ -56,6 +56,11 @@ plugins:
 #   - vendor/gems/
 #   - vendor/ruby/
 
+sass:
+  style: expanded
+  line_comments: true
+  sourcemap: always
+
 #collection:
 #  model:
 #    output: true

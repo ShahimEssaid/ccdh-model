@@ -28,6 +28,13 @@ module CCDH
   H_MIXINS = "mixins"
   H_COMPOSITIONS = "compositions"
 
+  H_M_DISPLAY = "m_display"
+  H_P_DISPLAY = "p_display"
+  H_C_DISPLAY = "c_display"
+  H_E_DISPLAY = "e_display"
+  H_S_DISPLAY = "s_display"
+  H_A_DISPLAY = "a_display"
+
   #
   #
   #
@@ -144,6 +151,12 @@ module CCDH
   K_URLS = "_urls"
   K_DEBUG = "_debug"
 
+  K_M_DISP_HEADERS = "_m_disp_headers"
+  K_P_DISP_HEADERS = "_p_disp_headers"
+  K_C_DISP_HEADERS = "_c_disp_headers"
+  K_E_DISP_HEADERS = "_e_disp_headers"
+  K_S_DISP_HEADERS = "_s_disp_headers"
+  K_A_DISP_HEADERS = "_a_disp_headers"
 
   VK_FQN = "_fqn" # this is the a FQN like ConceptName:c:PackageName:p:ModelName
   VK_ENTITY_NAME = "_entity_name" # this is the name without the model name prefix. It's a FQN within a model.
@@ -180,12 +193,19 @@ module CCDH
   # this is the directory path under "Jekyll source" where model sets' page content will be written.
   V_J_MS_DIR = "ms"
   V_J_TEMPLATE_PATH = "_template"
-  V_PAGE_LINK_KEY_PREFIX = "_l_"
+
+  V_M_DISPLAY = "#{H_NAME}, #{H_SUMMARY}, #{H_DESCRIPTION}, #{H_GH_ISSUE}, #{H_STATUS}, #{H_NOTES}, #{H_BUILD}"
+  V_P_DISPLAY = "#{H_NAME}, #{H_SUMMARY}, #{H_DESCRIPTION}, #{H_GH_ISSUE}, #{H_STATUS}, #{H_NOTES}, #{H_BUILD}"
+  V_C_DISPLAY = "#{H_NAME}, #{H_SUMMARY}, #{H_DESCRIPTION}, #{H_GH_ISSUE}, #{H_STATUS}, #{H_NOTES}, #{H_BUILD}"
+  V_E_DISPLAY = "#{H_NAME}, #{H_SUMMARY}, #{H_DESCRIPTION}, #{H_GH_ISSUE}, #{H_STATUS}, #{H_NOTES}, #{H_BUILD}"
+  V_S_DISPLAY = "#{H_NAME}, #{H_SUMMARY}, #{H_DESCRIPTION}, #{H_GH_ISSUE}, #{H_STATUS}, #{H_NOTES}, #{H_BUILD}"
+  V_A_DISPLAY = "#{H_NAME}, #{H_SUMMARY}, #{H_DESCRIPTION}, #{H_GH_ISSUE}, #{H_STATUS}, #{H_NOTES}, #{H_BUILD}"
 
 
-  V_MODEL_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD, H_GH_REPO]
-  V_MODEL_DEFAULT_ROW = [V_DEFAULT, "Model #{V_DEFAULT} summary.", "Model #{V_DEFAULT} description.", "", "", V_STATUS_CURRENT, "", "", ""]
-  V_MODEL_CURRENT_ROW = [V_CURRENT, "Model #{V_CURRENT} summary.", "Model #{V_CURRENT} description.", "", V_DEFAULT, V_STATUS_CURRENT, "", ""]
+  V_MODEL_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_DEPENDS_ON, H_STATUS, H_NOTES, H_BUILD, H_GH_REPO,
+                     H_M_DISPLAY, H_P_DISPLAY, H_C_DISPLAY, H_E_DISPLAY, H_S_DISPLAY, H_A_DISPLAY]
+  # V_MODEL_DEFAULT_ROW = [V_DEFAULT, "Model #{V_DEFAULT} summary.", "Model #{V_DEFAULT} description.", "", "", V_STATUS_CURRENT, "", "", ""]
+  # V_MODEL_CURRENT_ROW = [V_CURRENT, "Model #{V_CURRENT} summary.", "Model #{V_CURRENT} description.", "", V_DEFAULT, V_STATUS_CURRENT, "", ""]
 
   V_PACKAGE_HEADERS = [H_NAME, H_SUMMARY, H_DESCRIPTION, H_GH_ISSUE, H_STATUS, H_NOTES, H_BUILD, H_GH_REPO]
   V_PACKAGE_DEFAULT_ROW = [V_PKG_DEFAULT, "Package #{V_PKG_DEFAULT} summary.", "Package #{V_PKG_DEFAULT} description.", "", V_STATUS_CURRENT, "", "", ""]
@@ -205,6 +225,5 @@ module CCDH
   ENV_GH_TOKEN = "GH_TOKEN"
   ENV_M_MODEL_SETS = "M_MODEL_SETS"
   ENV_M_MODEL_SETS_WRITE_PATH = "M_MODEL_SETS_WRITE_PATH"
-  ENV_DEBUG = "M_DEBUG"
   CCDH_CONFIGURED = "CCDH_CONFIGURED"
 end

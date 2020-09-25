@@ -1,0 +1,37 @@
+---
+# Feel free to add content and custom Front Matter to this file.
+# To modify the layout, see https://jekyllrb.com/docs/themes/#overriding-theme-defaults
+layout: home
+testval:
+    - one
+    - two
+testval2: []
+testval3:
+
+---
+{% assign model_sets = site.data._ms | sort %}
+
+<p>Introductory text here.</p>
+
+<p>The following are the ModelSet(s) published during this build. Each Model set page shows the full content of a ModelSet</p>
+
+<h3>Simple model set pages</h3>
+
+<ol>
+    {% for ms in model_sets %}
+    {% assign model_set = ms[1] %}
+    <li><a href="{{model_set._urls.model_set | relative_url }}">{{model_set.name}}</a>
+        {% include debug.html name="model in index.html"  object=model_set on="false" %}
+    </li>
+    {% endfor %}
+</ol>
+
+<h3>Full model set pages</h3>
+<ol>
+{% for ms in model_sets %}
+{% assign model_set = ms[1] %}
+<li><a href="{{model_set._urls.model_set_full | relative_url }}">{{model_set.name}}</a>
+{% include debug.html name="model in index.html"  object=model_set on="false" %}
+</li>
+{% endfor %}
+</ol>

@@ -51,6 +51,7 @@ module CCDH
       var = line.split("=").collect(&:strip).reject(&:empty?)
       unless var.empty?
         ENV[var[0]] = var[1].gsub(/"/, "")
+        # puts ENV[var[0]]
       end
     end
   end

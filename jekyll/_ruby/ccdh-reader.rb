@@ -9,9 +9,16 @@ module CCDH
 
     modelsets.each do |model_set_name, model_set|
       model_set[K_MODELS].each do |model_name, model|
-        CCDH.rr_process_depends_on(model_set, model)
+        rr_process_depends_on(model_set, model)
       end
     end
+
+    modelsets.each do |model_set_name, model_set|
+      model_set[K_MODELS].each do |model_name, model|
+        rr_process_display_headers(model_set, model)
+      end
+    end
+
 
     modelsets.each do |name, model_set|
       rr_add_default_dependency(model_set)
@@ -67,6 +74,15 @@ module CCDH
       model[K_DEPENDS_ON] << dependency
       dependency[K_DEPENDED_ON].include?(model) || dependency[K_DEPENDED_ON] << model
     end
+  end
+
+  def self.rr_process_display_headers(model_set, model)
+    model[K_M_DISP_HEADERS] =  model[H_M_DISPLAY].split(SEP_COMMA).collect(&:strip).reject(&:empty?)
+    model[K_P_DISP_HEADERS] =  model[H_P_DISPLAY].split(SEP_COMMA).collect(&:strip).reject(&:empty?)
+    model[K_C_DISP_HEADERS] =  model[H_C_DISPLAY].split(SEP_COMMA).collect(&:strip).reject(&:empty?)
+    model[K_E_DISP_HEADERS] =  model[H_E_DISPLAY].split(SEP_COMMA).collect(&:strip).reject(&:empty?)
+    model[K_S_DISP_HEADERS] =  model[H_S_DISPLAY].split(SEP_COMMA).collect(&:strip).reject(&:empty?)
+    model[K_A_DISP_HEADERS] =  model[H_A_DISPLAY].split(SEP_COMMA).collect(&:strip).reject(&:empty?)
   end
 
   def self.rr_add_default_dependency(model_set)
@@ -141,6 +157,11 @@ module CCDH
         row[H_DEPENDS_ON] += modelRef
       end
       row[H_DEPENDS_ON] == depends_on_old || r_build_entry("#{H_DEPENDS_ON}: was updated from: #{depends_on_old} to:#{row[H_DEPENDS_ON]}.", row)
+
+      # parse header display fields
+
+
+
       r_copy_row_vals(model, row)
     end
     model[K_LOADED] = true

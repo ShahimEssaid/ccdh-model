@@ -5,9 +5,9 @@ generated: true
 nav_exclude: true
 ---
 {% raw %}
-<h1>Model: {{ page.M.name }}</h1>
-<p>Summary: {{ page.M.summary }}</p>
-<p>Description: {{ page.M.description }}</p>
+<h1>{{page.M.name}} model</h1>
+{% include entity-table.html entity=page.M headers=page.M._m_disp_headers %}
 
+{% include debug.html object=page.M name="model in MS/M/model.html" on="false" hr="true" %}
 {% endraw %}
 

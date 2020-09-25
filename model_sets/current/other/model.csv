@@ -1,2 +1,2 @@
-"name","summary","description","gh_issue","depends_on","status","notes","build"
-"other","Summary of model other","Description of model other","","","generated","",""
+"name","summary","description","gh_issue","depends_on","status","notes","build","gh_repo","m_display","p_display","c_display","e_display","s_display","a_display"
+"other","Summary of model other","Description of model other","","","generated","","","","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build"

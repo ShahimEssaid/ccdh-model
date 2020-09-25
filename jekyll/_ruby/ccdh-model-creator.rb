@@ -24,9 +24,10 @@ module CCDH
     model_file = File.join(dir, F_MODEL_CSV)
     if !File.exist?(model_file)
       # write empty file
-      CSV.open(model_file, mode = "wb", {force_quotes: true}) do |csv|
+      CSV.open(model_file, mode = "wb", force_quotes: true) do |csv|
         csv << V_MODEL_HEADERS
-        csv << [model_name, "Summary of model #{model_name}", "Description of model #{model_name}", "", "", V_GENERATED, "", ""]
+        csv << [model_name, "Summary of model #{model_name}", "Description of model #{model_name}", "", "", V_GENERATED, "", "", "",
+                V_M_DISPLAY, V_P_DISPLAY, V_C_DISPLAY, V_E_DISPLAY, V_S_DISPLAY, V_A_DISPLAY]
       end
     end
 
@@ -34,7 +35,7 @@ module CCDH
     packages_file = File.join(dir, F_PACKAGES_CSV)
     if !File.exist?(packages_file)
       # write empty file
-      CSV.open(packages_file, mode = "wb", {force_quotes: true}) do |csv|
+      CSV.open(packages_file, mode = "wb", force_quotes: true) do |csv|
         csv << V_PACKAGE_HEADERS
         model_name == V_DEFAULT && csv << V_PACKAGE_DEFAULT_ROW
       end
@@ -45,7 +46,7 @@ module CCDH
     ## create new file if missing
     if !File.exist?(concepts_file)
       # write empty file
-      CSV.open(concepts_file, mode = "wb", {force_quotes: true}) do |csv|
+      CSV.open(concepts_file, mode = "wb", force_quotes: true) do |csv|
         csv << V_CONCEPT_HEADERS
         model_name == V_DEFAULT && csv << V_CONCEPT_THING_ROW
       end
@@ -56,7 +57,7 @@ module CCDH
     ## create new file if missing
     if !File.exist?(elements_file)
       # write empty file
-      CSV.open(elements_file, mode = "wb", {force_quotes: true}) do |csv|
+      CSV.open(elements_file, mode = "wb", force_quotes: true) do |csv|
         csv << V_ELEMENT_HEADERS
         model_name == V_DEFAULT && csv << V_ELEMENT_HAS_THING_ROW
       end
@@ -67,7 +68,7 @@ module CCDH
     ## create new file if missing
     if !File.exist?(structures_file)
       # write empty file
-      CSV.open(structures_file, mode = "wb", {force_quotes: true}) do |csv|
+      CSV.open(structures_file, mode = "wb", force_quotes: true) do |csv|
         csv << V_STRUCTURE_HEADERS
       end
     end

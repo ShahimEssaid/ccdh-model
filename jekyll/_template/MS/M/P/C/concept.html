@@ -5,11 +5,8 @@ generated: true
 nav_exclude: true
 ---
 {% raw %}
-<h1>Model concept: {{ page.C.name }}</h1>
-<p>{{ page.C.summary }}</p>
-<p>{{ page.C.description }}</p>
+<h1>{{page.C.name}} concept</h1>
+{% include entity-table.html entity=page.C headers=page.C._model._c_disp_headers %}
 
-{% include c-li.html c=page.C %}
-
+{% include debug.html object=page.C name="concept in MS/M/P/C/concept.html" on="false" hr="true" %}
 {% endraw %}
-

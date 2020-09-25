@@ -16,6 +16,46 @@ module UDML
       end
     end
 
+    def object_type(input)
+      case input
+      when nil
+        type = "nil"
+      when CCDH::ModelHash
+        type = "mhash"
+      when String
+        if input.start_with?("http")
+          type = "http"
+        else
+          type = "string"
+        end
+      when Array
+        type = "array"
+      when Hash
+        type = "hash"
+      when Numeric
+        type = "numeric"
+      end
+      type
+    end
+
+    def entity_home_url(entity)
+      template = nil
+      case entity._type
+      when CCDH::V_TYPE_MODEL_SET
+        template = "model_set"
+      when CCDH::V_TYPE_MODEL
+        template = "model"
+      when CCDH::V_TYPE_PACKAGE
+              template = "package"
+      when CCDH::V_TYPE_CONCEPT
+                    template = "concept"
+      when CCDH::V_TYPE_ELEMENT
+        template = "element"
+      when CCDH::V_TYPE_STRUCTURE
+        template = "structure"
+      end
+      entity[CCDH::K_URLS][template]
+    end
   end
 end
 

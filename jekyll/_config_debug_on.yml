@@ -1,0 +1,4 @@
+# Adding this configuration file to the commandline turns on all debugging output
+# regardless of any object specific setting
+
+_debug: debug_on

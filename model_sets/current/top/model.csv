@@ -1,2 +1,2 @@
-"name","summary","description","gh_issue","depends_on","status","notes","build"
-"top","Summary of model top","Description of model top","","","generated","",""
+"name","summary","description","gh_issue","depends_on","status","notes","build","gh_repo","m_display","p_display","c_display","e_display","s_display","a_display"
+"top","Summary of model top","Description of model top","","","generated","","","","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build","name, summary, description, gh_issue, status, notes, build"

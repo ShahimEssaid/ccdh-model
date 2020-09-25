@@ -2,5 +2,5 @@
 {%- assign build = entity.build | strip -%}
 {%- assign size = build | size -%}
 {%- if size > 0 -%}
-<tr><td>{{entity._fqn}}</td><td>{{build}}{%- include debug.html object=entity name=entity._fqn on="true" -%}</td></tr>
+<tr><td>{{entity._fqn}}</td><td>{{build}}{%- include debug.html object=entity on="true" -%}</td></tr>
 {%- endif -%}

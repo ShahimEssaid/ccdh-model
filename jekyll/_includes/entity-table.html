@@ -28,7 +28,7 @@
                     {%- else -%}
                         {{hash_entry[1]}}
                     {%- endif -%}
-                {%- if forloop.last != true -%}, {%- endif -%}
+                {% if forloop.last != true %}, {% endif %}
                 {%- endfor -%}
             {%- elsif type == "array" -%}
                 {%- assign sorted = val | sort -%}
@@ -39,8 +39,7 @@
                     {%- else -%}
                     {{entry}}
                     {%- endif -%}
-                <a href="{{entry | entity_home_url | relative_url }}">{{entry._entity_name | default: "NONAME"}}</a>
-                {%- if forloop.last != true -%}, {%- endif -%}
+                {% if forloop.last != true %}, {% endif %}
                 {%- endfor -%}
             {%- elsif type == "numeric" -%}
                 {{ val }}

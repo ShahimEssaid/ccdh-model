@@ -13,6 +13,10 @@ module CCDH
     def to_s
       self[VK_FQN]
     end
+
+    def <=>(other)
+      self[H_NAME] <=> other[H_NAME]
+    end
   end
 
   class ModelEntity < ModelHash
@@ -67,6 +71,9 @@ module CCDH
 
     def initialize(name, dir, model_names)
       super()
+      # TODO: fix hard coding this.
+      self[VK_ENTITY_NAME] = name
+      self[VK_FQN] = name
       self.default_proc = proc do |hash, key|
         hash.r_get_missing_key(key)
       end
@@ -126,6 +133,9 @@ module CCDH
   class Model < ModelEntity
     def initialize(name, model_set)
       super(name, self, V_TYPE_MODEL)
+      # TODO: fix this hard coding of VKs
+      self[VK_FQN] = name
+      self[VK_ENTITY_NAME] = name
       # we need this to avoid errors on new model.xlsx/csv files  TODO: necessary?
       #self[H_DEPENDS_ON] = ""
       self[K_MS] = model_set

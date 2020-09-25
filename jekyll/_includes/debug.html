@@ -16,14 +16,46 @@ _<details style="display: inline; vertical-align: top">
         </tr>
         {%- for entry in sorted -%}
         <tr>
-            {%- if entry[1].first -%} {%- comment -%} this checks if the value is an array/hash, and skips it for custom
-            handling {%- endcomment -%}
+            {%- assign type = entry[1] | object_type -%}
             <td>{{ entry[0] }}</td>
-            <td>{{ entry[1] | size}}</td>
-            {% else %}
-            <td>{{ entry[0] }}</td>
-            <td>{{ entry[1] }}</td>
+            <td>
+            {%- assign val = entry[1] -%}
+            {%- if type == "nil" -%}
+            nil value
+            {%- elsif type == "string" -%}
+            {{ val }}
+            {%- elsif type == "http" -%}
+            <a href="{{val}}">{{val}}</a>
+            {%- elsif type == "mhash" -%}
+            <a href="{{val | entity_home_url | relative_url }}">{{val._entity_name | default: "NONAME1"}}</a>
+            {%- elsif type == "hash" -%}
+            {%- assign sorted = val | sort -%}
+            {%- for hash_entry in sorted -%}
+            {%- assign htype = hash_entry[1] | object_type -%}
+            {%- if htype == "mhash" -%}
+            <a href="{{hash_entry[1] | entity_home_url | relative_url }}">{{hash_entry[1]._entity_name | default: "NONAME2"}}</a>
+            {%- else -%}
+            {{hash_entry[1]}}
             {%- endif -%}
+            {% if forloop.last != true %}, {% endif %}
+            {%- endfor -%}
+            {%- elsif type == "array" -%}
+            {%- assign sorted = val | sort -%}
+            {%- for entry in sorted -%}
+            {%- assign htype = entry | object_type -%}
+            {%- if htype == "mhash" -%}
+            <a href="{{entry | entity_home_url | relative_url }}">{{entry._entity_name | default: "NONAME3"}}</a>
+            {%- else -%}
+            {{entry}}
+            {%- endif -%}
+            {% if forloop.last != true %}, {% endif %}
+            {%- endfor -%}
+            {%- elsif type == "numeric" -%}
+            {{ val }}
+            {%- else -%}
+            Unknown value: {{val}}
+            {%- endif -%}
+            </td>
         </tr>
         {%- endfor -%}
     </table>

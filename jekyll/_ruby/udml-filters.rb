@@ -40,7 +40,7 @@ module UDML
 
     def entity_home_url(entity)
       template = nil
-      case entity._type
+      case entity[CCDH::K_TYPE]
       when CCDH::V_TYPE_MODEL_SET
         template = "model_set"
       when CCDH::V_TYPE_MODEL

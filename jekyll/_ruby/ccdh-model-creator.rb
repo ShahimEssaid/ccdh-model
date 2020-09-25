@@ -15,10 +15,10 @@ module CCDH
     !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
 
     # copy excel file template if needed
-    excel_file = File.join(model_set[K_DIR], "#{model_name}.xlsx")
-    if !File.exist? excel_file
-      FileUtils.copy_file(File.join(model_set[K_SITE].source, V_J_TEMPLATE_PATH, F_MODEL_XLSX), excel_file)
-    end
+    # excel_file = File.join(model_set[K_DIR], "#{model_name}.xlsx")
+    # if !File.exist? excel_file
+    #   FileUtils.copy_file(File.join(model_set[K_SITE].source, V_J_TEMPLATE_PATH, F_MODEL_XLSX), excel_file)
+    # end
 
     # write model file
     model_file = File.join(dir, F_MODEL_CSV)
@@ -37,7 +37,7 @@ module CCDH
       # write empty file
       CSV.open(packages_file, mode = "wb", force_quotes: true) do |csv|
         csv << V_PACKAGE_HEADERS
-        model_name == V_DEFAULT && csv << V_PACKAGE_DEFAULT_ROW
+        model_name == model_set[K_DEFAULT] && csv << V_PACKAGE_DEFAULT_ROW
       end
     end
 
@@ -48,7 +48,12 @@ module CCDH
       # write empty file
       CSV.open(concepts_file, mode = "wb", force_quotes: true) do |csv|
         csv << V_CONCEPT_HEADERS
-        model_name == V_DEFAULT && csv << V_CONCEPT_THING_ROW
+        if model_name == model_set[K_DEFAULT]
+          csv << V_CONCEPT_THING_ROW
+          csv << V_CONCEPT_ENTITY_ROW
+          csv << V_CONCEPT_PRIMITIVE_ROW
+          csv << V_CONCEPT_TAG_ROW
+        end
       end
     end
 
@@ -59,7 +64,7 @@ module CCDH
       # write empty file
       CSV.open(elements_file, mode = "wb", force_quotes: true) do |csv|
         csv << V_ELEMENT_HEADERS
-        model_name == V_DEFAULT && csv << V_ELEMENT_HAS_THING_ROW
+        model_name == model_set[K_DEFAULT] && csv << V_ELEMENT_HAS_ENTITY_ROW
       end
     end
 

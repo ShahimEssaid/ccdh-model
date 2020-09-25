@@ -56,40 +56,40 @@ module CCDH
     error = ""
 
     # thing
-    things = model_set[K_ENTITIES][V_DEFAULT_C_THING]
+    things = model_set[K_ENTITIES][V_THING_C_BASE]
     if things.size > 1
       things.each do |thing|
-        error += "There are multiple #{V_DEFAULT_C_THING} instances in the model set:#{model_set[H_NAME]}.\n"
+        error += "There are multiple #{V_THING_C_BASE} instances in the model set:#{model_set[H_NAME]}.\n"
       end
     end
 
     if things.empty?
-      error += "Model set #{model_set[H_NAME]} does not have a #{V_DEFAULT_C_THING}.\n"
+      error += "Model set #{model_set[H_NAME]} does not have a #{V_THING_C_BASE}.\n"
     end
 
     # has_thing
-    has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING]
+    has_thing = model_set[K_ENTITIES][V_HAS_ENTITY_E_BASE]
     if has_thing.size > 1
       has_thing.each do |thing|
-        error += "There are multiple #{V_DEFAULT_E_HAS_THING} instances in the model set:#{model_set[H_NAME]}.\n"
+        error += "There are multiple #{V_HAS_ENTITY_E_BASE} instances in the model set:#{model_set[H_NAME]}.\n"
       end
     end
 
     if has_thing.empty?
-      error += "Model set #{model_set[H_NAME]} does not have a #{V_DEFAULT_E_HAS_THING}.\n"
+      error += "Model set #{model_set[H_NAME]} does not have a #{V_HAS_ENTITY_E_BASE}.\n"
     end
 
     # check it's visible from each model
     model_set[K_MODELS].each do |name, model|
 
-      thing = model[K_ENTITIES_VISIBLE][V_DEFAULT_C_THING]
+      thing = model[K_ENTITIES_VISIBLE][V_THING_C_BASE]
       unless thing
-        error += "#{V_DEFAULT_C_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}.\n"
+        error += "#{V_THING_C_BASE} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}.\n"
       end
 
-      has_thing = model[K_ENTITIES_VISIBLE][V_DEFAULT_E_HAS_THING]
+      has_thing = model[K_ENTITIES_VISIBLE][V_HAS_ENTITY_E_BASE]
       unless has_thing
-        error += "#{V_DEFAULT_E_HAS_THING} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}.\n"
+        error += "#{V_HAS_ENTITY_E_BASE} is not visible for model #{model[H_NAME]} in model set #{model_set[H_NAME]}.\n"
       end
     end
 
@@ -261,7 +261,7 @@ module CCDH
   def self.rr_ce_parentless(model_set)
     model_set[K_MODELS].each do |model_name, model|
       # concepts
-      thing = model[K_MS][K_ENTITIES][V_DEFAULT_C_THING][0]
+      thing = model[K_MS][K_ENTITIES][V_THING_C_BASE][0]
       model[K_PACKAGES].each do |package_name, package|
         package[K_CONCEPTS].each do |ck, c|
           c == thing && next
@@ -271,7 +271,7 @@ module CCDH
       end
 
       # elements
-      has_thing = model[K_MS][K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
+      has_thing = model[K_MS][K_ENTITIES][V_HAS_ENTITY_E_BASE][0]
       model[K_PACKAGES].each do |pk, p|
         p[K_ELEMENTS].each do |ck, e|
           e == has_thing && next
@@ -284,10 +284,10 @@ module CCDH
 
   # TODO: add check for elements
   def self.rr_ce_DAG_ancestors_descendants(model_set)
-    thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
+    thing = model_set[K_ENTITIES][V_THING_C_BASE][0]
     rr_ce_DAG_ancestors_descendants_recursive([], thing)
 
-    has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
+    has_thing = model_set[K_ENTITIES][V_HAS_ENTITY_E_BASE][0]
     rr_ce_DAG_ancestors_descendants_recursive([], has_thing)
   end
 
@@ -322,8 +322,8 @@ module CCDH
   end
 
   def self.rr_e_effective(model_set)
-    thing = model_set[K_ENTITIES][V_DEFAULT_C_THING][0]
-    has_thing = model_set[K_ENTITIES][V_DEFAULT_E_HAS_THING][0]
+    thing = model_set[K_ENTITIES][V_THING_C_BASE][0]
+    has_thing = model_set[K_ENTITIES][V_HAS_ENTITY_E_BASE][0]
 
     has_thing[K_CONCEPTS_E][thing[VK_FQN]] = thing
     has_thing[K_CONCEPTS_CLD].merge!(thing[K_DESCENDANTS])

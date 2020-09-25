@@ -1,0 +1,6 @@
+{%- assign entity = include.entity -%}
+{%- assign build = entity.build | strip -%}
+{%- assign size = build | size -%}
+{%- if size > 0 -%}
+<tr><td>{{entity._fqn}}</td><td>{{build}}</td></tr>
+{%- endif -%}

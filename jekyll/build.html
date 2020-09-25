@@ -1,0 +1,29 @@
+---
+layout: page
+---
+{% assign model_sets = site.data._ms | sort %}
+<table>
+    <tr><th>Entity</th><th>Build entry</th></tr>
+    {%- for ms_entry in model_sets -%}
+        {%- assign ms = ms_entry[1] -%}
+        {%- include build-entry.html entity=ms -%}
+        {%- assign models = ms._models | sort -%}
+        {%- for model_entry in models -%}
+            {%- assign model = model_entry[1] -%}
+            {%- include build-entry.html entity=model -%}
+            {%- assign packages = model._packages | sort -%}
+            {%- for package_entry in packages -%}
+                {%- assign package = package_entry[1] -%}
+                {%- include build-entry.html entity=package -%}
+
+                {%- assign entities = package._concepts | sort -%}
+                {%- for entity_entry in entities -%}
+                    {%- assign entity = entity_entry[1] -%}
+                    {%- include build-entry.html entity=entity -%}
+                {%- endfor -%}
+
+
+            {%- endfor -%}
+        {%- endfor -%}
+    {%- endfor-%}
+</table>

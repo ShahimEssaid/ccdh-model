@@ -17,6 +17,8 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
+[ "$M_SETX" = "true" ] && set -x
+
 echo "======== running local-to-csv ================="
 OLDIFS=$IFS
 
@@ -36,10 +38,3 @@ for MODELSET in  "${MODELSETS[@]}"; do
   done
 done
 echo "======== finished local-to-csv ================="
-
-#${DIR}/run.sh
-
-#for m in $(find  src -maxdepth 1 -mindepth 1 -type f -iname '*.xlsx')
-#do
-#  java -jar "${DIR}/bin/converter.jar" --file "../model_sets/${m}" --direction excel
-#done

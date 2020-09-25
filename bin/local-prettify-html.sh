@@ -17,6 +17,7 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
+[ "$M_SETX" = "true" ] && set -x
 
 echo "======== running local-prettify-html.sh ================="
 for html_file_path in $(find jekyll/_site -name '*.html' | sort); do

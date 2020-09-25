@@ -17,8 +17,12 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [ -f "bin/.config" ] && . bin/.config
 
-echo "# Installing gem dependencies"
+[ "$M_SETX" = "true" ] && set -x
+
+
+echo "============  running local-install-dependencies.sh ====================="
 bundle config set path 'vendor/bundle'
 bundle check || bundle install
 echo "# Installing npm dependencies"
 npm install
+echo "============  finished local-install-dependencies.sh ====================="

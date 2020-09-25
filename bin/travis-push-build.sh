@@ -17,18 +17,18 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
+[ "$M_SETX" = "true" ] && set -x
 
+echo "======== running travis-push-build.sh ================="
 git status
 git branch
 cat .git/config
-git log -5
+git log -2
 
-echo ================================  ADDING BUILD RESULT  ===========================================
 GIT_CURL_VERBOSE=1 GIT_TRACE=1 git add -A &>/dev/null
-echo ================================  COMMITTING BUILD RESULT  ===========================================
-GIT_CURL_VERBOSE=1 GIT_TRACE=1 git commit -m "#TravisBuild of $GIT_BRANCH"
-echo ================================  PUSHING BUILD RESULT  ===========================================
-GIT_CURL_VERBOSE=1 GIT_TRACE=1 git push --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" HEAD:$GIT_BRANCH
-echo ================= FINISHED COMMIT AND PUSH OF BUILD =========================
 
-#env
+GIT_CURL_VERBOSE=1 GIT_TRACE=1 git commit -m "#TravisBuild of $GIT_BRANCH"
+
+GIT_CURL_VERBOSE=1 GIT_TRACE=1 git push --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" HEAD:$GIT_BRANCH
+
+echo "======== finished travis-push-build.sh ================="

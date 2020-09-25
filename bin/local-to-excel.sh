@@ -17,10 +17,10 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [ -f "bin/.config" ] && . bin/.config
 
+[ "$M_SETX" = "true" ] && set -x
+
 echo "======== running local-to-excel ================="
 OLDIFS=$IFS
-
-set -x
 
 IFS="|"
 read -ra MODELSETS <<<"${M_MODEL_SETS}"
@@ -39,6 +39,7 @@ for MODELSET in "${MODELSETS[@]}"; do
   MDIRS=("${PARTS[@]:1}")
   for MDIR in "${MDIRS[@]}"; do
     FILEPATH="${MSDIR}/${MDIR}.xlsx"
+    echo "converting file: ${FILEPATH}"
     java -jar "${DIR}/converter.jar" --file "${FILEPATH}" --direction excel
   done
 done

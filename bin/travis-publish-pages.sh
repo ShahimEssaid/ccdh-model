@@ -17,7 +17,9 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
+[ "$M_SETX" = "true" ] && set -x
 
+echo "======== running travis-publish-pages.sh ================="
 BRANCHES=($(git for-each-ref --format="%(refname)"))
 
 cd ${GIT_ROOT}/../stage-gh-pages
@@ -50,6 +52,4 @@ git reset gh-pages-start
 git add -A &>/dev/null
 git commit -m "#TravisBuild of $GIT_BRANCH"
 git push -f --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" gh-pages
-echo ================= FINISHED PUBLISHING =========================
-
-#env
+echo "======== finished travis-publish-pages.sh ================="

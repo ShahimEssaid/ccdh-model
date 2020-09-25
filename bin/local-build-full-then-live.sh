@@ -17,6 +17,9 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
-echo "======== running local-live-jekyll.sh ================="
-bundle exec jekyll s --skip-initial-build -l -o --trace --disable-disk-cache --baseurl "${J_BASE_URL}" -s jekyll -d jekyll/_site --config "${J_CONFIG}"
-echo "======== finished local-live-jekyll.sh ================="
+[ "$M_SETX" = "true" ] && set -x
+
+echo "======== running local-build-full-then-live.sh ================="
+bin/local-build-full.sh
+bin/local-live-jekyll.sh
+echo "======== finished local-build-full-then-live.sh ================="

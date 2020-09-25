@@ -17,7 +17,9 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
+[ "$M_SETX" = "true" ] && set -x
 
+echo "======== running travis-pre-build.sh ================="
 # reset origin to default to work around Travis'
 git remote remove origin
 git remote add origin https://github.com${GIT_REPO}
@@ -32,5 +34,4 @@ git reset gh-pages-start
 git add -A &>/dev/null
 git commit -m "Preparing build of $GIT_BRANCH" || true
 git push -f --set-upstream "https://${TOKEN}@github.com${GIT_REPO}" gh-pages || true
-
-echo ================= FINISHED PRE BUILDING =========================
+echo "======== finished travis-pre-build.sh ================="

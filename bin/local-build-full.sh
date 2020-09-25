@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+#set -x
 set -e
 set -u
 set -o pipefail
@@ -17,11 +17,16 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
+if [ "${M_SETX}" = "true" ]; then
+  set -x
+fi
+
+echo "======== running local-build-full.sh ================="
 bin/local-to-csv.sh
 bin/local-build-jekyll.sh
 bin/local-prettify-html.sh
 bin/local-to-excel.sh
-
+echo "======== finished local-build-full.sh ================="
 
 
 

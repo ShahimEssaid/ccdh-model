@@ -1,0 +1,5 @@
+"package","name","summary","description","gh_issue","parents","related","status","notes","build"
+"base","Thing","Thing summary.","Thing description.","","","","current","",""
+"base","Entity","Entity summary.","Entity description.","","Thing:C:base","","current","",""
+"base","Primitive","Primitive summary.","Primitive description.","","Thing:C:base","","current","",""
+"base","Tag","Tag summary.","Tag description.","","Thing:C:base","","current","",""

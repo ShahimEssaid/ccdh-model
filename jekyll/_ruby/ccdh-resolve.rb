@@ -18,7 +18,8 @@ module CCDH
     rr_e_effective(model_set)
 
     rr_s_resolve_concepts_mixins_comps(model_set)
-    rr_s_closure_comps(model_set)
+    rr_s_self_concept_closures(model_set)
+    rr_s_closure_mixins_comps(model_set)
     rr_s_effective_concepts(model_set)
     rr_s_closure_mixins(model_set)
 
@@ -345,14 +346,7 @@ module CCDH
 
       # concepts
       child_element[K_CONCEPTS].each do |concept_group|
-        effective_concepts = nil
-        concept_group.each do |concept|
-          effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
-          # AND, remove what's not in both
-          effective_concepts.keep_if do |key, value|
-            concept[K_DESCENDANTS].has_key?(key)
-          end
-        end
+        effective_concepts = rr_concept_array_descendants(concept_group)
         # OR
         child_element[K_CONCEPTS_E].merge!(rr_concepts_dag_roots(effective_concepts))
       end
@@ -379,14 +373,7 @@ module CCDH
       # domains
       #
       child_element[K_DOMAINS].each do |concept_group|
-        effective_concepts = nil
-        concept_group.each do |concept|
-          effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
-          # AND, remove what's not in both
-          effective_concepts.keep_if do |key, value|
-            concept[K_DESCENDANTS].has_key?(key)
-          end
-        end
+        effective_concepts = rr_concept_array_descendants(concept_group)
         # OR
         child_element[K_DOMAINS_E].merge!(rr_concepts_dag_roots(effective_concepts))
       end
@@ -412,14 +399,7 @@ module CCDH
       #
       # ranges
       child_element[K_RANGES].each do |concept_group|
-        effective_concepts = nil
-        concept_group.each do |concept|
-          effective_concepts.nil? && effective_concepts = concept[K_DESCENDANTS].clone
-          # AND, remove what's not in both
-          effective_concepts.keep_if do |key, value|
-            concept[K_DESCENDANTS].has_key?(key)
-          end
-        end
+        effective_concepts = rr_concept_array_descendants(concept_group)
         # OR
         child_element[K_RANGES_E].merge!(rr_concepts_dag_roots(effective_concepts))
       end
@@ -491,7 +471,7 @@ module CCDH
                 if !concepts.include?(concept)
                   concepts << concept
                 else
-                  r_build_entry("Concept #{concept_name} duplcate in AND group #{concept_group}", structure)
+                  r_build_entry("Concept #{concept_name} duplicate in AND group #{concept_group}", structure)
                 end
               else
                 r_build_entry("Concept #{concept_name} not resolved.", structure)
@@ -540,7 +520,23 @@ module CCDH
     end
   end
 
-  def self.rr_s_closure_comps(model_set)
+  def self.rr_s_self_concept_closures(model_set)
+    model_set[K_MODELS].each do |model_name, model|
+      model[K_PACKAGES].each do |package_name, package|
+        package[K_STRUCTURES].each do |structure_name, structure|
+          structure[K_CONCEPTS].each do |concept_array|
+            structure[K_CONCEPTS_E].merge!(rr_concepts_dag_roots(rr_concept_array_descendants(concept_array)))
+          end
+          structure[K_CONCEPTS_E].each do |key, concept|
+            structure[K_CONCEPTS_CLU].merge!(concept[K_ANCESTORS])
+            structure[K_CONCEPTS_CLD].merge!(concept[K_DESCENDANTS])
+          end
+        end
+      end
+    end
+  end
+
+  def self.rr_s_closure_mixins_comps(model_set)
     model_set[K_MODELS].each do |model_name, model|
       model[K_PACKAGES].each do |package_name, package|
         package[K_STRUCTURES].each do |structure_name, structure|
@@ -561,6 +557,7 @@ module CCDH
     if path.include?(structure)
       # cycle, don't include in path again
       r_build_entry("DAG check: #{key} is circular with path: #{path_string}.", structure)
+      r_build_entry("DAG check: #{key} is circular with path: #{path_string}.", starting_structure)
       rr_s_populate_transitive(path, anc_key)
       rr_s_populate_transitive(path.reverse, desc_key)
     else

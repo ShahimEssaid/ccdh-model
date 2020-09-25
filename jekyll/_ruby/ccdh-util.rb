@@ -71,6 +71,21 @@ module CCDH
     hash[H_BUILD] += entry
   end
 
+  # this does the AND query over the concept hierarchy
+  def self.rr_concept_array_descendants(array)
+    descendants = nil
+    array.each do |c|
+      if descendants.nil?
+        descendants = c[K_DESCENDANTS].clone
+        next
+      end
+      descendants.keep_if do |key, value|
+        c[K_DESCENDANTS].has_key?(key)
+      end
+    end
+    descendants
+  end
+
   def self.rr_concepts_dag_roots(concepts)
     concepts_roots = concepts.clone
     concepts.each do |key, concept|

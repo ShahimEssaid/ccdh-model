@@ -1,11 +1,15 @@
 ---
 layout: page
+title: Build log
+nav_order: 10
 ---
 {% assign model_sets = site.data._ms | sort %}
+
+{%- for ms_entry in model_sets -%}
+{%- assign ms = ms_entry[1] -%}
+<h1>Model set: {{ms.name}}</h1>
 <table>
     <tr><th>Entity</th><th>Build entry</th></tr>
-    {%- for ms_entry in model_sets -%}
-        {%- assign ms = ms_entry[1] -%}
         {%- include build-entry.html entity=ms -%}
         {%- assign models = ms._models | sort -%}
         {%- for model_entry in models -%}
@@ -15,15 +19,12 @@ layout: page
             {%- for package_entry in packages -%}
                 {%- assign package = package_entry[1] -%}
                 {%- include build-entry.html entity=package -%}
-
                 {%- assign entities = package._concepts | sort -%}
                 {%- for entity_entry in entities -%}
                     {%- assign entity = entity_entry[1] -%}
                     {%- include build-entry.html entity=entity -%}
                 {%- endfor -%}
-
-
             {%- endfor -%}
         {%- endfor -%}
-    {%- endfor-%}
 </table>
+{%- endfor-%}

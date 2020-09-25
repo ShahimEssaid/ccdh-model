@@ -18,9 +18,9 @@ cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
 
-echo ===================== RUNNING PRETTIFY HTML ========================
+echo "======== running local-prettify-html.sh ================="
 for html_file_path in $(find jekyll/_site -name '*.html' | sort); do
-  echo -n "${html_file_path} ..."
+  echo "${html_file_path} ..."
   bin/local-prettify-html-file.sh "${html_file_path}"
 done
-
+echo "======== finished local-prettify-html.sh ================="

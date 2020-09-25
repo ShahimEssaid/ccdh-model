@@ -17,6 +17,6 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
-echo ===============================    BUILDING JEKYLL SITE  ==================================
+echo "======== running local-build-jekyll.sh ================="
 bundle exec jekyll b --trace --baseurl "${J_BASE_URL}" -s jekyll -d jekyll/_site --config jekyll/_config.yml
-
+echo "======== finished local-build-jekyll.sh ================="

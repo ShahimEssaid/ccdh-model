@@ -17,6 +17,7 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
+echo "======== running local-to-csv ================="
 OLDIFS=$IFS
 
 IFS="|"
@@ -30,10 +31,11 @@ for MODELSET in  "${MODELSETS[@]}"; do
   MDIRS=("${PARTS[@]:1}")
   for MDIR in "${MDIRS[@]}"; do
       FILEPATH="${MSDIR}/${MDIR}.xlsx"
-      java -jar "${DIR}/converter.jar" --file "${FILEPATH}" --direction csv
+
+      [ -f "${FILEPATH}" ] && java -jar "${DIR}/converter.jar" --file "${FILEPATH}" --direction csv
   done
 done
-
+echo "======== finished local-to-csv ================="
 
 #${DIR}/run.sh
 

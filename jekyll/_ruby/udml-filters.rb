@@ -20,6 +20,8 @@ module UDML
       case input
       when nil
         type = "nil"
+      when CSV::Table
+        type = "csvtable"
       when CCDH::ModelHash
         type = "mhash"
       when String

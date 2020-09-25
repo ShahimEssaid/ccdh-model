@@ -32,7 +32,6 @@ for MODELSET in  "${MODELSETS[@]}"; do
       FILEPATH="${MSDIR}/${MDIR}.xlsx"
       java -jar "${DIR}/converter.jar" --file "${FILEPATH}" --direction excel
   done
-echo "${MNAMES[@]}"
 done
 
 

@@ -17,12 +17,23 @@ GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
 [  -f "bin/.config" ] &&  . bin/.config
 
+OLDIFS=$IFS
 
-if [ -d "model_sets/src" ]; then
-  for m in $(find model_sets/src -maxdepth 1 -mindepth 1 -type f -iname '*.xlsx'); do
-    java -jar "${DIR}/converter.jar" --file "${m}" --direction csv
+IFS="|"
+read -ra MODELSETS <<< "${M_MODEL_SETS}"
+for MODELSET in  "${MODELSETS[@]}"; do
+  IFS="@"
+  read -ra MSPARTS <<< "${MODELSET}"
+  IFS=","
+  read -ra PARTS <<< "${MSPARTS[1]}"
+  MSDIR="${PARTS[0]}"
+  MDIRS=("${PARTS[@]:1}")
+  for MDIR in "${MDIRS[@]}"; do
+      FILEPATH="${MSDIR}/${MDIR}.xlsx"
+      java -jar "${DIR}/converter.jar" --file "${FILEPATH}" --direction csv
   done
-fi
+done
+
 
 #${DIR}/run.sh
 

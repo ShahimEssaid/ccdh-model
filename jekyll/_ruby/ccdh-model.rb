@@ -14,9 +14,9 @@ module CCDH
       self[VK_FQN]
     end
 
-    def <=>(other)
-      self[H_NAME] <=> other[H_NAME]
-    end
+    # def <=>(other)
+    #   self[H_NAME] <=> other[H_NAME]
+    # end
   end
 
   class ModelEntity < ModelHash

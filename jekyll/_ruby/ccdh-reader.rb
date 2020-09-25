@@ -107,15 +107,15 @@ module CCDH
     models_linked.each do |m|
       path += "> #{m[H_NAME]} "
     end
-
-    if models_linked[0...-1].include?(model)
+    models_linked.pop
+    if models_linked.include?(model)
       # we have a cycle. log and stop
       models_linked << model
       r_build_entry("Model dependency cycle: #{path}", model)
       models_linked.pop
       return
     end
-
+    models_linked << model
     # every model in the models_linked path needs to have this model on its path if not already
     # this will also place the model as a dependency of itself on it's path, which makes sense.
     # a model searches in itself first before its dependencies
@@ -124,6 +124,10 @@ module CCDH
     end
 
     model[K_DEPENDS_ON].each do |dm|
+      if model == dm
+        # self dependency, which should only happen for the default model, skip this one
+        next
+      end
       rr_process_depends_on_path(model_set, dm, models_linked)
     end
     models_linked.pop
@@ -229,7 +233,7 @@ module CCDH
       single_parent_list = row[H_PARENTS].split(SEP_BAR)[0]
       single_parent_list.nil? && single_parent_list = ""
       row[H_PARENTS] = r_check_entity_name_bar_list(single_parent_list, V_TYPE_CONCEPT)
-      if row[H_PARENTS].empty?
+      if row[H_PARENTS].empty? && row[H_NAME] != V_CONCEPT_THING && row[H_PACKAGE] != V_DEFAULT
         row[H_PARENTS] = V_DEFAULT_C_THING
       end
       row[H_PARENTS] == parents || r_build_entry("#{H_PARENTS}: was changed from #{parents} to:#{row[H_PARENTS]}", row)
@@ -292,7 +296,7 @@ module CCDH
       # check parent element name
       parent = row[H_PARENT]
       row[H_PARENT] = r_check_entity_name(parent, V_TYPE_ELEMENT)
-      if row[H_PARENT].empty?
+      if row[H_PARENT].empty? && row[H_NAME] != V_ELEMENT_HAS_THING && row[H_PACKAGE] != V_DEFAULT
         row[H_PARENT] = V_DEFAULT_E_HAS_THING
       end
       row[H_PARENT] == parent || r_build_entry("#{H_PARENT}: #{parent} was updated to:#{row[H_PARENT]}", row)

@@ -31,8 +31,7 @@
                 {% if forloop.last != true %}, {% endif %}
                 {%- endfor -%}
             {%- elsif type == "array" -%}
-                {%- assign sorted = val | sort -%}
-                {%- for entry in sorted -%}
+                {%- for entry in val -%}
                     {%- assign htype = entry | object_type -%}
                     {%- if htype == "mhash" -%}
                     <a href="{{entry | entity_home_url | relative_url }}">{{hash_entry[1]._entity_name | default: "NONAME"}}</a>
@@ -43,6 +42,8 @@
                 {%- endfor -%}
             {%- elsif type == "numeric" -%}
                 {{ val }}
+            {%- elsif type == "csvtable" -%}
+                "CSV::TABLE"
             {%- else -%}
                 Unknown value: {{val}}
             {%- endif -%}

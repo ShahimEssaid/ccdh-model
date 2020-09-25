@@ -19,11 +19,32 @@ nav_order: 10
             {%- for package_entry in packages -%}
                 {%- assign package = package_entry[1] -%}
                 {%- include build-entry.html entity=package -%}
+
                 {%- assign entities = package._concepts | sort -%}
                 {%- for entity_entry in entities -%}
                     {%- assign entity = entity_entry[1] -%}
                     {%- include build-entry.html entity=entity -%}
                 {%- endfor -%}
+
+                {%- assign entities = package._elements | sort -%}
+                {%- for entity_entry in entities -%}
+                {%- assign entity = entity_entry[1] -%}
+                {%- include build-entry.html entity=entity -%}
+                {%- endfor -%}
+
+                {%- assign entities = package._structures | sort -%}
+                {%- for entity_entry in entities -%}
+                {%- assign entity = entity_entry[1] -%}
+                {%- include build-entry.html entity=entity -%}
+
+                    {%- assign attributes = entity._attributes | sort -%}
+                    {%- for attribute_entry in attributes -%}
+                    {%- assign attribute = attribute_entry[1] -%}
+                    {%- include build-entry.html entity=attribute -%}
+                    {%- endfor -%}
+
+                {%- endfor -%}
+
             {%- endfor -%}
         {%- endfor -%}
 </table>

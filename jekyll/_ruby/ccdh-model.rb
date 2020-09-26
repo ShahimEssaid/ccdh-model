@@ -199,6 +199,9 @@ module CCDH
   class MPackage < ModelEntity
     def initialize(name, model)
       super(name, model, V_TYPE_PACKAGE)
+      # TODO: fix hard coded
+      self[VK_ENTITY_NAME] = name
+      self[VK_FQN] = "#{name}:#{V_TYPE_PACKAGE}:#{model[H_NAME]}"
       self[K_CONCEPTS] = {}
       self[K_STRUCTURES] = {}
       self[K_ELEMENTS] = {}

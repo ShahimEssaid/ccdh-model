@@ -24,38 +24,41 @@ _
                 {%- if type == "nil" -%}
                     nil value
                 {%- elsif type == "string" -%}
-                    {{ val }}
+                    string: {{ val }}
                 {%- elsif type == "http" -%}
-                    <a href="{{val}}">{{val}}</a>
+                    http: <a href="{{val}}">{{val}}</a>
                 {%- elsif type == "mhash" -%}
-                    <a href="{{val | entity_home_url | relative_url }}">{{val._entity_name | default: "NONAME1"}}</a>
-                {%- elsif type == "hash" -%}
+                  mhash: {% include entity-href.html entity=val %}
+                {% elsif type == "hash" %}
+                    hash:
                     {%- assign sorted = val | sort -%}
-                    {%- for hash_entry in sorted -%}
-                        {%- assign htype = hash_entry[1] | object_type -%}
+                    {% for hash_entry in sorted %}
+                        {% assign entity = hash_entry[1] %}
+                        {%- assign htype = entity | object_type -%}
                         {%- if htype == "mhash" -%}
-                            <a href="{{hash_entry[1] | entity_home_url | relative_url }}">{{hash_entry[1]._entity_name | default: "NONAME2"}}</a>
+                            {% include entity-href.html entity=entity %}
                          {%- else -%}
-                            {{hash_entry[1]}}
+                            key:{{hash_entry[0]}} val:{{hash_entry[1]}}
                         {%- endif -%}
                         {% if forloop.last != true %}, {% endif %}
                     {%- endfor -%}
                 {%- elsif type == "array" -%}
-                    {%- for entry in val -%}
+                    array:
+                    {% for entry in val %}
                         {%- assign htype = entry | object_type -%}
                         {%- if htype == "mhash" -%}
-                            <a href="{{entry | entity_home_url | relative_url }}">{{entry._entity_name | default: "NONAME3"}}</a>
+                            {% include entity-href.html entity=entry %}
                         {%- else -%}
                             {{entry}}
                         {%- endif -%}
                         {% if forloop.last != true %}, {% endif %}
                     {%- endfor -%}
                 {%- elsif type == "numeric" -%}
-                    {{ val }}
+                    numeric: {{ val }}
                 {%- elsif type == "csvtable" -%}
                     "CSV::TABLE"
                 {%- else -%}
-                Unknown value: {{val}}
+                    Unknown type: {{val}}
                 {%- endif -%}
             </td>
         </tr>

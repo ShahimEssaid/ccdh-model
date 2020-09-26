@@ -26,7 +26,7 @@ module CCDH
       # write empty file
       CSV.open(model_file, mode = "wb", force_quotes: true) do |csv|
         csv << V_MODEL_HEADERS
-        csv << [model_name, "Summary of model #{model_name}", "Description of model #{model_name}", "", "", V_GENERATED, "", "", "",
+        csv << [model_name, "Title of model #{model_name}", "Summary of model #{model_name}", "Description of model #{model_name}", "", "", V_GENERATED, "", "", "",
                 V_M_DISPLAY, V_P_DISPLAY, V_C_DISPLAY, V_E_DISPLAY, V_S_DISPLAY, V_A_DISPLAY]
       end
     end

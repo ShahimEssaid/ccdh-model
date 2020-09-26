@@ -37,3 +37,4 @@ gem 'rufo', :group => :development
 gem 'ripper-tags', :group => :development
 
 gem 'octokit', '~> 4.0'
+gem 'html-proofer'

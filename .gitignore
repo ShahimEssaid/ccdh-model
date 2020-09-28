@@ -10,3 +10,4 @@ bin/.config
 .env
 .idea
 /model_sets_write
+/model_sets

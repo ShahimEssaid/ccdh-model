@@ -2,6 +2,7 @@ module CCDH
 
   def self.rr_process_modelsets(modelsets)
     modelsets.each do |model_set_name, model_set|
+
       model_set[K_MODELS].each do |model_name, model|
         CCDH.rr_load_model_files_and_object(model_set, model_name)
       end

@@ -162,12 +162,19 @@ module CCDH
   VK_FQN = "_fqn" # this is the a FQN like ConceptName:c:PackageName:p:ModelName
   VK_ENTITY_NAME = "_entity_name" # this is the name without the model name prefix. It's a FQN within a model.
 
-  F_MODEL_XLSX = "model.xlsx"
+
   F_MODEL_CSV = "model.csv"
   F_PACKAGES_CSV = "packages.csv"
   F_CONCEPTS_CSV = "concepts.csv"
   F_ELEMENTS_CSV = "elements.csv"
   F_STRUCTURES_CSV = "structures.csv"
+  F_VIEWS_DIR = "_views"
+  F_VIEWS_LOCAL_DIR = "_views_local"
+  F_INCLUDES_DIR = "_includes"
+  F_INCLUDES_LOCAL_DIR = "_includes_local"
+  F_WEB_DIR = "_web"
+  F_WEB_LOCAL_DIR = "_web_local"
+  F_GIT_IGNORE = ".gitignore"
 
 
   V_SELF = "_self_"

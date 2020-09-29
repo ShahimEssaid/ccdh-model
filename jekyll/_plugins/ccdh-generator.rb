@@ -140,10 +140,10 @@ module CCDH
         CCDH.r_gh(first_model_set)
       end
 
-      site.data[K_MS].each do |model_set_name, model_set|
-        publisher = ModelPublisher.new(model_set, V_J_TEMPLATE_PATH, "#{V_J_MS_DIR}/#{model_set_name}")
-        publisher.publishModel
-      end
+      # site.data[K_MS].each do |model_set_name, model_set|
+      #   publisher = ModelPublisher.new(site, model_set, V_J_TEMPLATE_PATH, "#{V_J_MS_DIR}/#{model_set_name}")
+      #   publisher.publish_model
+      # end
 
       # if we want to write to a different place pass in a root directory
       write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]

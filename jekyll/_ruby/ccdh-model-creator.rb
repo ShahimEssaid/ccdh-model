@@ -9,19 +9,33 @@ module CCDH
   # end
 
   def self.r_create_model_files_if_needed(model_set, model_name)
+    # this step for the model set is redundant but doing it here anyway because this is where creating stuff happens
+    model_set_dir = model_set[K_DIR]
+
+    views_dir = File.join(model_set_dir, F_VIEWS_DIR)
+    !Dir.exist?(views_dir) && create_views_directories(views_dir)
+    web_dir = File.join(model_set_dir, F_WEB_DIR)
+    !Dir.exist?(web_dir) && create_web_directory(web_dir)
+    includes_dir = File.join(model_set_dir, F_INCLUDES_DIR)
+    !Dir.exist?(includes_dir) && create_includes_directory(includes_dir)
 
     # crate model diretory if needed
-    dir = File.join(model_set[K_DIR], model_name)
-    !Dir.exist?(dir) && FileUtils.mkdir_p(dir)
+    model_dir = File.join(model_set[K_DIR], model_name)
+    !Dir.exist?(model_dir) && FileUtils.mkdir_p(model_dir)
 
-    # copy excel file template if needed
-    # excel_file = File.join(model_set[K_DIR], "#{model_name}.xlsx")
-    # if !File.exist? excel_file
-    #   FileUtils.copy_file(File.join(model_set[K_SITE].source, V_J_TEMPLATE_PATH, F_MODEL_XLSX), excel_file)
-    # end
+    views_dir = File.join(model_dir, F_VIEWS_DIR)
+    !Dir.exist?(views_dir) && create_views_directories(views_dir)
+    views_local_dir = File.join(model_dir, F_VIEWS_LOCAL_DIR)
+    !Dir.exist?(views_local_dir) && create_views_directories(views_local_dir)
+    web_dir = File.join(model_dir, F_WEB_DIR)
+    !Dir.exist?(web_dir) && create_web_directory(web_dir)
+    includes_dir = File.join(model_dir, F_INCLUDES_DIR)
+    !Dir.exist?(includes_dir) && create_includes_directory(includes_dir)
+    includes_dir = File.join(model_dir, F_INCLUDES_LOCAL_DIR)
+    !Dir.exist?(includes_dir) && create_includes_directory(includes_dir)
 
     # write model file
-    model_file = File.join(dir, F_MODEL_CSV)
+    model_file = File.join(model_dir, F_MODEL_CSV)
     if !File.exist?(model_file)
       # write empty file
       CSV.open(model_file, mode = "wb", force_quotes: true) do |csv|
@@ -32,7 +46,7 @@ module CCDH
     end
 
     # write packages file
-    packages_file = File.join(dir, F_PACKAGES_CSV)
+    packages_file = File.join(model_dir, F_PACKAGES_CSV)
     if !File.exist?(packages_file)
       # write empty file
       CSV.open(packages_file, mode = "wb", force_quotes: true) do |csv|
@@ -42,7 +56,7 @@ module CCDH
     end
 
     # write concepts file
-    concepts_file = File.join(dir, F_CONCEPTS_CSV)
+    concepts_file = File.join(model_dir, F_CONCEPTS_CSV)
     ## create new file if missing
     if !File.exist?(concepts_file)
       # write empty file
@@ -58,7 +72,7 @@ module CCDH
     end
 
     # write elements file
-    elements_file = File.join(dir, F_ELEMENTS_CSV)
+    elements_file = File.join(model_dir, F_ELEMENTS_CSV)
     ## create new file if missing
     if !File.exist?(elements_file)
       # write empty file
@@ -69,7 +83,7 @@ module CCDH
     end
 
     # write structures file
-    structures_file = File.join(dir, F_STRUCTURES_CSV)
+    structures_file = File.join(model_dir, F_STRUCTURES_CSV)
     ## create new file if missing
     if !File.exist?(structures_file)
       # write empty file
@@ -77,6 +91,26 @@ module CCDH
         csv << V_STRUCTURE_HEADERS
       end
     end
+  end
+
+  def self.create_views_directories(base_dir)
+    FileUtils.mkdir_p(File.join(base_dir, V_TYPE_MODEL_SET, V_TYPE_MODEL, V_TYPE_PACKAGE, V_TYPE_CONCEPT))
+    FileUtils.mkdir_p(File.join(base_dir, V_TYPE_MODEL_SET, V_TYPE_MODEL, V_TYPE_PACKAGE, V_TYPE_ELEMENT))
+    FileUtils.mkdir_p(File.join(base_dir, V_TYPE_MODEL_SET, V_TYPE_MODEL, V_TYPE_PACKAGE, V_TYPE_STRUCTURE))
+
+    FileUtils.touch(File.join(base_dir, V_TYPE_MODEL_SET, V_TYPE_MODEL, V_TYPE_PACKAGE, V_TYPE_CONCEPT, F_GIT_IGNORE))
+    FileUtils.touch(File.join(base_dir, V_TYPE_MODEL_SET, V_TYPE_MODEL, V_TYPE_PACKAGE, V_TYPE_ELEMENT, F_GIT_IGNORE))
+    FileUtils.touch(File.join(base_dir, V_TYPE_MODEL_SET, V_TYPE_MODEL, V_TYPE_PACKAGE, V_TYPE_STRUCTURE, F_GIT_IGNORE))
+  end
+
+  def self.create_web_directory(base_dir)
+    FileUtils.mkdir_p(base_dir)
+    FileUtils.touch(File.join(base_dir, F_GIT_IGNORE))
+  end
+
+  def self.create_includes_directory(base_dir)
+      FileUtils.mkdir_p(base_dir)
+      FileUtils.touch(File.join(base_dir, F_GIT_IGNORE))
   end
 
 end

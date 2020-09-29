@@ -81,6 +81,9 @@ module CCDH
       self[K_SITE] = nil # the Jekyll site
       self[H_NAME] = name
       self[K_DIR] = dir
+      self[F_VIEWS_DIR] = File.join(dir, F_VIEWS_DIR)
+      self[F_WEB_DIR] = File.join(dir, F_WEB_DIR)
+      self[F_INCLUDES_DIR] = File.join(dir, F_INCLUDES_DIR)
 
       self[K_DEFAULT] = model_names[0].strip
       self[K_TOP] = model_names[1].strip
@@ -140,6 +143,13 @@ module CCDH
       #self[H_DEPENDS_ON] = ""
       self[K_MS] = model_set
       self[K_DIR] = File.join(model_set[K_DIR], name)
+
+      self[F_VIEWS_DIR] = File.join(self[K_DIR], F_VIEWS_DIR)
+      self[F_VIEWS_LOCAL_DIR] = File.join(self[K_DIR], F_VIEWS_LOCAL_DIR)
+      self[F_WEB_DIR] = File.join(self[K_DIR], F_WEB_DIR)
+      self[F_INCLUDES_DIR] = File.join(self[K_DIR], F_INCLUDES_DIR)
+      self[F_INCLUDES_LOCAL_DIR] = File.join(self[K_DIR], F_INCLUDES_LOCAL_DIR)
+
       self[K_DEPENDS_ON] = []
       self[K_DEPENDED_ON] = []
       self[K_DEPENDS_ON_PATH] = []

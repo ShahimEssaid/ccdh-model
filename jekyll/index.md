@@ -31,3 +31,6 @@ nav_order: 1
 </li>
 {% endfor %}
 </ol>
+
+
+[Kramdown syntax](https://kramdown.gettalong.org/syntax.html)

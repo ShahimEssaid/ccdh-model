@@ -15,8 +15,12 @@ done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 GIT_ROOT="$(dirname "$DIR")"
 cd "${GIT_ROOT}"
-[  -f "bin/.config" ] &&  . bin/.config
+[ -f "bin/.config" ] && . bin/.config
 
-echo "======== running local-live-jekyll.sh ================="
-bundle exec jekyll s --skip-initial-build -l -o --trace --disable-disk-cache --baseurl "${J_BASE_URL}" -s jekyll -d jekyll/_site --config "${J_CONFIG}"
-echo "======== finished local-live-jekyll.sh ================="
+inotifywait -q -m -r -e modify model_sets |
+  while read -r line; do
+          echo "MODIFIED ${line}"
+   # if [[ $line != */ ]] ; then
+    touch jekyll/index.md
+   # fi
+  done

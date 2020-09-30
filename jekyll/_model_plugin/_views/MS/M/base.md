@@ -1,13 +1,14 @@
 ---
 layout: page
-title: Model {{page.M._model.name}} in model set {{page.M._model._ms.name}}
-generated: true
+title: Model {{page.M..name}} in model set {{page.M._ms.name}}
 nav_exclude: true
 ---
-{% raw %}
-<h1>{{page.M.name}} model</h1>
-{% include entity-table.html entity=page.M headers=page.M._m_disp_headers %}
+{% assign entity=page.M %}
 
-{% include debug.html object=page.M name="model in MS/M/model.html" on="false" hr="true" %}
-{% endraw %}
+{% include title-summary-desc.md entity=entity %}
+
+{% include entity-table.md entity=entity headers=entity._m_disp_headers %}
+
+{% include debug.md object=entity name="" on="false" hr="true" %}
+
 

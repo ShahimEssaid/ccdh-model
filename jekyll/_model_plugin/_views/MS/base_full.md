@@ -1,23 +1,22 @@
 ---
 layout: page
 title: Model set {{page.MS.name}} full outline
-generated: true
 nav_exclude: true
 ---
-{% raw %}
-<h1>Model set {{ page.MS.name }} full outline</h1>
 
-<p>The following is a full outline of the content of this model set.</p>
+# Model set: {{ page.MS.name }}
+
+The following is a full outline of the content of this model set.
 
 <ol><h3>Models</h3>
 
     {% assign models = page.MS._models | sort %}
     {% for model_entry in models %}
     {% assign model = model_entry[1] %}
-    {% include li/m-r.html M=model %}
+    {% include li/m-r.md M=model %}
     {% endfor %}
 
 </ol>
 
-{% include debug.html object=page.MS name="model set in MS/model_set_full.html" on="false" hr="true" %}
-{% endraw %}
+{% include debug.md object=page.MS name="model set in MS/base_full.md" on="false" hr="true" %}
+

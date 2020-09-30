@@ -1,21 +1,16 @@
 ---
 layout: page
 title: Concept {{page.C.name}} in package {{page.C._package.name}}:{{page.C._model.name}}:{{page.C._model._ms.name}}
-generated: true
 nav_exclude: true
 ---
+{% assign entity=page.C %}
 
-# {{C.title}}
+{% include title-summary-desc.md entity=entity %}
 
-{{page.C.summary}}
+{% include entity-table.md entity=entity headers=entity._m_disp_headers %}
 
-## Description
+{% include debug.md object=entity name="" on="false" hr="true" %}
 
-{{page.C.description}}
-
-## Additional metadata
-
-{% include entity-table.html entity=page.C headers=page.C._model._c_disp_headers %}
 
 ## Concept relationships
 
@@ -29,7 +24,7 @@ The following subheadings show Concept to Concept relationships in the model
         <th>Summary</th>
     </tr>
     {%- for entity in page.C._parents -%}
-    {%- include entity-name-summary-tr.html entity=entity -%}
+    {%- include entity-name-summary-tr.md entity=entity -%}
     {%- endfor -%}
 </table>
 
@@ -38,7 +33,7 @@ The following subheadings show Concept to Concept relationships in the model
 {% assign sorted = page.C._children | sort -%}
 {%- for entity_entry in sorted -%}
 {%- assign entity = entity_entry[1] -%}
-{%- include entity-href.html entity=entity -%}
+{%- include entity-href.md entity=entity -%}
 {%- if forloop.last != true -%},
 {% endif -%}
 {%- endfor %}
@@ -48,7 +43,7 @@ The following subheadings show Concept to Concept relationships in the model
 {%- assign sorted = page.C._ancestors | sort -%}
 {% for entity_entry in sorted %}
 {%- assign entity = entity_entry[1] -%}
-{%- include entity-href.html entity=entity -%}
+{%- include entity-href.md entity=entity -%}
 {% if forloop.last != true %}, {% endif %}
 {% endfor %}
 
@@ -57,7 +52,7 @@ The following subheadings show Concept to Concept relationships in the model
 {%- assign sorted = page.C._descendants | sort -%}
 {% for entity_entry in sorted %}
 {%- assign entity = entity_entry[1] -%}
-{% include entity-href.html entity=entity %}
+{% include entity-href.md entity=entity %}
 {% if forloop.last != true %}, {% endif %}
 {% endfor %}
 
@@ -66,4 +61,4 @@ The following subheadings show Concept to Concept relationships in the model
 The following subheadings show Element to Concept relationships in the model
 
 
-{% include debug.html object=page.C name="concept in MS/M/P/C/concept.html" on="false" hr="true" %}
+{% include debug.md object=page.C name="concept in MS/M/P/C/concept.html" on="false" hr="true" %}

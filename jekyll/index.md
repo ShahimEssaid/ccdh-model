@@ -7,30 +7,29 @@ nav_order: 1
 ---
 {% assign model_sets = site.data._ms | sort %}
 
-<p>Introductory text here.</p>
+# Home page
 
-<p>The following are the ModelSet(s) published during this build. Each Model set page shows the full content of a ModelSet</p>
+Introductory text here.
 
-<h3>Simple model set pages</h3>
+The following are the ModelSet(s) published during this build. Each Model set page shows the full content of a ModelSet
+
+## Simple model set pages
 
 <ol>
     {% for ms in model_sets %}
     {% assign model_set = ms[1] %}
-    <li><a href="{{model_set._urls.model_set | relative_url }}">{{model_set.name}}</a>
-        {% include debug.html name="model in index.html"  object=model_set on="false" %}
+    <li><a href="{{model_set._urls.base_html | relative_url }}">{{model_set.name}}</a>
+        {% include debug.md name="model in index.html"  object=model_set on="false" %}
     </li>
     {% endfor %}
 </ol>
 
-<h3>Full model set pages</h3>
+## Full model set pages
 <ol>
 {% for ms in model_sets %}
 {% assign model_set = ms[1] %}
-<li><a href="{{model_set._urls.model_set_full | relative_url }}">{{model_set.name}}</a>
-{% include debug.html name="model in index.html"  object=model_set on="false" %}
+<li><a href="{{model_set._urls.base_full_html | relative_url }}">{{model_set.name}}</a>
+{% include debug.md name="model in index.html"  object=model_set on="false" %}
 </li>
 {% endfor %}
 </ol>
-
-
-[Kramdown syntax](https://kramdown.gettalong.org/syntax.html)

@@ -3,4 +3,5 @@
 .jekyll-metadata
 vendor
 /_site
-/ms
+/views
+/webs

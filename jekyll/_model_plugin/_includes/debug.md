@@ -1,15 +1,12 @@
 {%- comment -%}This is how to include this:
-{% include debug.html object=someObject name="summary phrase" on="false" hr="false" %}
+{% include debug.md object=someObject name="summary phrase" on="false" hr="false" %}
 {%- endcomment -%}
-{%- if site._debug == "debug_on" or  site._debug == "debug_on_all"-%}
+{%- if site._debug == "debug_on" or  site._debug == "debug_on_all" -%}
 {%- if site._debug == "debug_on_all" or include.object._debug == "true"  or include.on == "true" -%}
-{%- assign sorted = include.object | sort -%}
-{%- if include.hr == "true" -%}
-<hr>
-{%- endif -%}
-_
+{% assign sorted = include.object | sort %}
+{% if include.hr == "true" %}---{% endif %}
 <details style="display: inline; vertical-align: top">
-    <summary><span style="background-color:#fdd;">DEBUGGING</span> {{include.name}}</summary>
+    <summary><span style="background-color:#fdd;">Debugging/All fields</span> {{include.name}}</summary>
     <table>
         <tr>
             <th>Name</th>
@@ -28,7 +25,7 @@ _
                 {%- elsif type == "http" -%}
                     http: <a href="{{val}}">{{val}}</a>
                 {%- elsif type == "mhash" -%}
-                  mhash: {% include entity-href.html entity=val %}
+                  mhash: {% include entity-href.md entity=val %}
                 {% elsif type == "hash" %}
                     hash:
                     {%- assign sorted = val | sort -%}
@@ -36,7 +33,7 @@ _
                         {% assign entity = hash_entry[1] %}
                         {%- assign htype = entity | object_type -%}
                         {%- if htype == "mhash" -%}
-                            {% include entity-href.html entity=entity %}
+                            {% include entity-href.md entity=entity %}
                          {%- else -%}
                             key:{{hash_entry[0]}} val:{{hash_entry[1]}}
                         {%- endif -%}
@@ -47,7 +44,7 @@ _
                     {% for entry in val %}
                         {%- assign htype = entry | object_type -%}
                         {%- if htype == "mhash" -%}
-                            {% include entity-href.html entity=entry %}
+                            {% include entity-href.md entity=entry %}
                         {%- else -%}
                             {{entry}}
                         {%- endif -%}
@@ -64,11 +61,9 @@ _
         </tr>
         {%- endfor -%}
     </table>
-</details>_
-{%- if include.hr == "true" -%}
-<hr>
-{%- endif -%}
-{%- endif -%}
-{%- else -%}
-{%- endif -%}
+</details>
+{% if include.hr == "true" %}---{% endif %}
+{% endif %}
+{% else %}
+{% endif %}
 

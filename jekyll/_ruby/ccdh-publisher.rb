@@ -39,47 +39,50 @@ module CCDH
       pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME])
       views_and_includes = rr_get_entity_views_and_includes(nil, V_TYPE_MODEL_SET)
       page_wrappers.concat(rr_create_entity_views(@model_set, views_and_includes, pages_dir))
-      to_dir = File.join(@web_directory, V_TYPE_MODEL_SET, @model_set[H_NAME])
-      FileUtils.mkdir_p(to_dir)
-      FileUtils.cp_r(File.join(@model_set[K_DIR], F_WEB_DIR, "."), to_dir)
-      FileUtils.cp_r(File.join(@model_set[K_DIR], F_WEB_LOCAL_DIR, "."), to_dir)
 
-      # @model_set[K_MODELS].each do |model_name, model|
-      #
-      #   pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME])
-      #   views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_MODEL)
-      #   page_wrappers.concat(rr_create_entity_views(model, views_and_includes, pages_dir))
-      #
-      #   model[K_PACKAGES].each do |package_name, package|
-      #
-      #     # package
-      #     pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME], package[H_NAME])
-      #     views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_PACKAGE)
-      #     page_wrappers.concat(rr_create_entity_views(package, views_and_includes, pages_dir))
-      #
-      #     # concepts
-      #     pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME], package[H_NAME], V_TYPE_CONCEPT)
-      #     views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_CONCEPT)
-      #     package[K_CONCEPTS].each do |name, entity|
-      #       page_wrappers.concat(rr_create_entity_views(entity, views_and_includes, pages_dir))
-      #     end
-      #
-      #     # elements
-      #     pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME], package[H_NAME], V_TYPE_ELEMENT)
-      #     views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_ELEMENT)
-      #     package[K_ELEMENTS].each do |name, entity|
-      #       page_wrappers.concat(rr_create_entity_views(entity, views_and_includes, pages_dir))
-      #     end
-      #
-      #     # elements
-      #     pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME], package[H_NAME], V_TYPE_STRUCTURE)
-      #     views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_STRUCTURE)
-      #     package[K_STRUCTURES].each do |name, entity|
-      #       page_wrappers.concat(rr_create_entity_views(entity, views_and_includes, pages_dir))
-      #     end
-      #
-      #   end
-      # end
+      ms_web_to_dir = File.join(@web_directory, @model_set[H_NAME])
+      rr_copy_web(@model_set[K_DIR], ms_web_to_dir)
+
+
+      @model_set[K_MODELS].each do |model_name, model|
+
+        pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME])
+        views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_MODEL)
+        page_wrappers.concat(rr_create_entity_views(model, views_and_includes, pages_dir))
+        rr_copy_web(model[K_DIR], File.join(ms_web_to_dir, V_TYPE_MODEL, model[H_NAME]))
+
+
+
+          model[K_PACKAGES].each do |package_name, package|
+
+            # package
+            pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME], package[H_NAME])
+            views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_PACKAGE)
+            page_wrappers.concat(rr_create_entity_views(package, views_and_includes, pages_dir))
+
+            # concepts
+            pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME], package[H_NAME], V_TYPE_CONCEPT)
+            views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_CONCEPT)
+            package[K_CONCEPTS].each do |name, entity|
+              page_wrappers.concat(rr_create_entity_views(entity, views_and_includes, pages_dir))
+            end
+
+            # elements
+            pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME], package[H_NAME], V_TYPE_ELEMENT)
+            views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_ELEMENT)
+            package[K_ELEMENTS].each do |name, entity|
+              page_wrappers.concat(rr_create_entity_views(entity, views_and_includes, pages_dir))
+            end
+
+            # elements
+            pages_dir = File.join(@site.source, V_J_VIEWS_DIR, @model_set[H_NAME], model[H_NAME], package[H_NAME], V_TYPE_STRUCTURE)
+            views_and_includes = rr_get_entity_views_and_includes(model, V_TYPE_STRUCTURE)
+            package[K_STRUCTURES].each do |name, entity|
+              page_wrappers.concat(rr_create_entity_views(entity, views_and_includes, pages_dir))
+            end
+
+          end
+      end
 
       # we need to delay creating the new pages until all the _urls are populated.
       # This wrapper approach does allow for this by capturing all needed information
@@ -87,6 +90,25 @@ module CCDH
       page_wrappers.each do |wrapper|
         wrapper.render
       end
+    end
+
+    def rr_copy_web(from, to)
+      FileUtils.mkdir_p(to)
+      FileUtils.cp_r(File.join(from, F_WEB_DIR, "."), to)
+      FileUtils.cp_r(File.join(from, F_WEB_LOCAL_DIR, "."), to)
+
+      base_path = @site.source
+      Dir.glob("**/*", base: to).each do |file|
+        File.directory?(File.join(to, file)) && next
+        dir_path = File.join(to, file)
+        dir_path.delete_prefix!(File.join(base_path, ""))
+        file_name = File.basename(dir_path)
+        dir_path = File.dirname(dir_path)
+
+        @site.pages << Page.new(@site, base_path, dir_path, file_name)
+      end
+
+
     end
 
     def rr_create_entity_views(entity, views_and_includes, pages_dir)
@@ -106,7 +128,7 @@ module CCDH
         # now create the site relative URL path to save on the entity
         site_path = page_file.delete_prefix(File.join(@site.source))
         site_path.gsub!(/\.md$/, ".html") # if this is an .md file, it will actually be a .html file in the site
-        entity[K_URLS][view_name] = site_path
+        entity[K_URLS][view_name.gsub(/\./, "_")] = site_path
         if File.exist?(page_file)
           page = rr_find_existing_page(page_file)
           page_wrappers << PageWrapper.new(page, nil, nil, nil, nil, nil, includes, @base_includes_dir)
@@ -245,7 +267,6 @@ module CCDH
         end
 
       end
-
       views_and_includes
     end
   end
@@ -269,15 +290,23 @@ module CCDH
         rendererFile = @site.liquid_renderer.file(@view_file)
         parsedTemplate = rendererFile.parse(File.read(@view_file))
         @site.reset_and_prepend_includes(@includes, @base_includes_dir)
-        fileContent = parsedTemplate.render({"page" => {@entity[K_TYPE] => @entity}}, {registers: {site: @site}})
+        drop = Jekyll::Drops::UnifiedPayloadDrop.new(@site)
+        drop.page = {@entity[K_TYPE] => @entity}
+        fileContent = parsedTemplate.render(drop, {registers: {site: @site}})
         @site.reset_and_prepend_includes(nil, @base_includes_dir)
         File.open(File.join(page_dir, @page_name), "w") { |f|
           f.puts(fileContent)
         }
-        @page = Jekyll::Page.new(@site, @site.source, @page_relative_dir, @page_name)
+        @page = Page.new(@site, @site.source, @page_relative_dir, @page_name)
         @site.pages << @page
       end
       @page.data[@entity[K_TYPE]] = @entity
+    end
+  end
+
+  class Page < Jekyll::Page
+    def initialize(site, base, dir, name)
+      super(site, base, dir, name)
     end
   end
 end

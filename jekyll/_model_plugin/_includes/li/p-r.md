@@ -1,25 +1,25 @@
 {%- assign package = include.P -%}
-<li><a href="{{package._urls.package | relative_url }}">{{package.name}}</a>
-    {% include debug.html object=package name="package in p-r.html" on="false" %}
+<li><a href="{{package._urls.base_html | relative_url }}">{{package.name}}</a>
+    {% include debug.md object=package name="package in p-r.md" on="false" %}
     <ol><h3>Concepts</h3>
         {% assign entities = package._concepts | sort %}
         {% for entity_entry in entities %}
         {% assign entity = entity_entry[1] %}
-        {% include li/c.html C=entity %}
+        {% include li/c.md C=entity %}
         {% endfor %}
     </ol>
     <ol><h3>Elements</h3>
         {% assign entities = package._elements | sort %}
         {% for entity_entry in entities %}
         {% assign entity = entity_entry[1] %}
-        {% include li/e.html E=entity %}
+        {% include li/e.md E=entity %}
         {% endfor %}
     </ol>
     <ol><h3>Structures</h3>
         {% assign entities = package._structures | sort %}
         {% for entity_entry in entities %}
         {% assign entity = entity_entry[1] %}
-        {% include li/s.html S=entity %}
+        {% include li/s.md S=entity %}
         {% endfor %}
     </ol>
 </li>

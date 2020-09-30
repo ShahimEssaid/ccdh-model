@@ -96,10 +96,29 @@ module CCDH
       # "generated" variable in the front matter to "false" to customize as needed and this plugin
       # will use that page from now on and not regenerate it. The editor will then have to manually keep up with any
       # changes to the meta templates for that type of page, if desired.
-      r_clean_generated_pages(File.join(source, V_J_VIEWS_DIR))
+
     end
 
     def generate(site)
+      dir = File.join(site.source, V_J_VIEWS_DIR)
+      File.exist?(dir) && FileUtils.remove_dir(dir)
+      dir = File.join(site.source, V_J_WEBS_DIR)
+      File.exist?(dir) && FileUtils.remove_dir(dir)
+
+      # pages = []
+      # views_prefix = File.join(V_J_VIEWS_DIR, "")
+      # webs_prefix = File.join(V_J_WEBS_DIR, "")
+      # site.pages.each do |page|
+      #   relative_path = page.get_relative_path
+      #   if relative_path.start_with?(views_prefix) || relative_path.start_with?(webs_prefix)
+      #     pages << page
+      #   end
+      # end
+      #
+      # pages.each do |page|
+      #   site.pages.delete(page)
+      # end
+
       #r_clean_generated_pages2(File.join(site.source, V_J_MS_DIR), site)
       # r_clean_deleted_file(File.join(site.source, V_J_MS_DIR), site)
       puts "================= RUNNING generate()  =============="
@@ -143,37 +162,49 @@ module CCDH
 
       site.data[K_MS].each do |model_set_name, model_set|
         publisher = ModelPublisher.new(site, model_set,
-                                       File.join(site.source, "_model_plugin", F_VIEWS_DIR),  # base/plugin views dir
-                                       File.join(site.source, "_model_plugin", F_INCLUDES_DIR),  #  base/plugin views dir
-                                       File.join(site.source, V_J_WEBS_DIR))  # the webs directory under jekyll/
+                                       File.join(site.source, "_model_plugin", F_VIEWS_DIR), # base/plugin views dir
+                                       File.join(site.source, "_model_plugin", F_INCLUDES_DIR), #  base/plugin views dir
+                                       File.join(site.source, V_J_WEBS_DIR)) # the webs directory under jekyll/
         publisher.publish_model_set
       end
 
-      # if we want to write to a different place pass in a root directory
-      write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]
-      site.data[K_MS].each do |model_set_name, model_set|
-        if write_path.nil? || write_path.empty?
-          write_dir = File.expand_path(model_set_name, model_set[K_MS_DIR])
-        else
-          write_dir = File.expand_path(model_set_name, File.expand_path(write_path))
+      # first check if we want to write
+      # This is useful for when working on publication stuff to avoid
+      # rewriting the csv files, which triggers the inotifywait tool
+      # and causes too much noise
+      if ENV[ENV_M_MODEL_SETS_WRITE] == V_TRUE
+        # if we want to write to a different place pass in a root directory
+        write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]
+        site.data[K_MS].each do |model_set_name, model_set|
+          if write_path.nil? || write_path.empty?
+            write_dir = File.expand_path(model_set_name, model_set[K_MS_DIR])
+          else
+            write_dir = File.expand_path(model_set_name, File.expand_path(write_path))
+          end
+          CCDH.r_write_modelset(model_set, write_dir)
         end
-        CCDH.r_write_modelset(model_set, write_dir)
+        #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
       end
-      #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
+
+      puts "DONE"
     end
 
-    def r_clean_generated_pages(path)
-      Dir.glob("**/*", base: path).each do |f|
-        file = File.join(path, f)
-        next if File.directory?(file)
-        fileContent = File.read(file)
-        if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
-          postYamlContent = $POSTMATCH
-          yaml_string = Regexp.last_match(1)
-          yaml = SafeYAML.load(yaml_string)
-          yaml.nil? || (yaml[V_GENERATED] == true && File.delete(file))
-        end
-      end
+
+    def r_clean_pages(path)
+      # just delete all for now since we now have a better way to customize
+
+
+      # Dir.glob("**/*", base: path).each do |f|
+      #   file = File.join(path, f)
+      #   next if File.directory?(file)
+      #   fileContent = File.read(file)
+      #   if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
+      #     postYamlContent = $POSTMATCH
+      #     yaml_string = Regexp.last_match(1)
+      #     yaml = SafeYAML.load(yaml_string)
+      #     yaml.nil? || (yaml[V_GENERATED] == true && File.delete(file))
+      #   end
+      # end
 
       #Dir.glob('**/*', base: path).select{ |d|  File.directory? d }.select{ |d| !(Dir.entries(d) - %w[ . .. ]).empty? }.each { |d| puts d }
     end

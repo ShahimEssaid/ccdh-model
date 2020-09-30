@@ -1,16 +1,21 @@
 {% assign headers = include.headers %}
 {% assign entity = include.entity %}
+
+## Additional fields
+
 <table>
     <tr>
         <th>Name</th>
         <th>Value</th>
     </tr>
     {% for header in headers %}
+    {%- assign val = entity[header] -%}
+    {%- assign type = entity[header] | object_type -%}  
+    {% if val.size > 0 %}
     <tr>
         <td>{{header}}</td>
         <td>
-            {%- assign val = entity[header] -%}
-            {%- assign type = entity[header] | object_type -%}
+
             {%- if type == "nil" -%}
                 nil value
             {%- elsif type == "string" -%}
@@ -38,7 +43,7 @@
                     {%- else -%}
                     {{entry}}
                     {%- endif -%}
-                {% if forloop.last != true %}, {% endif %}
+                {% if forloop.last != true %},<br> {% endif %}
                 {%- endfor -%}
             {%- elsif type == "numeric" -%}
                 {{ val }}
@@ -49,5 +54,6 @@
             {%- endif -%}
         </td>
     </tr>
+    {% endif %}
     {% endfor %}
 </table>

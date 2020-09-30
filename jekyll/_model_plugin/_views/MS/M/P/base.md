@@ -1,13 +1,14 @@
 ---
 layout: page
-title: "Package {{page.P._package.name}} in model {{page.P._model.name}}:{{page.P._model._ms.name}}"
-generated: true
+title: "Package {{page.P.name}} in model {{page.P._model.name}}:{{page.P._model._ms.name}}"
 nav_exclude: true
 ---
-{% raw %}
-<h1>{{page.P.name}} package</h1>
-{% include entity-table.html entity=page.P headers=page.P._model._p_disp_headers %}
+{% assign entity=page.P %}
 
-{% include debug.html object=page.P name="package in MS/M/P/package.html" on="false" hr="true" %}
-{% endraw %}
+{% include title-summary-desc.md entity=entity %}
+
+{% include entity-table.md entity=entity headers=entity._m_disp_headers %}
+
+{% include debug.md object=entity name="" on="false" hr="true" %}
+
 

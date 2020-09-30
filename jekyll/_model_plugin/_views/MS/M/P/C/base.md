@@ -1,21 +1,21 @@
 ---
 layout: page
-title: Concept {{C.name}} in package {{C._package.name}}:{{C._model.name}}:{{C._model._ms.name}}
+title: Concept {{page.C.name}} in package {{page.C._package.name}}:{{page.C._model.name}}:{{page.C._model._ms.name}}
 generated: true
 nav_exclude: true
 ---
 
 # {{C.title}}
 
-{{C.summary}}
+{{page.C.summary}}
 
 ## Description
 
-{{C.description}}
+{{page.C.description}}
 
 ## Additional metadata
 
-{% include entity-table.html entity=C headers=C._model._c_disp_headers %}
+{% include entity-table.html entity=page.C headers=page.C._model._c_disp_headers %}
 
 ## Concept relationships
 
@@ -28,14 +28,14 @@ The following subheadings show Concept to Concept relationships in the model
         <th>Concept</th>
         <th>Summary</th>
     </tr>
-    {%- for entity in C._parents -%}
+    {%- for entity in page.C._parents -%}
     {%- include entity-name-summary-tr.html entity=entity -%}
     {%- endfor -%}
 </table>
 
 ### Children
 
-{% assign sorted = C._children | sort -%}
+{% assign sorted = page.C._children | sort -%}
 {%- for entity_entry in sorted -%}
 {%- assign entity = entity_entry[1] -%}
 {%- include entity-href.html entity=entity -%}
@@ -45,7 +45,7 @@ The following subheadings show Concept to Concept relationships in the model
 
 ### Ancestors
 
-{%- assign sorted = C._ancestors | sort -%}
+{%- assign sorted = page.C._ancestors | sort -%}
 {% for entity_entry in sorted %}
 {%- assign entity = entity_entry[1] -%}
 {%- include entity-href.html entity=entity -%}
@@ -54,7 +54,7 @@ The following subheadings show Concept to Concept relationships in the model
 
 ### Descendants
 
-{%- assign sorted = C._descendants | sort -%}
+{%- assign sorted = page.C._descendants | sort -%}
 {% for entity_entry in sorted %}
 {%- assign entity = entity_entry[1] -%}
 {% include entity-href.html entity=entity %}
@@ -66,4 +66,4 @@ The following subheadings show Concept to Concept relationships in the model
 The following subheadings show Element to Concept relationships in the model
 
 
-{% include debug.html object=C name="concept in MS/M/P/C/concept.html" on="false" hr="true" %}
+{% include debug.html object=page.C name="concept in MS/M/P/C/concept.html" on="false" hr="true" %}

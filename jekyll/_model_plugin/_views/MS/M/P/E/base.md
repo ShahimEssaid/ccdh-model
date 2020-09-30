@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Element {{E.name}} in package {{E._package.name}}:{{E._model.name}}:{{E._model._ms.name}}
+title: Element {{page.E.name}} in package {{page.E._package.name}}:{{page.E._model.name}}:{{page.E._model._ms.name}}
 generated: true
 nav_exclude: true
 ---

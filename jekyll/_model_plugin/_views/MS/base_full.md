@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Model set {{MS.name}} full outline
+title: Model set {{page.MS.name}} full outline
 generated: true
 nav_exclude: true
 ---

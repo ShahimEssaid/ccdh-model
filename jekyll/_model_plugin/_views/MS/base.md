@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Model set {{MS.name}}
+title: Model set {{page.MS.name}}
 generated: true
 nav_exclude: true
 ---

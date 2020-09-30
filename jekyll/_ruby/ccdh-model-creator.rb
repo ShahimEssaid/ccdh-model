@@ -9,30 +9,41 @@ module CCDH
   # end
 
   def self.r_create_model_files_if_needed(model_set, model_name)
+
     # this step for the model set is redundant but doing it here anyway because this is where creating stuff happens
     model_set_dir = model_set[K_DIR]
-
     views_dir = File.join(model_set_dir, F_VIEWS_DIR)
     !Dir.exist?(views_dir) && create_views_directories(views_dir)
     web_dir = File.join(model_set_dir, F_WEB_DIR)
-    !Dir.exist?(web_dir) && create_web_directory(web_dir)
+    !Dir.exist?(web_dir) && create_directory(web_dir)
     includes_dir = File.join(model_set_dir, F_INCLUDES_DIR)
-    !Dir.exist?(includes_dir) && create_includes_directory(includes_dir)
+    !Dir.exist?(includes_dir) && create_directory(includes_dir)
+    web_dir = File.join(model_set_dir, F_WEB_DIR)
+    !Dir.exist?(web_dir) && create_directory(web_dir)
+    web_dir = File.join(model_set_dir, F_WEB_LOCAL_DIR)
+    !Dir.exist?(web_dir) && create_directory(web_dir)
 
     # crate model diretory if needed
     model_dir = File.join(model_set[K_DIR], model_name)
-    !Dir.exist?(model_dir) && FileUtils.mkdir_p(model_dir)
 
+    # model views dir
     views_dir = File.join(model_dir, F_VIEWS_DIR)
     !Dir.exist?(views_dir) && create_views_directories(views_dir)
     views_local_dir = File.join(model_dir, F_VIEWS_LOCAL_DIR)
     !Dir.exist?(views_local_dir) && create_views_directories(views_local_dir)
-    web_dir = File.join(model_dir, F_WEB_DIR)
-    !Dir.exist?(web_dir) && create_web_directory(web_dir)
+
+    # model includes dir
     includes_dir = File.join(model_dir, F_INCLUDES_DIR)
-    !Dir.exist?(includes_dir) && create_includes_directory(includes_dir)
+    !Dir.exist?(includes_dir) && create_directory(includes_dir)
     includes_dir = File.join(model_dir, F_INCLUDES_LOCAL_DIR)
-    !Dir.exist?(includes_dir) && create_includes_directory(includes_dir)
+    !Dir.exist?(includes_dir) && create_directory(includes_dir)
+
+    # model web dir
+    web_dir = File.join(model_dir, F_WEB_DIR)
+    !Dir.exist?(web_dir) && create_directory(web_dir)
+    web_dir = File.join(model_dir, F_WEB_LOCAL_DIR)
+    !Dir.exist?(web_dir) && create_directory(web_dir)
+
 
     # write model file
     model_file = File.join(model_dir, F_MODEL_CSV)
@@ -103,14 +114,9 @@ module CCDH
     FileUtils.touch(File.join(base_dir, V_TYPE_MODEL_SET, V_TYPE_MODEL, V_TYPE_PACKAGE, V_TYPE_STRUCTURE, F_GIT_IGNORE))
   end
 
-  def self.create_web_directory(base_dir)
+  def self.create_directory(base_dir)
     FileUtils.mkdir_p(base_dir)
     FileUtils.touch(File.join(base_dir, F_GIT_IGNORE))
-  end
-
-  def self.create_includes_directory(base_dir)
-      FileUtils.mkdir_p(base_dir)
-      FileUtils.touch(File.join(base_dir, F_GIT_IGNORE))
   end
 
 end

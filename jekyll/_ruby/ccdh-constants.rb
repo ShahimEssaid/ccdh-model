@@ -168,12 +168,14 @@ module CCDH
   F_CONCEPTS_CSV = "concepts.csv"
   F_ELEMENTS_CSV = "elements.csv"
   F_STRUCTURES_CSV = "structures.csv"
+
   F_VIEWS_DIR = "_views"
   F_VIEWS_LOCAL_DIR = "_views_local"
   F_INCLUDES_DIR = "_includes"
   F_INCLUDES_LOCAL_DIR = "_includes_local"
   F_WEB_DIR = "_web"
   F_WEB_LOCAL_DIR = "_web_local"
+
   F_GIT_IGNORE = ".gitignore"
 
 
@@ -207,8 +209,13 @@ module CCDH
 
   V_TRUE = "true"
   # this is the directory path under "Jekyll source" where model sets' page content will be written.
-  V_J_MS_DIR = "ms"
-  V_J_TEMPLATE_PATH = "_template"
+  V_J_VIEWS_DIR = "views"
+  V_J_WEBS_DIR = "webs"
+
+  # V_PLGN_INCLUDES_DIR="_includes"
+  # V_PLGN_MS_WEB_DIR = "_ms_web"
+  # V_PLGN_WEB_DIR = "_web"
+  # V_PLGN_VIEWS_DIR = "_views"
 
   V_M_DISPLAY = "#{H_NAME},  #{H_GH_ISSUE}, #{H_STATUS}, #{H_NOTES}, #{H_BUILD}"
   V_P_DISPLAY = "#{H_NAME},  #{H_GH_ISSUE}, #{H_STATUS}, #{H_NOTES}, #{H_BUILD}"

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Package {{P._package.name}} in model {{P._model.name}}:{{P._model._ms.name}}
+title: "Package {{page.P._package.name}} in model {{page.P._model.name}}:{{page.P._model._ms.name}}"
 generated: true
 nav_exclude: true
 ---

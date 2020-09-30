@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Structure {{S.name}} in package {{S._package.name}}:{{S._model.name}}:{{S._model._ms.name}}
+title: Structure {{page.S.name}} in package {{page.S._package.name}}:{{page.S._model.name}}:{{page.S._model._ms.name}}
 generated: true
 nav_exclude: true
 ---

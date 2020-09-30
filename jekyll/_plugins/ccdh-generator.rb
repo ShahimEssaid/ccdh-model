@@ -7,6 +7,7 @@ require 'octokit'
 # ruby_files = File.expand_path(File.join(__dir__, "../_ruby"))
 # puts ruby_files
 # Dir.glob(ruby_files + "/ccdh-*.rb", &method(:puts))
+require_relative "../_ruby/ccdh-patches"
 require_relative "../_ruby/ccdh-constants"
 require_relative "../_ruby/ccdh-util"
 require_relative "../_ruby/ccdh-model"
@@ -95,7 +96,7 @@ module CCDH
       # "generated" variable in the front matter to "false" to customize as needed and this plugin
       # will use that page from now on and not regenerate it. The editor will then have to manually keep up with any
       # changes to the meta templates for that type of page, if desired.
-      r_clean_generated_pages(File.join(source, V_J_MS_DIR))
+      r_clean_generated_pages(File.join(source, V_J_VIEWS_DIR))
     end
 
     def generate(site)
@@ -140,10 +141,13 @@ module CCDH
         CCDH.r_gh(first_model_set)
       end
 
-      # site.data[K_MS].each do |model_set_name, model_set|
-      #   publisher = ModelPublisher.new(site, model_set, V_J_TEMPLATE_PATH, "#{V_J_MS_DIR}/#{model_set_name}")
-      #   publisher.publish_model
-      # end
+      site.data[K_MS].each do |model_set_name, model_set|
+        publisher = ModelPublisher.new(site, model_set,
+                                       File.join(site.source, "_model_plugin", F_VIEWS_DIR),  # base/plugin views dir
+                                       File.join(site.source, "_model_plugin", F_INCLUDES_DIR),  #  base/plugin views dir
+                                       File.join(site.source, V_J_WEBS_DIR))  # the webs directory under jekyll/
+        publisher.publish_model_set
+      end
 
       # if we want to write to a different place pass in a root directory
       write_path = ENV[ENV_M_MODEL_SETS_WRITE_PATH]
@@ -165,7 +169,8 @@ module CCDH
         fileContent = File.read(file)
         if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
           postYamlContent = $POSTMATCH
-          yaml = SafeYAML.load(Regexp.last_match(1))
+          yaml_string = Regexp.last_match(1)
+          yaml = SafeYAML.load(yaml_string)
           yaml.nil? || (yaml[V_GENERATED] == true && File.delete(file))
         end
       end
@@ -176,7 +181,7 @@ module CCDH
     def r_clean_deleted_file(path, site)
       site.pages.each do |page|
         relative_path = page.relative_path
-        if (relative_path.start_with?(V_J_MS_DIR + "/"))
+        if (relative_path.start_with?(V_J_VIEWS_DIR + "/"))
           full_path = File.join(site.source, relative_path)
           if !File.exist?(full_path)
             puts "debug"
@@ -191,7 +196,7 @@ module CCDH
       paths_to_delete = {}
 
       Dir.glob("**/*", base: path).each do |f|
-        relative_path = File.join(V_J_MS_DIR, f)
+        relative_path = File.join(V_J_VIEWS_DIR, f)
         file = File.join(path, f)
         next if File.directory?(file)
         fileContent = File.read(file)

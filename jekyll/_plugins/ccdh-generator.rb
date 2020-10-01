@@ -89,13 +89,6 @@ module CCDH
   class JGenerator < Jekyll::Generator
 
     def initialize(config)
-      source = File.expand_path(config["source"])
-      # we need to clean up any generated files from previous runs here so Jekyll doesn't pick them up
-      # before calling the generate() method. This allows two things. First, generated files will be removed
-      # and rewritten in case the meta templates have changed. Second, it allows an editor to change the
-      # "generated" variable in the front matter to "false" to customize as needed and this plugin
-      # will use that page from now on and not regenerate it. The editor will then have to manually keep up with any
-      # changes to the meta templates for that type of page, if desired.
 
     end
 
@@ -105,23 +98,6 @@ module CCDH
       dir = File.join(site.source, V_J_WEBS_DIR)
       File.exist?(dir) && FileUtils.remove_dir(dir)
 
-      # pages = []
-      # views_prefix = File.join(V_J_VIEWS_DIR, "")
-      # webs_prefix = File.join(V_J_WEBS_DIR, "")
-      # site.pages.each do |page|
-      #   relative_path = page.get_relative_path
-      #   if relative_path.start_with?(views_prefix) || relative_path.start_with?(webs_prefix)
-      #     pages << page
-      #   end
-      # end
-      #
-      # pages.each do |page|
-      #   site.pages.delete(page)
-      # end
-
-      #r_clean_generated_pages2(File.join(site.source, V_J_MS_DIR), site)
-      # r_clean_deleted_file(File.join(site.source, V_J_MS_DIR), site)
-      puts "================= RUNNING generate()  =============="
       @site = site
       site.data[K_MS] = {}
 
@@ -153,7 +129,7 @@ module CCDH
 
       CCDH.rr_process_modelsets(site.data[K_MS])
 
-
+      return
       CCDH.rr_resolve_model_sets(site.data[K_MS])
 
       if ENV[ENV_GH_ACTIVE] == V_TRUE
@@ -186,73 +162,6 @@ module CCDH
         #CCDH.writeModelSetToCSV(current_model_set, File.expand_path(File.join(site.source, "../model-write")))
       end
 
-      puts "DONE"
     end
-
-
-    def r_clean_pages(path)
-      # just delete all for now since we now have a better way to customize
-
-
-      # Dir.glob("**/*", base: path).each do |f|
-      #   file = File.join(path, f)
-      #   next if File.directory?(file)
-      #   fileContent = File.read(file)
-      #   if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
-      #     postYamlContent = $POSTMATCH
-      #     yaml_string = Regexp.last_match(1)
-      #     yaml = SafeYAML.load(yaml_string)
-      #     yaml.nil? || (yaml[V_GENERATED] == true && File.delete(file))
-      #   end
-      # end
-
-      #Dir.glob('**/*', base: path).select{ |d|  File.directory? d }.select{ |d| !(Dir.entries(d) - %w[ . .. ]).empty? }.each { |d| puts d }
-    end
-
-    def r_clean_deleted_file(path, site)
-      site.pages.each do |page|
-        relative_path = page.relative_path
-        if (relative_path.start_with?(V_J_VIEWS_DIR + "/"))
-          full_path = File.join(site.source, relative_path)
-          if !File.exist?(full_path)
-            puts "debug"
-          end
-        end
-      end
-
-    end
-
-    def r_clean_generated_pages2(path, site)
-
-      paths_to_delete = {}
-
-      Dir.glob("**/*", base: path).each do |f|
-        relative_path = File.join(V_J_VIEWS_DIR, f)
-        file = File.join(path, f)
-        next if File.directory?(file)
-        fileContent = File.read(file)
-        if fileContent =~ Jekyll::Document::YAML_FRONT_MATTER_REGEXP
-          postYamlContent = $POSTMATCH
-          yaml = SafeYAML.load(Regexp.last_match(1))
-          if !yaml.nil? && yaml[V_GENERATED] == true
-            File.delete(file)
-            paths_to_delete[relative_path] = nil
-          end
-        end
-      end
-
-      site.pages.each do |page|
-        if paths_to_delete.key?(page.relative_path)
-          paths_to_delete[page.relative_path] = page
-        end
-      end
-
-      paths_to_delete.each do |rp, page|
-        site.pages.delete(page)
-      end
-
-      #Dir.glob('**/*', base: path).select{ |d|  File.directory? d }.select{ |d| !(Dir.entries(d) - %w[ . .. ]).empty? }.each { |d| puts d }
-    end
-
   end
 end

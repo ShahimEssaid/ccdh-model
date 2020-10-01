@@ -111,7 +111,7 @@ module CCDH
               else
                 if !concept[K_PARENTS].include?(parent)
                   concept[K_PARENTS] << parent
-                  parent[K_CHILDREN][concept[VK_FQN]] = concept
+                  parent[K_CHILDREN][concept[K_FQN]] = concept
                 else
                   r_build_entry("Parent #{parent_name} was already in parents.", concept)
                 end
@@ -135,7 +135,7 @@ module CCDH
               else
                 if !concept[K_RELATED].include?(related)
                   concept[K_RELATED] << related
-                  related[K_RELATED_OF][concept[VK_FQN]] = concept
+                  related[K_RELATED_OF][concept[K_FQN]] = concept
                 else
                   r_build_entry("Related #{related_name} was already in related.", concept)
                 end
@@ -162,7 +162,7 @@ module CCDH
                 r_build_entry("Parent #{element[H_PARENT]} resolved to self.", element)
               else
                 element[K_PARENT] = parent
-                parent[K_CHILDREN][element[VK_FQN]] = element
+                parent[K_CHILDREN][element[K_FQN]] = element
               end
             else
               r_build_entry("Parent ref #{element[H_PARENT]} was not resolvable.", element)
@@ -183,7 +183,7 @@ module CCDH
               else
                 if !element[K_RELATED].include?
                   element[K_RELATED] << related
-                  related[K_RELATED_OF][element[VK_FQN]] = element
+                  related[K_RELATED_OF][element[K_FQN]] = element
                 else
                   r_build_entry("Related #{related_name} was already in related.", element)
                 end
@@ -266,7 +266,7 @@ module CCDH
         package[K_CONCEPTS].each do |ck, c|
           c == thing && next
           c[K_PARENTS].empty? && c[K_PARENTS] << thing
-          thing[K_CHILDREN][c[VK_FQN]] = c
+          thing[K_CHILDREN][c[K_FQN]] = c
         end
       end
 
@@ -276,7 +276,7 @@ module CCDH
         p[K_ELEMENTS].each do |ck, e|
           e == has_thing && next
           e[K_PARENT].nil? && e[K_PARENT] = has_thing
-          has_thing[K_CHILDREN][e[VK_FQN]] = e
+          has_thing[K_CHILDREN][e[K_FQN]] = e
         end
       end
     end
@@ -296,10 +296,10 @@ module CCDH
       # a circle is found, don't include in path again
       pathString = ""
       path.each do |e|
-        pathString += "#{e[VK_FQN]} > "
+        pathString += "#{e[K_FQN]} > "
       end
-      pathString += entity[VK_FQN]
-      r_build_entry("DAG check: #{entity[VK_FQN]} is circular with path: #{pathString}.", entity)
+      pathString += entity[K_FQN]
+      r_build_entry("DAG check: #{entity[K_FQN]} is circular with path: #{pathString}.", entity)
       rr_c_populate_hierarchy(path, K_DESCENDANTS)
       rr_c_populate_hierarchy(path.reverse, K_ANCESTORS)
     else
@@ -317,7 +317,7 @@ module CCDH
 
   def self.rr_c_populate_hierarchy(path, key)
     path.each.with_index.map do |entity, i|
-      entity[key].merge!(path[i..].to_h { |e| [e[VK_FQN], e] })
+      entity[key].merge!(path[i..].to_h { |e| [e[K_FQN], e] })
     end
   end
 
@@ -325,15 +325,15 @@ module CCDH
     thing = model_set[K_ENTITIES][V_THING_C_BASE][0]
     has_thing = model_set[K_ENTITIES][V_HAS_ENTITY_E_BASE][0]
 
-    has_thing[K_CONCEPTS_E][thing[VK_FQN]] = thing
+    has_thing[K_CONCEPTS_E][thing[K_FQN]] = thing
     has_thing[K_CONCEPTS_CLD].merge!(thing[K_DESCENDANTS])
     has_thing[K_CONCEPTS_CLU].merge!(thing[K_ANCESTORS])
 
-    has_thing[K_DOMAINS_E][thing[VK_ENTITY_NAME]] = thing
+    has_thing[K_DOMAINS_E][thing[K_ENAME]] = thing
     has_thing[K_DOMAINS_CLD].merge!(thing[K_DESCENDANTS])
     has_thing[K_DOMAINS_CLU].merge!(thing[K_ANCESTORS])
 
-    has_thing[K_RANGES_E][thing[VK_ENTITY_NAME]] = thing
+    has_thing[K_RANGES_E][thing[K_ENAME]] = thing
     has_thing[K_RANGES_CLD].merge!(thing[K_DESCENDANTS])
     has_thing[K_RANGES_CLU].merge!(thing[K_ANCESTORS])
 
@@ -550,9 +550,9 @@ module CCDH
 
     path_string = ""
     path.each do |s|
-      path_string += "> #{s[VK_FQN]} "
+      path_string += "> #{s[K_FQN]} "
     end
-    path_string += structure[VK_FQN]
+    path_string += structure[K_FQN]
 
     if path.include?(structure)
       # cycle, don't include in path again
@@ -565,7 +565,7 @@ module CCDH
       if is_mixin
         structure[K_CONCEPTS_E].each do |fqn, concept|
           unless starting_structure[K_CONCEPTS_CLU].key?(fqn)
-            r_build_entry("Mixin #{structure[VK_FQN]} has concept #{fqn} not under this structure. Mixin path: #{path_string}.", starting_structure)
+            r_build_entry("Mixin #{structure[K_FQN]} has concept #{fqn} not under this structure. Mixin path: #{path_string}.", starting_structure)
             rr_s_populate_transitive(path, anc_key)
             rr_s_populate_transitive(path.reverse, desc_key)
             return
@@ -589,7 +589,7 @@ module CCDH
       subpath = path[index + 1..] # skip self
       if subpath
         subpath.each do |ss|
-          structure[key][ss[VK_FQN]] = ss
+          structure[key][ss[K_FQN]] = ss
         end
       end
     end

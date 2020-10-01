@@ -27,7 +27,7 @@ module CCDH
 
     model_set[K_MODELS].each do |model_name, model|
       model[K_ENTITIES].each do |entity_name, entity|
-        label_name = entity[VK_ENTITY_NAME]
+        label_name = entity[K_ENAME]
         label_index = label_name.downcase
         current_label = self.gh_labels[label_index]
         response = nil
@@ -75,13 +75,13 @@ module CCDH
     client = Octokit::Client.new(:access_token => ENV[ENV_GH_TOKEN])
 
     package[K_CONCEPTS].each do |c_name, concept|
-      title = "Concept #{concept[VK_ENTITY_NAME]}"
+      title = "Concept #{concept[K_ENAME]}"
       body = "**Concept:** #{concept[H_NAME]}\n**Package:** #{concept[K_PACKAGE][H_NAME]}\n**Model:** #{concept[K_MODEL][H_NAME]}\n\n"
       body += "**Summary:** #{concept[H_SUMMARY]}\n\n"
       body += "**Description:** #{concept[H_DESCRIPTION]}\n\n"
       body += "**Status:** #{concept[H_STATUS]}\n\n"
       labels = []
-      labels << concept[VK_ENTITY_NAME]
+      labels << concept[K_ENAME]
       gh_issue_url = concept[H_GH_ISSUE]
 
       gh_issue_url.nil? || gh_issue = self.gh_issues[gh_issue_url]

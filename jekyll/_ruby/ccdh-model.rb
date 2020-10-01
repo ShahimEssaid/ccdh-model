@@ -1,57 +1,45 @@
 module CCDH
 
-  class ModelHash < Hash
-    def initialize
-      self.default_proc = proc do |hash, key|
-        hash.r_get_missing_key(key)
-      end
-
-      self[K_URLS] = {}
-
-    end
-
-    def to_s
-      self[VK_FQN]
-    end
-
-    # def <=>(other)
-    #   self[H_NAME] <=> other[H_NAME]
-    # end
-  end
-
-  class ModelEntity < ModelHash
+  class ModelingEntity < Hash
     def initialize(name, model, type)
-      super()
+      if name.nil? || name.empty? || type.nil? || type.empty?
+        raise("Initializing ModelingEntity  with bad args name:#{name}, type:#{type}")
+      end
+      if model.nil? && type != V_TYPE_MODEL_SET
+        raise("Initializing ModelingEntity with null model for name:#{name}, type:#{type}")
+      end
       self[H_NAME] = name
       self[K_TYPE] = type
+      self[K_NAME] = self[H_NAME] + SEP_NAME_PARTS + self[K_TYPE]
       self[K_MODEL] = model
       self[K_NIL] = []
       self[K_GENERATED_NOW] = false
-
       self[K_RELATED] = []
       self[K_RELATED_OF] = {}
-
+      self[K_URLS] = {}
     end
-
-    def r_get_missing_key(key)
-      nil
-    end
-
   end
 
-  class PackagableEntity < ModelEntity
+  class PackagableEntity < ModelingEntity
     def initialize(name, package, model, type)
       super(name, model, type)
+      if package.nil?
+        raise("Initializing PackagableEntity with null package for name:#{name}, type:#{type}, model:#{model[K_ID]}")
+      end
       self[K_PACKAGE] = package
+
+      self[K_ENAME] = self[K_NAME] + SEP_NAME_PARTS + package[K_NAME]
+      self[K_FQN] = self[K_ENAME] + SEP_NAME_PARTS + model[K_NAME]
+      self[K_ID] = self[K_FQN] + SEP_NAME_PARTS + model[K_MS][K_NAME]
     end
 
     def r_get_missing_key(key)
       self.has_key?(key) && self[key]
 
       case key
-      when VK_FQN
+      when K_FQN
         value = "#{self[H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_MODEL][H_NAME]}"
-      when VK_ENTITY_NAME
+      when K_ENAME
         value = "#{self[H_NAME]}#{SEP_COLON}#{self[K_TYPE]}#{SEP_COLON}#{self[K_PACKAGE][H_NAME]}"
       else
         value = nil
@@ -61,7 +49,7 @@ module CCDH
     end
   end
 
-  class ModelSet < ModelHash
+  class ModelSet < ModelingEntity
     # name:
     #
     #
@@ -70,26 +58,32 @@ module CCDH
     # that model be be created (directory and empty files) if it doesn't exist
 
     def initialize(name, dir, model_names)
-      super()
-      # TODO: fix hard coding this.
-      self[VK_ENTITY_NAME] = name
-      self[VK_FQN] = name
-      self.default_proc = proc do |hash, key|
-        hash.r_get_missing_key(key)
+      super(name, nil, V_TYPE_MODEL_SET)
+      if dir.nil? || dir.empty?
+        raise("Initializing ModelSet with invalid values dir:#{dir}, name:#{name}, model_names:#{model_names}")
+      end
+      if model_names.nil? || model_names.size < 2
+        raise("Initializing ModelSet with less than 2 model names  name:#{name}, model_names:#{model_names}")
       end
 
-      self[K_SITE] = nil # the Jekyll site
-      self[H_NAME] = name
-      self[K_DIR] = dir
-      self[F_VIEWS_DIR] = File.join(dir, F_VIEWS_DIR)
-      self[F_WEB_DIR] = File.join(dir, F_WEB_DIR)
-      self[F_INCLUDES_DIR] = File.join(dir, F_INCLUDES_DIR)
+      self[K_ENAME] = self[K_NAME]
+      self[K_FQN] = self[K_ENAME]
+      self[K_ID] = self[K_FQN]
+
+      self[K_DIR] = File.expand_path(dir)
+
+      self[F_VIEWS_DIR] = File.join(self[K_DIR], F_VIEWS_DIR)
+      self[F_VIEWS_LOCAL_DIR] = File.join(self[K_DIR], F_VIEWS_LOCAL_DIR)
+
+      self[F_WEB_DIR] = File.join(self[K_DIR], F_WEB_DIR)
+      self[F_WEB_LOCAL_DIR] = File.join(self[K_DIR], F_WEB_LOCAL_DIR)
+
+      self[F_INCLUDES_DIR] = File.join(self[K_DIR], F_INCLUDES_DIR)
+      self[F_INCLUDES_LOCAL_DIR] = File.join(self[K_DIR], F_INCLUDES_LOCAL_DIR)
 
       self[K_DEFAULT] = model_names[0].strip
       self[K_TOP] = model_names[1].strip
       self[K_MODELS] = {}
-      self[K_TYPE] = V_TYPE_MODEL_SET
-
       model_names.each do |name|
         self[K_MODELS][name.strip] = nil
       end
@@ -102,21 +96,6 @@ module CCDH
 
     end
 
-    def r_get_missing_key(key)
-      self.has_key?(key) && self[key]
-
-      case key
-      when VK_FQN
-        value = "#{self[H_NAME]}"
-      when VK_ENTITY_NAME
-        value = "#{self[H_NAME]}"
-      else
-        value = nil
-      end
-      self[key] = value
-      value
-    end
-
     def r_get_model(name, create)
       model = self[K_MODELS][name]
       if model.nil? && create
@@ -125,28 +104,28 @@ module CCDH
       end
       model
     end
-
-    def to_s
-      self[VK_FQN]
-    end
-
-
   end
 
-  class Model < ModelEntity
+  class Model < ModelingEntity
     def initialize(name, model_set)
       super(name, self, V_TYPE_MODEL)
-      # TODO: fix this hard coding of VKs
-      self[VK_FQN] = name
-      self[VK_ENTITY_NAME] = name
-      # we need this to avoid errors on new model.xlsx/csv files  TODO: necessary?
-      #self[H_DEPENDS_ON] = ""
+      if model_set.nil?
+        raise("Initializing Model with nil ModelSet  name:#{name}")
+      end
+
+      self[K_ENAME] = self[K_NAME]
+      self[K_FQN] = self[K_ENAME]
+      self[K_ID] = self[K_FQN] + SEP_NAME_PARTS + model_set[K_NAME]
+
       self[K_MS] = model_set
       self[K_DIR] = File.join(model_set[K_DIR], name)
 
       self[F_VIEWS_DIR] = File.join(self[K_DIR], F_VIEWS_DIR)
       self[F_VIEWS_LOCAL_DIR] = File.join(self[K_DIR], F_VIEWS_LOCAL_DIR)
+
       self[F_WEB_DIR] = File.join(self[K_DIR], F_WEB_DIR)
+      self[F_WEB_LOCAL_DIR] = File.join(self[K_DIR], F_WEB_LOCAL_DIR)
+
       self[F_INCLUDES_DIR] = File.join(self[K_DIR], F_INCLUDES_DIR)
       self[F_INCLUDES_LOCAL_DIR] = File.join(self[K_DIR], F_INCLUDES_LOCAL_DIR)
 
@@ -166,22 +145,6 @@ module CCDH
       self[K_CONCEPT_HEADERS] = []
       self[K_ELEMENT_HEADERS] = []
       self[K_STRUCTURE_HEADERS] = []
-
-    end
-
-    def r_get_missing_key(key)
-      self.has_key?(key) && self[key]
-
-      case key
-      when VK_FQN
-        value = "#{self[H_NAME]}"
-      when VK_ENTITY_NAME
-        value = "#{self[H_NAME]}"
-      else
-        value = nil
-      end
-      self[key] = value
-      value
     end
 
     def r_get_package(name, create)
@@ -197,39 +160,26 @@ module CCDH
       package = r_get_package(pkgName, false)
       if package.nil?
         package = r_get_package(pkgName, true)
+        package[H_TITLE] = "Package #{pkgName} title, generated"
+        package[H_SUMMARY] = "Package #{pkgName} summary, generated"
+        package[H_DESCRIPTION] = "Package #{pkgName} description, generated"
         package[K_GENERATED_NOW] = true
         package[H_STATUS] = V_GENERATED
-        package[H_SUMMARY] = "Package #{pkgName}, generated"
       end
       package
     end
-
   end
 
-  class MPackage < ModelEntity
+  class MPackage < ModelingEntity
     def initialize(name, model)
       super(name, model, V_TYPE_PACKAGE)
-      # TODO: fix hard coded
-      self[VK_ENTITY_NAME] = name
-      self[VK_FQN] = "#{name}:#{V_TYPE_PACKAGE}:#{model[H_NAME]}"
+
+      self[K_ENAME] = self[K_NAME]
+      self[K_FQN] = self[K_NAME] + SEP_NAME_PARTS + model[K_NAME]
+      self[K_ID] = self[K_NAME] + SEP_NAME_PARTS + model[K_ID]
       self[K_CONCEPTS] = {}
       self[K_STRUCTURES] = {}
       self[K_ELEMENTS] = {}
-    end
-
-    def r_get_missing_key(key)
-      self.has_key?(key) && self[key]
-
-      case key
-      when VK_FQN
-        value = "#{self[H_NAME]}#{SEP_COLON}#{V_TYPE_PACKAGE}#{SEP_COLON}#{self[K_MODEL][H_NAME]}"
-      when VK_ENTITY_NAME
-        value = "#{self[H_NAME]}"
-      else
-        value = nil
-      end
-      self[key] = value
-      value
     end
 
     def r_get_concept(name, create)
@@ -237,7 +187,7 @@ module CCDH
       if concept.nil? && create
         concept = MConcept.new(name, self, self[K_MODEL])
         self[K_CONCEPTS][name] = concept
-        concept[K_MODEL][K_ENTITIES][concept[VK_ENTITY_NAME]] = concept
+        concept[K_MODEL][K_ENTITIES][concept[K_ENAME]] = concept
       end
       concept
     end
@@ -247,7 +197,7 @@ module CCDH
       if element.nil? && create
         element = MElement.new(name, self, self[K_MODEL])
         self[K_ELEMENTS][name] = element
-        element[K_MODEL][K_ENTITIES][element[VK_ENTITY_NAME]] = element
+        element[K_MODEL][K_ENTITIES][element[K_ENAME]] = element
       end
       element
     end
@@ -257,7 +207,7 @@ module CCDH
       if structure.nil? && create
         structure = MStructure.new(name, self, self[K_MODEL])
         self[K_STRUCTURES][name] = structure
-        structure[K_MODEL][K_ENTITIES][structure[VK_ENTITY_NAME]] = structure
+        structure[K_MODEL][K_ENTITIES][structure[K_ENAME]] = structure
       end
       structure
     end
@@ -266,9 +216,11 @@ module CCDH
       structure = package.r_get_structure(structureName, false)
       if structure.nil?
         structure = r_get_structure(structureName, true)
+        structure[H_TITLE] = "#{structure[K_ENAME]} title, #{V_GENERATED}"
+        structure[H_SUMMARY] = "#{structure[K_ENAME]} summary, #{V_GENERATED}"
+        structure[H_DESCRIPTION] = "#{structure[K_ENAME]} description, #{V_GENERATED}"
         structure[H_STATUS] = V_GENERATED
         structure[K_GENERATED_NOW] = true
-        structure[H_SUMMARY] = "#{structure[VK_ENTITY_NAME]}, #{V_GENERATED}"
       end
       structure
     end
@@ -368,7 +320,6 @@ module CCDH
       # traversing the inverse K_COMPS_OF as descendants
       self[K_COMPS_DESC] = {}
 
-
       self[K_ATTRIBUTES] = {}
 
       self[K_ELEMENTS] = {}
@@ -376,6 +327,9 @@ module CCDH
     end
 
     def r_get_attribute(name, create)
+      if name.nil? || name.empty? || name == V_SELF || create.nil? || (!!create == create)
+        raise("Getting attribute with invalid values name:#{name}, create:#{create}")
+      end
       if self[K_ATTRIBUTES][name].nil? && create
         attribute = MSAttribute.new(name, self, self[K_MODEL])
         self[K_ATTRIBUTES][name] = attribute
@@ -384,14 +338,14 @@ module CCDH
     end
   end
 
-  class MSAttribute < ModelEntity
+  class MSAttribute < ModelingEntity
     # attr_accessor :concept_refs, :val_concept_refs
     def initialize(name, structure, model)
       super(name, model, V_TYPE_ATTRIBUTE)
 
       self[K_STRUCTURE] = structure
 
-      self[K_CONCEPTS] = [] # 2d
+      self[K_CONCEPTS] = []
       self[K_RANGES] = []
     end
 

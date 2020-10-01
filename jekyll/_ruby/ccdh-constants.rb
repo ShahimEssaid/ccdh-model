@@ -3,6 +3,10 @@ module CCDH
   SEP_COLON = ":"
   SEP_AT = "@"
   SEP_BAR = "|"
+  SEP_HASH = "#"
+  SEP_SLASH = "/"
+  SEP_DOT = "."
+  SEP_NAME_PARTS = SEP_SLASH
 
   H_PACKAGE = "package"
   H_NAME = "name"
@@ -36,11 +40,6 @@ module CCDH
   H_S_DISPLAY = "s_display"
   H_A_DISPLAY = "a_display"
 
-  #
-  #
-  #
-  #
-  #
 
   K_SITE = "_site"
   K_NIL = "_nil"
@@ -51,27 +50,21 @@ module CCDH
   K_TOP = "_top"
   K_DEFAULT = "_default"
   K_TYPE = "_type"
-
   K_ENTITIES = "_entities"
   K_ENTITIES_VISIBLE = "_entities_visible"
-
   K_MODEL_CSV = "_model_csv"
   K_PACKAGES_CSV = "_packages_csv"
   K_CONCEPTS_CSV = "_concepts_csv"
   K_ELEMENTS_CSV = "_elements_csv"
   K_STRUCTURES_CSV = "_structures_csv"
-
   K_MODEL_HEADERS = "_model_headers"
   K_PACKAGE_HEADERS = "_package_headers"
   K_CONCEPT_HEADERS = "_concept_headers"
   K_ELEMENT_HEADERS = "_element_headers"
   K_STRUCTURE_HEADERS = "_structure_headers"
-
   K_GENERATED_NOW = "_generated_now"
   K_PACKAGE = "_package"
-
   K_PACKAGES = "_packages"
-
   K_DEPENDS_ON = "_depends_on"
   K_DEPENDS_ON_PATH = "_depends_on_path"
   K_DEPENDED_ON = "_depended_on"
@@ -87,43 +80,32 @@ module CCDH
   K_RELATED_OF = "_related_of"
   K_ATTRIBUTES = "_attributes"
   K_STRUCTURE = "_structure" # used in a hash to point to the vals of a structure
-
-
   K_DOMAINS = "_domains"
   K_RANGES = "_ranges"
-
   K_CONCEPTS_E = "_concepts_e"
   K_CONCEPTS_NE = "_concepts_ne"
   K_CONCEPTS_CLU = "_concepts_clu"
   K_CONCEPTS_CLD = "_concepts_cld"
-
   K_DOMAINS_E = "_domains_e"
   K_DOMAINS_NE = "_domains_ne"
   K_DOMAINS_CLU = "_domains_clu"
   K_DOMAINS_CLD = "_domains_cld"
-
   K_RANGES_E = "_ranges_e"
   K_RANGES_NE = "_ranges_ne"
   K_RANGES_CLU = "_ranges_clu"
   K_RANGES_CLD = "_ranges_cld"
-
   K_OF_EL_CONCEPTS_E = "_of_el_concepts_e"
   K_OF_EL_CONCEPTS_CLU = "_of_el_concepts_clu"
   K_OF_EL_CONCEPTS_CLD = "_of_el_concepts_cld"
-
   K_OF_EL_DOMAINS_E = "_of_el_domains_e"
   K_OF_EL_DOMAINS_CLU = "_of_el_domains_clu"
   K_OF_EL_DOMAINS_CLD = "_of_el_domains_cld"
-
   K_OF_EL_RANGES_E = "_of_el_ranges_e"
   K_OF_EL_RANGES_CLU = "_of_el_ranges_clu"
   K_OF_EL_RANGES_CLD = "_of_el_ranges_cld"
-
-
   K_OF_S_CONCEPTS_E = "_of_s_concepts_e"
   K_OF_S_CONCEPTS_CLU = "_of_s_concepts_clu"
   K_OF_S_CONCEPTS_CLD = "_of_s_concepts_cld"
-
   K_SUB_ELEMENTS = "_sub_elements"
 
   # the following two are meant to hold if the modeling element runtime instance has already been fully loaded  from disc
@@ -159,8 +141,21 @@ module CCDH
   K_S_DISP_HEADERS = "_s_disp_headers"
   K_A_DISP_HEADERS = "_a_disp_headers"
 
-  VK_FQN = "_fqn" # this is the a FQN like ConceptName:c:PackageName:p:ModelName
-  VK_ENTITY_NAME = "_entity_name" # this is the name without the model name prefix. It's a FQN within a model.
+
+  # this is the EntityName/Type
+  K_NAME = "_name"
+  # The entity name. It's EntityName/TYPE/PackageName/P
+  # THe /P is optional
+  # This also works for PackageName/P, ModelName/M and ModelSetName/MS
+  # Basically, the token at index 1, the second one, has to be one of the types and the
+  # type helps determine if it's a valid entity name for that type
+  K_ENAME = "_ename" # this is the name without the model name prefix. It's a FQN within a model.
+
+  # A FQN includes the /ModelName/M part in addition to K_ENAME
+  K_FQN = "_fqn" # this is the a FQN like ConceptName:c:PackageName:p:ModelName
+
+  # A ID includes the /ModelSet/MS part
+  K_ID = "_id"
 
 
   F_MODEL_CSV = "model.csv"
@@ -192,20 +187,21 @@ module CCDH
 
   V_TYPE_CONCEPT = "C"
   V_TYPE_ELEMENT = "E"
-
-  V_THING_C_BASE = "#{V_CONCEPT_THING}:#{V_TYPE_CONCEPT}:#{V_PKG_BASE}"
-  V_ENTITY_C_BASE = "#{V_CONCEPT_ENTITY}:#{V_TYPE_CONCEPT}:#{V_PKG_BASE}"
-  V_PRIMITIVE_C_BASE = "#{V_CONCEPT_PRIMITIVE}:#{V_TYPE_CONCEPT}:#{V_PKG_BASE}"
-  V_TAG_C_BASE = "#{V_CONCEPT_TAG}:#{V_TYPE_CONCEPT}:#{V_PKG_BASE}"
-
-  V_HAS_ENTITY_E_BASE = "#{V_ELEMENT_HAS_ENTITY}:#{V_TYPE_ELEMENT}:#{V_PKG_BASE}"
-  V_HAS_VALUE_E_BASE = "#{V_ELEMENT_HAS_VALUE}:#{V_TYPE_ELEMENT}:#{V_PKG_BASE}"
-
   V_TYPE_MODEL_SET = "MS"
   V_TYPE_MODEL = "M"
   V_TYPE_PACKAGE = "P"
   V_TYPE_STRUCTURE = "S"
   V_TYPE_ATTRIBUTE = "a"
+
+  V_THING_C_BASE = V_CONCEPT_THING + SEP_NAME_PARTS + V_TYPE_CONCEPT + SEP_NAME_PARTS + V_PKG_BASE
+  V_ENTITY_C_BASE = V_CONCEPT_ENTITY + SEP_NAME_PARTS + V_TYPE_CONCEPT + SEP_NAME_PARTS + V_PKG_BASE
+  V_PRIMITIVE_C_BASE = V_CONCEPT_PRIMITIVE + SEP_NAME_PARTS + V_TYPE_CONCEPT + SEP_NAME_PARTS + V_PKG_BASE
+  V_TAG_C_BASE = V_CONCEPT_TAG + SEP_NAME_PARTS + V_TYPE_CONCEPT + SEP_NAME_PARTS + V_PKG_BASE
+
+  V_HAS_ENTITY_E_BASE = V_ELEMENT_HAS_ENTITY + SEP_NAME_PARTS + V_TYPE_ELEMENT + SEP_NAME_PARTS + V_PKG_BASE
+  V_HAS_VALUE_E_BASE = V_ELEMENT_HAS_VALUE + SEP_NAME_PARTS + V_TYPE_ELEMENT + SEP_NAME_PARTS + V_PKG_BASE
+
+
 
   V_TRUE = "true"
   # this is the directory path under "Jekyll source" where model sets' page content will be written.

@@ -31,7 +31,7 @@ module UDML
         type = "nil"
       when CSV::Table
         type = "csvtable"
-      when CCDH::ModelHash
+      when CCDH::ModelingEntity
         type = "mhash"
       when String
         if input.start_with?("http")

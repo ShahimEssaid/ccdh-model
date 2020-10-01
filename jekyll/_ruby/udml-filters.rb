@@ -15,6 +15,15 @@ module UDML
     #     "NotKnownEntityType:#{input}"
     #   end
     # end
+    #
+
+    def hash_as_sorted_array(hash)
+      values = []
+      hash.keys().sort().each do |key|
+        values << hash[key]
+      end
+      values
+    end
 
     def object_type(input)
       case input

@@ -1,0 +1,7 @@
+
+Primitive:c:base:p:default:m
+Primitive:c:base:p:default:m
+
+SomeStructure:s:base:p:default:m
+SomeStructure.attribute:s:base:p:default:m
+SomeStructure#id.attribute:s:base:p:default:m

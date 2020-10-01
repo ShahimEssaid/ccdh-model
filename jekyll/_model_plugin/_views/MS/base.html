@@ -1,0 +1,17 @@
+---
+layout: page
+title: Model set {{page.MS.name}}
+nav_exclude: true
+---
+
+<h1>Model set: {{ page.MS.name }}</h1>
+
+The models in this model set are:
+{% assign models = page.MS._models | sort %}
+{%- for model_entry in models -%}
+{%- assign model = model_entry[1] -%}
+{% include li/m.html  M=model%}
+{%- endfor -%}
+
+{% include debug.html object=page.MS name="model set in MS/model_set.html" on="false" hr="true"  %}
+

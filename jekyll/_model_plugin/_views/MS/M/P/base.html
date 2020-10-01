@@ -1,0 +1,14 @@
+---
+layout: page
+title: "Package {{page.P.name}} in model {{page.P._model.name}}:{{page.P._model._ms.name}}"
+nav_exclude: true
+---
+{% assign entity=page.P %}
+
+{% include title-summary-desc.html entity=entity %}
+
+{% include entity-table.html entity=entity headers=entity._m_disp_headers %}
+
+{% include debug.html object=entity name="" on="false" hr="true" %}
+
+

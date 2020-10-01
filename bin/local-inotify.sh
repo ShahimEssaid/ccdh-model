@@ -21,6 +21,6 @@ inotifywait -q -m -r -e modify model_sets |
   while read -r line; do
           echo "MODIFIED ${line}"
    # if [[ $line != */ ]] ; then
-    touch jekyll/index.md
+    touch jekyll/index.html
    # fi
   done

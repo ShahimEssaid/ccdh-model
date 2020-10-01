@@ -1,0 +1,10 @@
+{% assign entities = include.entities %}
+<table>
+    <tr>
+        <th>Entity</th>
+        <th>Summary</th>
+    </tr>
+    {%- for entity in entities -%}
+    {% include entity-name-summary-tr.html entity=entity %}
+    {% endfor %}
+</table>

@@ -1,1 +1,0 @@
-<a href="{{include.entity | entity_home_url | relative_url }}">{{include.entity._entity_name | default: "NO_ENTITY_NAME"}}</a>

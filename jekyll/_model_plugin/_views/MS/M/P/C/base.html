@@ -1,0 +1,38 @@
+---
+layout: page
+title: Concept {{page.C.name}} in package {{page.C._package.name}}:{{page.C._model.name}}:{{page.C._model._ms.name}}
+nav_exclude: true
+---
+{% assign entity=page.C %}
+
+{% include title-summary-desc.html entity=entity %}
+
+{% include entity-table.html entity=entity headers=entity._m_disp_headers %}
+
+<h2>Concept relationships</h2>
+
+The following subheadings show Concept to Concept relationships in the model
+
+<h3>Parents</h3>
+{% assign entities = page.C._parents %}
+{% include entities-summary-tbl.html entities=entities %}
+
+
+<h3>Children</h3>
+{% assign entities = page.C._children | hash_as_sorted_array %}
+{% include entities-summary-tbl.html entities= entities %}
+
+<h3>Ancestorss</h3>
+{% assign entities = page.C._ancestors | hash_as_sorted_array %}
+{% include entities-summary-tbl.html entities= entities %}
+
+<h3>Descendants</h3>
+{% assign entities = page.C._descendants | hash_as_sorted_array %}
+{% include entities-summary-tbl.html entities= entities %}
+
+<h2>Element links</h2>
+
+The following subheadings show Element to Concept relationships in the model
+
+
+{% include debug.html object=page.C name="concept in MS/M/P/C/base.html" on="false" hr="true" %}
